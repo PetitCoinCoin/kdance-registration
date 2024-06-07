@@ -22,7 +22,7 @@ def login_user(request):
             login(request, user)
             return redirect("index")
         else:
-            message = "Mauvais username ou mot de passe. La connexion a échoué."
+            message = "Email et/ou mot de passe incorrect(s). La connexion a échoué."
             return render(request, "registration/login.html", context={"error": message})
     else:
         return render(request, "registration/login.html", context={"error": None})

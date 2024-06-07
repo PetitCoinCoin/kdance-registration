@@ -1,8 +1,40 @@
+/*** LAYOUT ***/
+html {
+    height: 100%;
+}
+
+body {
+    min-height: 100%;
+    display: grid;
+    grid-gap: 10px;
+    grid-template-areas:
+        "header"
+        "main"
+        "footer";
+    grid-template-rows: 50px 1fr 50px;
+}
+
+header {
+    grid-area: header;
+}
+
+main {
+    grid-area: main;
+}
+
+footer {
+    grid-area: footer;
+}
+
 #navbar-main {
     justify-content: space-between;
     align-items: center;
     margin-left: 20px;
     margin-right: 20px;
+}
+
+.min-w-500 {
+    min-width: 500px;
 }
 
 h1 {
