@@ -1,0 +1,46 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+
+<main>
+    <section>
+        <div class="container">
+            <div class="text-center">
+                <h1 class="display-4 mb-5 ">Création d'un compte K'Dance</h1>
+                <p>Le titulaire du compte doit être un adulte responsable.</p>
+            </div>
+            <form id="form-signup" method="post">
+                {% csrf_token %}
+                <div class="col-12">
+                    <div class="row">
+                        <label class="mr-2" for="firstname">Prénom:</label>
+                        <input type="text" name="firstname" required>
+                    </div>
+                    <br>
+                    <label for="lastname">Nom:</label>
+                    <input type="text" name="lastname" required>
+                    <br>
+                    <label for="phone">Téléphone:</label>
+                    <input type="text" name="phone" required>
+                    <br>
+                    <label for="email">Email:</label>
+                    <input type="email" name="email" required>
+                    <br>
+                    <label for="address">Adresse:</label>
+                    <input type="textarea" name="address" required>
+                    <br>
+                    <label for="password">Mot de passe:</label>
+                    <input type="password" name="password" required>
+                    <br>
+                    <label for="password-confirmation">Confirmation du mot de passe:</label>
+                    <input type="password" name="password-confirmation" required>
+                    <br>
+                    <input type="submit" value="Créer le compte">
+                </div>
+            <!-- <button type="submit">Sign Up</button> -->
+            </form>
+        </div>
+    </section>
+</main>
+
+{% endblock %}

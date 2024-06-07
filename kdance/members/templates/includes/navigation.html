@@ -1,0 +1,12 @@
+{% load static %}
+
+<header class="header-global">
+  <nav id="navbar-main" aria-label="Primary navigation" class="d-flex">
+    <img src="{% static 'img/cropped-kdance.png' %}" height="50"  alt="K'Dance Logo">
+    {% if user.is_authenticated %}
+      <a href="{% url 'logout' %}">Déconnexion</a>
+    {% else %}
+      <a href="{% url 'login' %}">Connexion</a>
+    {% endif %}
+  </nav>
+</header>

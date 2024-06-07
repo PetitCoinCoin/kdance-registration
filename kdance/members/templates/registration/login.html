@@ -1,0 +1,32 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+
+<main>
+  <section>
+    <div class="container">
+      <div class="text-center">
+        <h1 class="display-4 mb-5">Connexion à votre espace adhérent</h1>
+      </div>
+      <form method="post">
+        {% csrf_token %}
+        <div class="form-outline mb-4">
+          <label class="form-label" for="username">Email</label>
+          <input type="text" name="username" class="form-control" />
+        </div>
+
+        <div class="form-outline mb-4">
+          <label class="form-label" for="password">Mot de passe</label>
+          <input type="password" type="password" name="password" class="form-control" />
+        </div>
+
+        {% if error %}
+        <div>{{ error }}</div>
+        {% endif %}
+        <button type="submit">Connexion</button>
+      </form>
+    </div>
+  </section>
+</main>
+
+{% endblock content %}
