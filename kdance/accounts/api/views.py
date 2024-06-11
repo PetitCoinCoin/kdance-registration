@@ -1,10 +1,9 @@
 from cryptography.fernet import Fernet
 from django.contrib.auth import (
     get_user_model,
-    login,
-    logout,
     update_session_auth_hash,
 )
+from django.contrib.auth.models import User as UserType
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import APIException
@@ -22,8 +21,6 @@ from rest_framework.viewsets import GenericViewSet
 
 from accounts.api.serializers import (
     DetailSerializer,
-    EmptySerializer,
-    LoginPasswordSerializer,
     UserChangePwdSerializer,
     UserCreateSerializer,
     UserSerializer,
@@ -31,29 +28,6 @@ from accounts.api.serializers import (
 )
 
 User = get_user_model()
-
-
-class AuthApiViewSet(GenericViewSet):
-    def get_serializer_class(self):
-        if "logout" in self.request.path:
-            return EmptySerializer
-        return LoginPasswordSerializer
-
-    @action(detail=False, methods=["post"])
-    def login(self, _r: Request) -> Response:
-        body = self.get_serializer_class(instance=self.request.data, request=self.request)
-        body.is_valid(raise_exception=True)
-        login(self.request, body)
-        answer = DetailSerializer(data={"detail": "Utilisateur connecté"})
-        answer.is_valid(raise_exception=True)
-        return Response(answer)
-
-    # @action(detail=False, methods=["post"])
-    # def logout(self, _r: Request) -> Response:
-    #     logout(self.request)
-    #     answer = DetailSerializer(data={"detail": "Utilisateur déconnecté"})
-    #     answer.is_valid(raise_exception=True)
-    #     return Response(answer)
 
 
 class UsersApiViewSet(
@@ -92,7 +66,7 @@ class UsersApiViewSet(
         return Response(answer)
 
 
-class UsersMeApiViewSet(
+class UserMeApiViewSet(
     DestroyModelMixin,
     RetrieveModelMixin,
     UpdateModelMixin,
@@ -100,6 +74,9 @@ class UsersMeApiViewSet(
 ):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def get_object(self) -> UserType:
+        return self.queryset.get(pk=self.request.user.pk)
 
     @action(detail=False, methods=["put"])
     def password(self, request: Request) -> Response:

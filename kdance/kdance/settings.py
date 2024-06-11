@@ -109,7 +109,7 @@ CSRF_COOKIE_HTTPONLY = True
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "fr-fr"
 
 TIME_ZONE = "UTC"
 
@@ -123,7 +123,7 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = (
-  os.path.join(BASE_DIR, "static/"),
+  os.path.join(BASE_DIR, "members/static/"),
 )
 
 # Default primary key field type

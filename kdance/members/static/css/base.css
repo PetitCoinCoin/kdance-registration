@@ -37,6 +37,12 @@ footer {
     min-width: 500px;
 }
 
+/*** Forms ***/
+.required:after {
+    content:" *";
+    color: red;
+}
+
 h1 {
     color: red;
     background-color: blueviolet;

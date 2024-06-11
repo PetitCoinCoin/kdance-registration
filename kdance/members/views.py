@@ -6,4 +6,5 @@ from django.shortcuts import render
 @login_required(login_url="login/")
 def index(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
+        # si superuser, autre template
         return render(request, "pages/index.html", context={"user": request.user})

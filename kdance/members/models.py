@@ -21,10 +21,11 @@ class Season(models.Model):
         max_length=9,
         validators=[RegexValidator(r"\d{4}-\d{4}")]
     )
-    is_current = models.BooleanField(null=False, blank=False)
+    is_current = models.BooleanField(null=False, blank=False, default=True)
 
     @transaction.atomic
     def save(self, *args, **kwargs) -> None:
+        created = self.pk is None
         # When creating a new season, we delete the older ones
         if not Season.objects.filter(year=self.year).exists():
             too_old = Season.objects.order_by("-year")[4:]
@@ -34,6 +35,10 @@ class Season(models.Model):
         # Only one current season is possible
         if self.is_current:
             Season.objects.exclude(year=self.year).update(is_current=False)
+        # At creation, we add Payment object for each User
+        if created:
+            for user in User.objects.all():
+                Payment(user=user, season=self).save()
 
 
 class Teacher(models.Model):
@@ -62,12 +67,37 @@ class Course(models.Model):
     start_hour = models.TimeField()
     end_hour = models.TimeField()
 
+    def __repr__(self) -> str:
+        return self.name
+
 
 class Documents(models.Model):
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
     authorise_photos = models.BooleanField(null=False)
     authorise_emergency = models.BooleanField(null=True)
     medical_document = models.BooleanField(null=False)
+
+
+class Payment(models.Model):
+    season = models.ForeignKey(Season, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    paid = models.PositiveIntegerField(null=False, default=0)
+
+    @property
+    def due(self) -> float:
+        due = 0.0
+        total = 0
+        members = self.user.member_set.all()
+        for member in members:
+            for course in member.courses.filter(season=self.season).all():
+                total += 1
+                due += course.price
+        # Reduction
+        if total > 1:
+            due *= 0.9
+        # Adhesion
+        due += len(members) * 10
+        return due
 
 
 class Member(models.Model):
@@ -102,3 +132,6 @@ class Member(models.Model):
         validators=[RegexValidator(r"\d{10}")],
         max_length=10,
     )
+
+    def __repr__(self) -> str:
+        return self.first_name + self.last_name

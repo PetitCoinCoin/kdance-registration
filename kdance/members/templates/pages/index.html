@@ -15,7 +15,7 @@
         
         <div class="d-flex justify-content-center align-items-center mb-5">
           {% if user.is_authenticated %}
-          Bonjour {{user.username}}
+          Bonjour {{user.first_name}}
           {% else %}
           Va chier
           {% endif %}

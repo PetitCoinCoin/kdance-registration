@@ -1,31 +1,15 @@
-from typing import Any, Optional
+from typing import Any
 
-from django.contrib.auth import authenticate, get_user_model
-from django.contrib.auth.base_user import AbstractBaseUser
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User as UserType
 from django.db import transaction
-from django.http.request import HttpRequest
 from rest_framework import serializers
 
 from accounts.models import Profile
+from members.models import Payment, Season
+from members.api.serializers import PaymentSerializer
 
 User = get_user_model()
-
-class LoginPasswordSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ("username", "password")
-
-    def __init__(self, request: Optional[HttpRequest] = None, **kwargs: Any) -> None:
-        self.request = request or HttpRequest()
-        super().__init__(**kwargs)
-
-    def get_user(self) -> AbstractBaseUser:
-        return authenticate(
-            request=self.request,
-            username=self.data["username"],
-            password=self.data["password"],
-        )
 
 
 class DetailSerializer(serializers.Serializer):
@@ -46,7 +30,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 class UserBaseSerializer(serializers.ModelSerializer):
     def create(self, validated_data: dict) -> UserType:
         user: UserType = User.objects.create_user(
-            username=validated_data["email"],
+            username=validated_data["username"],
             email=validated_data["email"],
             password=validated_data["password"],
             first_name=validated_data["first_name"],
@@ -63,12 +47,11 @@ class UserBaseSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def save(self, **kwargs: UserType) -> None:
+        profile_data = self.validated_data.pop("profile")
         user: UserType = super().save(**kwargs)
-        profile: Profile = Profile.objects.get_or_create(user=user)
-        if self.validated_data.get("address"):
-            profile.address = self.validated_data["address"]
-        if self.validated_data.get("phone"):
-            profile.phone = self.validated_date["phone"]
+        profile, _ = Profile.objects.get_or_create(user=user)
+        profile.address = profile_data.get("address")
+        profile.phone = profile_data.get("phone")
         profile.save()
 
 
@@ -76,10 +59,12 @@ class UserCreateSerializer(UserBaseSerializer):
     address = serializers.CharField(
         required=True,
         allow_blank=False,
+        source="profile.address",
     )
     phone = serializers.CharField(
         required=True,
         allow_blank=False,
+        source="profile.phone",
     )
 
     class Meta:
@@ -93,15 +78,34 @@ class UserCreateSerializer(UserBaseSerializer):
             "address",
             "phone",
         )
-        extra_kwargs = {"password": {"write_only": True}}
+        extra_kwargs = {
+            "username": {"required": True},
+            "password": {"write_only": True, "required": True},
+            "email": {"required": True},
+            "first_name": {"required": True},
+            "last_name": {"required": True},
+        }
 
-    def validate_password(pwd: str) -> str:
+    @classmethod
+    def validate_password(cls, pwd: str) -> str:
         validate_pwd(pwd)
         return pwd
 
+    @classmethod
+    def validate_email(cls, email: str) -> str:
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError("Un utilisateur est déjà associé à cet email.")
+        return email
+
+    @transaction.atomic
+    def save(self, **kwargs: UserType) -> None:
+        user: UserType = super().save(**kwargs)
+        payment = Payment(user=user, season=Season.objects.get(is_current=True))
+        payment.save()
 
 class UserSerializer(UserBaseSerializer):
     profile = ProfileSerializer(read_only=True)
+    payment = PaymentSerializer(read_only=True)
 
     class Meta:
         model = User
@@ -113,18 +117,20 @@ class UserSerializer(UserBaseSerializer):
             "last_name",
             "date_joined",
             "last_login",
-            "profile"
+            "profile",
+            "payment",
         )
         read_only_fields = fields
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        # if args:
-        #     try:
-        #         users = iter(args[0])
-        #     except TypeError:
-        #         users = [args[0]]
-        #     for user in users:
-        #         user.profile = Profile.objects.get(user=user)
+        if args:
+            try:
+                users = iter(args[0])
+            except TypeError:
+                users = [args[0]]
+            for user in users:
+                user.profile = Profile.objects.get(user=user)
+                user.payment = Payment.objects.get(user=user)
         super().__init__(*args, **kwargs)
 
 
@@ -146,20 +152,16 @@ class UserChangePwdSerializer(serializers.Serializer):
         return pwd
 
     def save(self, **k_) -> None:
-        self._user.set_password(self.validate_data["new_password"])
+        self._user.set_password(self.validated_data["new_password"])
         self._user.save()
-
-
-class EmptySerializer(serializers.Serializer):
-    empty = serializers.CharField(required=False)
 
 
 def validate_pwd(pwd: str) -> None:
     if not pwd or len(pwd) < 8:
             raise serializers.ValidationError("Votre mot de passe doit contenir au moins 8 caractères.")
-    if all(letter.is_lower() for letter in pwd):
+    if all(letter.islower() for letter in pwd):
         raise serializers.ValidationError("Votre mot de passe doit contenir au moins une majuscule.")
-    if all(letter.is_upper() for letter in pwd):
+    if all(letter.isupper() for letter in pwd):
         raise serializers.ValidationError("Votre mot de passe doit contenir au moins une minuscule.")
     if not any(letter.isdigit() for letter in pwd):
         raise serializers.ValidationError("Votre mot de passe doit contenir au moins un chiffre.")

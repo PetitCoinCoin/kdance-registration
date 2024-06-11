@@ -1,10 +1,16 @@
+from django.contrib.auth import get_user_model
+from django.db import transaction
 from rest_framework import serializers
 
 from members.models import (
     Course,
+    Member,
+    Payment,
     Season,
     Teacher,
 )
+
+User = get_user_model()
 
 class SeasonSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,7 +21,7 @@ class SeasonSerializer(serializers.ModelSerializer):
 class TeacherSerializer(serializers.ModelSerializer):
     class Meta:
         model = Teacher
-        fields = ("name")
+        fields = ("name",)
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -30,3 +36,32 @@ class CourseSerializer(serializers.ModelSerializer):
             "start_hour",
             "end_hour",
         )
+
+
+class MemberSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Member
+        fields = (
+            "first_name",
+            "last_name",
+            "courses",
+            "documents",
+            "birthday",
+            "address",
+            "email",
+            "phone",
+        )
+
+    @transaction.atomic
+    def save(self, **kwargs) -> None:
+        username = kwargs.get("user")
+        self.validated_data["user"] = User.objects.get(username=username)
+        super().save()
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = ("season", "paid", "due")
+

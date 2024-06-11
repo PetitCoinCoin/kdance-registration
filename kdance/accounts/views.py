@@ -1,17 +1,12 @@
-from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.forms import UserCreationForm
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
-from django.urls import reverse_lazy
-from django.views.generic import CreateView
 
 
-class SignUpView(CreateView):
-    form_class = UserCreationForm
-    success_url = reverse_lazy("login")
-    template_name = "registration/signup.html"
+def signup_view(request: HttpRequest) -> HttpResponse:
+    return render(request, "registration/signup.html")
 
-def login_user(request):
+def login_view(request: HttpRequest) -> HttpResponse:
     logout(request)
     message = ""
     if request.method == "POST":
@@ -27,6 +22,6 @@ def login_user(request):
     else:
         return render(request, "registration/login.html", context={"error": None})
 
-def logout_view(request):
+def logout_view(request: HttpRequest) -> HttpResponse:
     logout(request)
     return redirect("index")

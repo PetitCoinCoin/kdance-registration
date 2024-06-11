@@ -3,6 +3,7 @@ from rest_framework import routers
 
 from members.api.views import (
     CourseViewSet,
+    MemberViewSet,
     SeasonViewSet,
     TeacherViewSet,
 )
@@ -10,9 +11,10 @@ from members.views import index
 
 
 router = routers.DefaultRouter()
-router.register(r"course", CourseViewSet)
-router.register(r"season", SeasonViewSet)
-router.register(r"teacher", TeacherViewSet)
+router.register(r"courses", CourseViewSet)
+router.register(r"members", MemberViewSet)
+router.register(r"seasons", SeasonViewSet)
+router.register(r"teachers", TeacherViewSet)
 
 urlpatterns = [
     path("", index, name="index"),
