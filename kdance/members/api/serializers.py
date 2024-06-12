@@ -65,3 +65,19 @@ class PaymentSerializer(serializers.ModelSerializer):
         model = Payment
         fields = ("season", "paid", "due")
 
+
+class MemberSerializer(serializers.ModelSerializer):
+    courses = CourseSerializer(many=True)
+
+    class Meta:
+        model = Member
+        fields = (
+            "first_name",
+            "last_name",
+            "courses",
+            "documents",
+            "birthday",
+            "address",
+            "email",
+            "phone",
+        )

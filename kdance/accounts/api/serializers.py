@@ -6,8 +6,11 @@ from django.db import transaction
 from rest_framework import serializers
 
 from accounts.models import Profile
-from members.models import Payment, Season
-from members.api.serializers import PaymentSerializer
+from members.models import Member, Payment, Season
+from members.api.serializers import (
+    MemberSerializer,
+    PaymentSerializer,
+)
 
 User = get_user_model()
 
@@ -105,7 +108,8 @@ class UserCreateSerializer(UserBaseSerializer):
 
 class UserSerializer(UserBaseSerializer):
     profile = ProfileSerializer(read_only=True)
-    payment = PaymentSerializer(read_only=True)
+    payment = PaymentSerializer(read_only=True, many=True)
+    members = MemberSerializer(read_only=True, many=True)
 
     class Meta:
         model = User
@@ -119,6 +123,7 @@ class UserSerializer(UserBaseSerializer):
             "last_login",
             "profile",
             "payment",
+            "members",
         )
         read_only_fields = fields
 
@@ -130,7 +135,8 @@ class UserSerializer(UserBaseSerializer):
                 users = [args[0]]
             for user in users:
                 user.profile = Profile.objects.get(user=user)
-                user.payment = Payment.objects.get(user=user)
+                user.payment = Payment.objects.filter(user=user).all()
+                user.members = Member.objects.filter(user=user).all()
         super().__init__(*args, **kwargs)
 
 

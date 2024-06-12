@@ -43,11 +43,8 @@ footer {
     color: red;
 }
 
+/*** Design ***/
 h1 {
-    color: red;
-    background-color: blueviolet;
-}
-
-.truc {
-    color: aqua;
+    color: purple;
+    border-bottom: 0.5rem solid orange;
 }

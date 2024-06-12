@@ -11,22 +11,82 @@
       <div class="text-center">
         <h1 class="display-4 mb-5">Page Adhérent K'Dance</h1>
       </div>
-      <div class="col-12 text-center">
+      {% if user.is_authenticated %}
+      <div class="container">
+        <div class="row">
+          <div class="col-2">
+            <img id="desc-picture" src="" class="img-thumbnail" alt="thumbs">
+          </div>
+          <div class="col">
+            <dl class="row">
+              <dt class="col-sm-5">Prénom:</dt>
+              <dd id="desc-firstname" class="col-sm-7"></dd>
+              <dt class="col-sm-5">Nom:</dt>
+              <dd id="desc-lastname" class="col-sm-7"></dd>
+              <dt class="col-sm-5">Nom d'utilisateur:</dt>
+              <dd id="desc-username"class="col-sm-7"></dd>
+              <dt class="col-sm-5">Email:</dt>
+              <dd id="desc-email" class="col-sm-7"></dd>
+              <dt class="col-sm-5">Téléphone:</dt>
+              <dd id="desc-phone" class="col-sm-7"></dd>
+              <dt class="col-sm-5">Adresse:</dt>
+              <dd id="desc-address"class="col-sm-7"></dd>
+            </dl>
+          </div>
+          <div class="col-1">
+            Edit/Del
+          </div>
+        </div>
+        <div class="row">
+          <div class="accordion" id="member-accordion">          
+          </div>
+        </div>
         
-        <div class="d-flex justify-content-center align-items-center mb-5">
-          {% if user.is_authenticated %}
-          Bonjour {{user.first_name}}
-          {% else %}
-          Va chier
-          {% endif %}
-        </div>
-        <div class="d-flex justify-content-center flex-column mb-6 mb-lg-5">
-            Pouet
-            <!-- {% csrf_token %} -->
-        </div>
-    </div>
+        <template id="accordion-item-template">
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" aria-expanded="true" aria-controls="accordion-0">
+                <span>Saison</span>
+              </button>
+            </h2>
+            <div class="accordion-collapse collapse show template-data" data-bs-parent="#member-accordion">
+              <div class="accordion-body">
+                <div class="row">
+                  <div class="col-6">
+                      <dl class="row">
+                          <dt class="col-sm-5">Total dû:</dt>
+                          <dd class="col-sm-7 payment">€</dd>
+                      </dl>
+                  </div>
+                  <div class="col-6">
+                      <dl class="row">
+                          <dt class="col-sm-5">Payé:</dt>
+                          <dd class="col-sm-7 payment">€</dd>
+                      </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+        
+        <template id="card-template">
+          <div class="card">
+            <div class="card-header">Membre</div>
+            <div class="card-body">
+            </div>
+          </div>
+        </template>
+
+      </div>
+      {% endif %}
     </div>
   </section>
+  <script type="text/javascript">
+      const userMeUrl = "{% url 'api-user-me' %}"
+      const seasonsUrl = "{% url 'api-seasons-list' %}"
+  </script>
+  <script src="{% static 'js/user.js' %}"></script> 
 </main>
 
 {% endblock content %}
