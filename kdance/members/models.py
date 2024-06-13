@@ -1,16 +1,6 @@
-from enum import Enum
-
 from django.contrib.auth.models import User
 from django.core.validators import EmailValidator, RegexValidator
 from django.db import models, transaction
-
-
-class WeekdayEnum(Enum):
-    MONDAY = "lundi"
-    TUESDAY = "mardi"
-    WEDNESDAY = "mercredi"
-    THURSDAY = "jeudi"
-    FRIDAY = "vendredi"
 
 
 class Season(models.Model):
@@ -60,9 +50,16 @@ class Course(models.Model):
     teacher = models.ForeignKey(Teacher, null=True, on_delete=models.SET_NULL)
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
     price = models.PositiveIntegerField(null=False)
-    weekday = models.CharField(
-        choices=[(day.value, day.value) for day in WeekdayEnum],
-        max_length=10,
+    weekday = models.PositiveIntegerField(
+        choices=[
+            (0, "Lundi"),
+            (1, "Mardi"),
+            (2, "Mercredi"),
+            (3, "Jeudi"),
+            (4, "Vendredi"),
+            (5, "Samedi"),
+            (6, "Dimanche"),
+        ],
     )
     start_hour = models.TimeField()
     end_hour = models.TimeField()

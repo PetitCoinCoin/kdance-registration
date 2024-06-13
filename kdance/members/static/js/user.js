@@ -51,7 +51,7 @@ function getUser() {
                     member.courses.map((course) => {
                         let paragraphe = document.createElement('p');
                         const startHour = course.start_hour.split(':');
-                        paragraphe.textContent = `${course.name}, ${course.weekday} ${startHour[0]}h${startHour[1]}`;
+                        paragraphe.textContent = `${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
                         memberBody.appendChild(paragraphe);
                     });
                     body.appendChild(cardClone);

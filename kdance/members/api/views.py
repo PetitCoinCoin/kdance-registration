@@ -56,8 +56,14 @@ class CourseViewSet(
     DestroyModelMixin,
     GenericViewSet,
 ):
-    queryset = Course.objects.all().order_by("-pk")
     serializer_class = CourseSerializer
+
+    def get_queryset(self):
+        queryset = Course.objects.all()
+        season = self.request.query_params.get("season")
+        if season:
+            queryset = queryset.filter(season__year=season)
+        return queryset.order_by("-season__year", "weekday")
 
 
 class MemberViewSet(
