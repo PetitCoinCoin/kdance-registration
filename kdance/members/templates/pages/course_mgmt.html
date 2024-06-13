@@ -1,0 +1,141 @@
+{% extends 'layouts/base.html' %}
+
+{% load static %}
+
+{% block content %}
+
+<main>
+	<section>
+    <!-- Modal -->
+    <div class="modal fade" id="add-teacher-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title">Ajouter un professeur</h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form id="form-add-teacher" name="form-add-teacher" method="post">
+            {% csrf_token %}
+            <div class="modal-body">
+              <div class="form-outline mb-4">
+                <label class="form-label required" for="name">Nom du professeur:</label>
+                <input type="text" id="name" class="form-control" maxlength="30" required/>
+                <div id="invalid-name" class="invalid-feedback"></div>   
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+              <button id="add-teacher-btn" type="submit" class="btn btn-info">Enregistrer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal fade" id="delete-teacher-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title">Supprimer un professeur</h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            Etes-vous sur.e de vouloir supprimer ce professeur ?
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button id="delete-teacher-btn" type="submit" class="btn btn-danger">Supprimer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+		<div class="container">
+			<div class="text-center">
+				<h1 class="display-4 mb-5">Gestion des cours</h1>
+			</div>
+			{% if user.is_authenticated and user.is_superuser %}
+			<div class="container">
+				<div class="d-flex justify-content-between mb-5">
+					<select id="season-select" class="form-select max-w-500">
+					</select>
+					<button id="add-season-btn" class="btn btn-outline-info" type="button">
+						<i class="bi-patch-plus" style="color: purple;"></i>
+						Ajouter une nouvelle saison
+					</button>
+				</div>
+				<div class="row">
+					<div class="accordion" id="courses-accordion">
+						<div class="accordion-item">
+							<h2 class="accordion-header">
+								<button class="accordion-button" type="button" data-bs-toggle="collapse" aria-expanded="false"
+									data-bs-target="#courses-teachers" aria-controls="courses-teachers">
+									<span>Professeurs</span>
+								</button>
+							</h2>
+							<div id="courses-teachers" class="accordion-collapse collapse collapsed template-data"
+								data-bs-parent="#courses-accordion">
+								<div class="accordion-body">
+									<ul id="teachers-list" class="list-group mb-3">
+									</ul>
+                  <button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#add-teacher-modal">
+                    <i class="bi-patch-plus" style="color: purple;"></i>
+                    Ajouter un nouveau professeur
+                  </button>
+								</div>
+							</div>
+						</div>
+						<div class="accordion-item">
+							<h2 class="accordion-header">
+								<button class="accordion-button" type="button" data-bs-toggle="collapse" aria-expanded="true"
+									data-bs-target="#courses-courses" aria-controls="courses-courses">
+									<span>Cours</span>
+								</button>
+							</h2>
+							<div id="courses-courses" class="accordion-collapse show collapsed template-data"
+								data-bs-parent="#courses-accordion">
+								<div class="accordion-body">
+									<div class="row">
+										truc
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<template id="teacher-item-template">
+					<li class="list-group-item d-flex justify-content-between align-items-center">
+						<div>
+							<img height="30">
+							<span></span>
+						</div>
+						<div>
+							<button class="btn btn-outline-info" type="button">
+								<i class="bi-pencil-fill"></i>Modifier
+							</button>
+							<button class="btn btn-outline-danger" type="button" data-bs-toggle="modal" data-bs-target="#delete-teacher-modal">
+								<i class="bi-trash3-fill"></i>Supprimer
+							</button>
+						</div>
+					</li>
+				</template>
+			</div>
+			{% else %}
+			<div class="text-center">
+				<h4 class="display-4 mb-5">Oh oh, vous n'avez rien à faire là !</h4>
+			</div>
+			{% endif %}
+		</div>
+	</section>
+	<script type="text/javascript">
+		const coursesUrl = "{% url 'api-courses-list' %}"
+		const seasonsUrl = "{% url 'api-seasons-list' %}"
+		const teachersUrl = "{% url 'api-teachers-list' %}"
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+	</script>
+	<script src="{% static 'js/courses.js' %}"></script>
+</main>
+
+{% endblock content %}

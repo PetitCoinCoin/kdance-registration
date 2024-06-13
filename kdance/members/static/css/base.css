@@ -37,6 +37,10 @@ footer {
     min-width: 500px;
 }
 
+.max-w-500 {
+    max-width: 500px;
+}
+
 /*** Forms ***/
 .required:after {
     content:" *";

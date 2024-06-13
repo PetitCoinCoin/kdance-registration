@@ -23,6 +23,10 @@ class TeacherSerializer(serializers.ModelSerializer):
         model = Teacher
         fields = ("name",)
 
+    def validate_name(self, name: str) -> str:
+        if Teacher.objects.filter(name__iexact=name).exists():
+            raise serializers.ValidationError("Ce professeur existe déjà.")
+
 
 class CourseSerializer(serializers.ModelSerializer):
     weekday = serializers.ChoiceField(

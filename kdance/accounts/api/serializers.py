@@ -49,13 +49,14 @@ class UserBaseSerializer(serializers.ModelSerializer):
         user.delete()
 
     @transaction.atomic
-    def save(self, **kwargs: UserType) -> None:
+    def save(self, **kwargs: UserType) -> UserType:
         profile_data = self.validated_data.pop("profile")
         user: UserType = super().save(**kwargs)
         profile, _ = Profile.objects.get_or_create(user=user)
         profile.address = profile_data.get("address")
         profile.phone = profile_data.get("phone")
         profile.save()
+        return user
 
 
 class UserCreateSerializer(UserBaseSerializer):
