@@ -31,7 +31,8 @@ function getUser() {
                 dd[1].textContent = `${item.paid}€`;
                 // Collapsible
                 let collapseBtn = clone.querySelector('button');
-                collapseBtn.dataBsTarget = `#accordion-${i}`
+                collapseBtn.dataset.bsTarget = `#accordion-${i}`;
+                collapseBtn.ariaControls = `accordion-${i}`;
                 let collapsing = clone.querySelectorAll('div.accordion-collapse')[0];
                 collapsing.id = `accordion-${i}`;
                 // collapse older seasons

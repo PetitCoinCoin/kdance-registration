@@ -17,7 +17,7 @@ def login_view(request: HttpRequest) -> HttpResponse:
             login(request, user)
             return redirect("index")
         else:
-            message = "Email et/ou mot de passe incorrect(s). La connexion a échoué."
+            message = "Utilisateur et/ou mot de passe incorrect(s). La connexion a échoué."
             return render(request, "registration/login.html", context={"error": message})
     else:
         return render(request, "registration/login.html", context={"error": None})
