@@ -5,84 +5,83 @@
 {% block content %}
 
 <main>
-    <section>
-        <div class="container">
-            <div>
-                <h1 class="display-4 mb-5 text-center">Création d'un compte K'Dance</h1>
-                <p><strong>Le titulaire du compte doit être un adulte responsable.</strong></p>
-            </div>
-            <form id="form-signup" name="form-signup" class="min-w-500 d-flex flex-column" method="post">
-                {% csrf_token %}
-                <div class="form-outline mb-4">
-                    <label class="form-label required" for="username">Nom d'utilisateur</label>
-                    <input type="text" id="username" class="form-control" required/>
-                    <div id="invalid-username" class="invalid-feedback"></div>                
-                </div>
-                <div class="row">
-                    <div class="col-6">
-                        <div class="form-outline mb-4">
-                            <label class="form-label required" for="firstname">Prénom</label>
-                            <input type="text" id="firstname" class="form-control" required/>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="form-outline mb-4">
-                          <label class="form-label required" for="lastname">Nom de famille</label>
-                          <input type="text" id="lastname" class="form-control" required/>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-6">
-                        <div class="form-outline mb-4">
-                            <label class="form-label required" for="phone">Téléphone</label>
-                            <input type="text" id="phone" class="form-control" required/>
-                            <div id="invalid-phone" class="invalid-feedback"></div>   
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="form-outline mb-4">
-                            <label class="form-label required" for="email">Email</label>
-                            <input type="text" id="email" class="form-control" required/>
-                            <div id="invalid-email" class="invalid-feedback"></div>   
-                        </div>
-                    </div>
-                </div>
-                <div class="form-outline mb-4">
-                    <label class="form-label required" for="address">Adresse</label>
-                    <textarea class="form-control" id="address" rows="3" required></textarea>
-                </div>
-                <div class="row">
-                    <div class="col-6">
-                        <div class="form-outline mb-4">
-                            <label class="form-label required" for="password">Mot de passe</label>
-                            <input type="password" id="password" class="form-control" required/>
-                            <div id="invalid-pwd" class="invalid-feedback"></div>   
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="form-outline mb-4">
-                          <label class="form-label required" for="password-confirmation">Confirmation du mot de passe</label>
-                          <input type="password" id="password-confirmation" class="form-control" required/>
-                          <div id="invalid-pwd-confirmation" class="invalid-feedback">Le mot de passe ne correspond pas !</div>   
-                        </div>
-                    </div>
-                </div>
-                <div id="message-error-signup" class="p-3 mb-2 bg-danger-subtle text-danger-emphasis d-none">
-                    Une erreur est survenue. Veuillez ré-essayer plus tard ou contacter K'Dance.
-                </div>
-                <button type="submit" class="btn btn-info mb-4" id="btn-signup">Créer un compte</button>
-                <div id="message-ok-signup" class="p-3 mb-2 bg-success-subtle text-success-emphasis d-none">
-                    Compte créé avec succès, vous pouvez désormais aller <a href="{% url 'login' %}">vous connecter</a>.
-                </div>
-            </form>
+  <section>
+    <div class="container">
+      <div>
+        <h1 class="display-4 mb-5 text-center">Création d'un compte K'Dance</h1>
+        <p><strong>Le titulaire du compte doit être un adulte responsable.</strong></p>
+      </div>
+      <form id="form-signup" name="form-signup" class="min-w-500 d-flex flex-column" method="post">
+        {% csrf_token %}
+        <div class="form-outline mb-4">
+          <label class="form-label required" for="username">Nom d'utilisateur</label>
+          <input type="text" id="username" class="form-control" required />
+          <div id="invalid-username" class="invalid-feedback"></div>
         </div>
-    </section>
-    <script type="text/javascript">
-        const usersUrl = "{% url 'api-users-list' %}"
-    </script>
-    <script src="{% static 'js/signup.js' %}"></script> 
+        <div class="row">
+          <div class="col-6">
+            <div class="form-outline mb-4">
+              <label class="form-label required" for="firstname">Prénom</label>
+              <input type="text" id="firstname" class="form-control" required />
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="form-outline mb-4">
+              <label class="form-label required" for="lastname">Nom de famille</label>
+              <input type="text" id="lastname" class="form-control" required />
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-6">
+            <div class="form-outline mb-4">
+              <label class="form-label required" for="phone">Téléphone</label>
+              <input type="text" id="phone" class="form-control" required />
+              <div id="invalid-phone" class="invalid-feedback"></div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="form-outline mb-4">
+              <label class="form-label required" for="email">Email</label>
+              <input type="text" id="email" class="form-control" required />
+              <div id="invalid-email" class="invalid-feedback"></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-outline mb-4">
+          <label class="form-label required" for="address">Adresse</label>
+          <textarea class="form-control" id="address" rows="3" required></textarea>
+        </div>
+        <div class="row">
+          <div class="col-6">
+            <div class="form-outline mb-4">
+              <label class="form-label required" for="password">Mot de passe</label>
+              <input type="password" id="password" class="form-control" required />
+              <div id="invalid-pwd" class="invalid-feedback"></div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="form-outline mb-4">
+              <label class="form-label required" for="password-confirmation">Confirmation du mot de passe</label>
+              <input type="password" id="password-confirmation" class="form-control" required />
+              <div id="invalid-pwd-confirmation" class="invalid-feedback">Le mot de passe ne correspond pas !</div>
+            </div>
+          </div>
+        </div>
+        <div id="message-error-signup" class="p-3 mb-2 bg-danger-subtle text-danger-emphasis d-none">
+          Une erreur est survenue. Veuillez ré-essayer plus tard ou contacter K'Dance.
+        </div>
+        <button type="submit" class="btn btn-info mb-4" id="btn-signup">Créer un compte</button>
+        <div id="message-ok-signup" class="p-3 mb-2 bg-success-subtle text-success-emphasis d-none">
+          Compte créé avec succès, vous pouvez désormais aller <a href="{% url 'login' %}">vous connecter</a>.
+        </div>
+      </form>
+    </div>
+  </section>
+  <script type="text/javascript">
+    const usersUrl = "{% url 'api-users-list' %}"
+  </script>
+  <script src="{% static 'js/signup.js' %}"></script>
 </main>
 
 {% endblock %}
-

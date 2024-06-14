@@ -32,7 +32,7 @@ class SeasonViewSet(
     DestroyModelMixin,
     GenericViewSet
 ):
-    queryset = Season.objects.all().order_by("-pk")
+    queryset = Season.objects.all().order_by("-year")
     serializer_class = SeasonSerializer
     http_method_names = ["get", "post", "patch", "delete"]
 

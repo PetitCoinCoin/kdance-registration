@@ -64,6 +64,9 @@ class Course(models.Model):
 
     def __repr__(self) -> str:
         return self.name
+    
+    class Meta:
+        unique_together = ("name", "season", "weekday", "start_hour")
 
 
 class Documents(models.Model):

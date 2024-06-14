@@ -15,7 +15,7 @@ User = get_user_model()
 class SeasonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Season
-        fields = ("year", "is_current")
+        fields = ("id", "year", "is_current")
 
 
 class TeacherSerializer(serializers.ModelSerializer):
