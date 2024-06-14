@@ -34,6 +34,7 @@ class SeasonViewSet(
 ):
     queryset = Season.objects.all().order_by("-pk")
     serializer_class = SeasonSerializer
+    http_method_names = ["get", "post", "patch", "delete"]
 
 
 class TeacherViewSet(
@@ -58,6 +59,7 @@ class CourseViewSet(
     GenericViewSet,
 ):
     serializer_class = CourseSerializer
+    http_method_names = ["get", "post", "patch", "delete"]
 
     def get_queryset(self):
         queryset = Course.objects.all()
@@ -77,6 +79,7 @@ class MemberViewSet(
 ):
     queryset = Member.objects.all().order_by("-pk")
     serializer_class = MemberSerializer
+    http_method_names = ["get", "post", "patch", "delete"]
 
     def create(self, request: Request, *a, **k) -> Response:
         serializer = self.get_serializer(data=request.data)

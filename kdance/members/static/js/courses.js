@@ -1,7 +1,8 @@
 $(document).ready(() => {
   getSeasons();
+  postSeason();
   getTeachers();
-  postTeachers();
+  postTeacher();
   putTeacher();
   deleteTeacher();
 });
@@ -25,6 +26,39 @@ function getSeasons() {
       //     $('#message-error-signup').removeAttr('hidden');
       // }
     }
+  });
+}
+
+function postSeason() {
+  $('#form-add-season').submit((event) => {
+    $('.invalid-feedback').removeClass('d-inline');
+    event.preventDefault();
+    const data = {
+      year: $('#year-add').val(),
+      is_current: $('#current-add').is(':checked'),
+    };
+    console.log(data)
+    $.ajax({
+      url: seasonsUrl,
+      type: 'POST',
+      contentType: 'application/json',
+      headers: { 'X-CSRFToken': csrftoken },
+      mode: 'same-origin',
+      data: JSON.stringify(data),
+      dataType: 'json',
+      success: () => {
+        event.currentTarget.submit();
+      },
+      error: (error) => {
+        // if (!error.responseJSON) {
+        //   $('#message-error-signup').removeAttr('hidden');
+        // }
+        if (error.responseJSON.year) {
+          $('#invalid-year-add').html(error.responseJSON.year[0]);
+          $('#invalid-year-add').addClass('d-inline');
+        }
+      }
+    });
   });
 }
 
@@ -59,7 +93,7 @@ function getTeachers() {
   });
 }
 
-function postTeachers() {
+function postTeacher() {
   $('#form-add-teacher').submit((event) => {
     $('.invalid-feedback').removeClass('d-inline');
     event.preventDefault();
@@ -83,7 +117,7 @@ function postTeachers() {
           $('#invalid-name-add').addClass('d-inline');
         }
       }
-    }); $
+    });
   });
 }
 
