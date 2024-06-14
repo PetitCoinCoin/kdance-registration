@@ -104,8 +104,9 @@ class UserCreateSerializer(UserBaseSerializer):
     @transaction.atomic
     def save(self, **kwargs: UserType) -> None:
         user: UserType = super().save(**kwargs)
-        payment = Payment(user=user, season=Season.objects.get(is_current=True))
-        payment.save()
+        if Season.objects.filter(is_current=True).exists():
+            payment = Payment(user=user, season=Season.objects.get(is_current=True))
+            payment.save()
 
 class UserSerializer(UserBaseSerializer):
     profile = ProfileSerializer(read_only=True)

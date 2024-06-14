@@ -5,7 +5,6 @@ from django.db import models, transaction
 
 class Season(models.Model):
     year = models.CharField(
-        primary_key=True,
         null=False,
         blank=False,
         max_length=9,
