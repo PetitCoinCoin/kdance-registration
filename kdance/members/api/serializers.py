@@ -21,11 +21,12 @@ class SeasonSerializer(serializers.ModelSerializer):
 class TeacherSerializer(serializers.ModelSerializer):
     class Meta:
         model = Teacher
-        fields = ("name",)
+        fields = ("id", "name")
 
     def validate_name(self, name: str) -> str:
         if Teacher.objects.filter(name__iexact=name).exists():
             raise serializers.ValidationError("Ce professeur existe déjà.")
+        return name
 
 
 class CourseSerializer(serializers.ModelSerializer):

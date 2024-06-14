@@ -46,6 +46,7 @@ class TeacherViewSet(
 ):
     queryset = Teacher.objects.all().order_by("pk")
     serializer_class = TeacherSerializer
+    http_method_names = ["get", "post", "patch", "delete"]
 
 
 class CourseViewSet(

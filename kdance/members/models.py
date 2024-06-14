@@ -33,7 +33,6 @@ class Season(models.Model):
 
 class Teacher(models.Model):
     name = models.CharField(
-        primary_key=True,
         unique=True,
         null=False,
         blank=False,
