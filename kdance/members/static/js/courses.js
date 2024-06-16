@@ -4,9 +4,9 @@ $(document).ready(() => {
   postSeason();
   getTeachers();
   postTeacher();
-  putTeacher();
+  patchTeacher();
   deleteTeacher();
-  postCourse();
+  createUpdateCourse();
   seasonSelect = document.querySelector('#season-select');
   seasonSelect.addEventListener('change', () => 
     onSeasonChange(seasonSelect.val(), seasonSelect[0].options[seasonSelect[0].selectedIndex].innerHTML)
@@ -14,7 +14,7 @@ $(document).ready(() => {
 });
 
 function populateWeekdays() {
-  weekdaySelectAdd = $('#course-weekday-add');
+  weekdaySelectAdd = $('#course-weekday');
   for (let key in WEEKDAY) {
     weekdaySelectAdd.append($('<option>', { value: key, text: WEEKDAY[key] }));
   }
@@ -29,9 +29,11 @@ function getSeasons() {
       data.map((season) => {
         let label = season.year;
         if (season.is_current) {
+          // TODO: modifier pour que ce soit au moment où on ouvre la modale (pour changer si edit)
           label += ' (en cours)'
-          $('#add-course-modal-title').html(`Ajouter un cours pour la saison ${season.year}`);
-          $('#course-season-add').val(season.id);
+          $('#course-modal-title').html(`Ajouter un cours pour la saison ${season.year}`);
+          $('#course-season').val(season.id);
+          getCourses(season.id);
         }
         seasonSelect.append($('<option>', { value: season.id, text: label, selected: season.is_current }));
       });
@@ -77,9 +79,42 @@ function postSeason() {
 }
 
 function onSeasonChange(seasonId, seasonYear) {
-  $('#add-course-modal-title').html(`Ajouter un cours pour la saison ${seasonYear}`);
-  $('#course-season-add').val(seasonId);
-  // trigger courses
+  // $('#course-modal-title').html(`Ajouter un cours pour la saison ${seasonYear}`);
+  // $('#course-season').val(seasonId);
+  getCourses(seasonId);
+}
+
+function getCourses(seasonId) {
+  $.ajax({
+    url: coursesUrl + `?season=${seasonId}`,
+    type: 'GET',
+    success: (data) => {
+      $('#courses-list').empty()
+      const listParent = document.querySelector('#courses-list');
+      const courseTemplate = document.querySelector('#course-item-template');
+      data.map((course) => {
+        const clone = courseTemplate.content.cloneNode(true);
+        let td = clone.querySelectorAll('td');
+        const startHour = course.start_hour.split(':');
+        const endHour = course.end_hour.split(':');
+        td[0].innerHTML = course.name;
+        td[1].innerHTML = course.teacher.name;
+        td[2].innerHTML = `${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]}-${endHour[0]}h${endHour[1]}`;
+        td[3].innerHTML = course.price + '€';
+        let buttons = clone.querySelectorAll('button');        
+        buttons[0].id = `edit-course-${course.id}-btn`;
+        buttons[0].dataset.bsCid = course.id;
+        buttons[1].id = `delete-course-${course.id}-btn`;
+        buttons[1].dataset.bsCid = course.id;
+        listParent.appendChild(clone);
+      });
+    },
+    error: (error) => {
+      // if (!error.responseJSON) {
+      //     $('#message-error-signup').removeAttr('hidden');
+      // }
+    }
+  });
 }
 
 function getTeachers() {
@@ -89,9 +124,9 @@ function getTeachers() {
     success: (data) => {
       const listParent = document.querySelector('#teachers-list');
       const teacherTemplate = document.querySelector('#teacher-item-template');
-      teacherSelectAdd = $('#course-teacher-add');
+      teacherSelect = $('#course-teacher');
       data.map((teacher) => {
-        teacherSelectAdd.append($('<option>', { value: teacher.id, text: teacher.name }));
+        teacherSelect.append($('<option>', { value: teacher.id, text: teacher.name }));
         const clone = teacherTemplate.content.cloneNode(true);
         let name = clone.querySelector('span');
         name.textContent = teacher.name;
@@ -143,7 +178,7 @@ function postTeacher() {
   });
 }
 
-function putTeacher() {
+function patchTeacher() {
   const editTeacherModal = document.getElementById('edit-teacher-modal');
   if (editTeacherModal) {
     editTeacherModal.addEventListener('show.bs.modal', event => {
@@ -155,13 +190,13 @@ function putTeacher() {
       $('#form-edit-teacher').submit((event) => {
         $('.invalid-feedback').removeClass('d-inline');
         event.preventDefault();
-        putTeacherRequest(teacherId, event);
+        patchTeacherRequest(teacherId, event);
       });
     })
   }
 }
 
-function putTeacherRequest(teacher, event) {
+function patchTeacherRequest(teacher, event) {
   $.ajax({
     url: teachersUrl + teacher + '/',
     type: 'PATCH',
@@ -218,27 +253,71 @@ function deleteTeacherRequest(teacher) {
   });
 }
 
+function createUpdateCourse() {
+  const courseModal = document.getElementById('course-modal');
+  if (courseModal) {
+    courseModal.addEventListener('show.bs.modal', event => {
+      const button = event.relatedTarget;
+      const course = button.getAttribute('data-bs-cid');
+      if (course !== null) {
+        getCourse(course);
+        $('#course-btn').html('Modifier');
+        patchCourse(course);
+      } else {
+        $('#course-btn').html('Ajouter');
+        postCourse();
+      }
+    });
+  }
+}
+
+function getCourse(course) {
+  $.ajax({
+    url: coursesUrl + course + '/',
+    type: 'GET',
+    success: (data) => {
+      seasonYear = seasonSelect[0].options[seasonSelect[0].selectedIndex].innerHTML
+      $('#course-modal-title').html(`Modifier le cours '${data.name}' pour la saison ${seasonYear}`);
+      $('#course-name').val(data.name);
+      $('#course-teacher').val(data.teacher.id);
+      $('#course-price').val(data.price);
+      $('#course-weekday').val(data.weekday);
+      $('#course-start').val(data.start_hour.substring(0, 5));
+      $('#course-end').val(data.end_hour.substring(0, 5));
+    },
+    error: (error) => {
+      // if (!error.responseJSON) {
+      //     $('#message-error-signup').removeAttr('hidden');
+      // }
+    }
+  });
+}
+
+function getCourseData() {
+  return {
+    name: $('#course-name').val(),
+    teacher: $('#course-teacher').val(),
+    season: seasonSelect.val(),
+    price: $('#course-price').val(),
+    weekday: $('#course-weekday').val(),
+    start_hour: $('#course-start').val(),
+    end_hour: $('#course-end').val(),
+  }
+}
+
 function postCourse() {
-  $('#form-add-course').submit((event) => {
+  seasonYear = seasonSelect[0].options[seasonSelect[0].selectedIndex].innerHTML
+  $('#course-modal-title').html(`Ajouter un cours pour la saison ${seasonYear}`);
+  $('#form-course').submit((event) => {
     $('.invalid-feedback').removeClass('d-inline');
     event.preventDefault();
-    const data = {
-      name: $('#course-name-add').val(),
-      teacher: $('#course-teacher-add').val(),
-      season: $('#course-season-add').val(),
-      price: $('#course-price-add').val(),
-      weekday: $('#course-weekday-add').val(),
-      start_hour: $('#course-start-add').val(),
-      end_hour: $('#course-end-add').val(),
-    };
-    console.log(data)
     $.ajax({
       url: coursesUrl,
       type: 'POST',
       contentType: 'application/json',
       headers: { 'X-CSRFToken': csrftoken },
       mode: 'same-origin',
-      data: JSON.stringify(data),
+      data: JSON.stringify(getCourseData()),
       dataType: 'json',
       success: () => {
         event.currentTarget.submit();
@@ -250,4 +329,28 @@ function postCourse() {
       }
     });
   });
+}
+
+function patchCourse(course) {
+  $('#form-course').submit((event) => {
+    $('.invalid-feedback').removeClass('d-inline');
+    event.preventDefault();
+    $.ajax({
+      url: coursesUrl + course + '/',
+      type: 'PATCH',
+      contentType: 'application/json',
+      headers: { 'X-CSRFToken': csrftoken },
+      mode: 'same-origin',
+      data: JSON.stringify(getCourseData()),
+      dataType: 'json',
+      success: () => {
+        event.currentTarget.submit();
+      },
+      error: (error) => {
+        // if (!error.responseJSON) {
+        //   $('#message-error-signup').removeAttr('hidden');
+        // }
+      }
+    });
+  }); 
 }

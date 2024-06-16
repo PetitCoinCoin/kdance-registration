@@ -105,59 +105,58 @@
       </div>
     </div>
 
-    <div class="modal fade" id="add-course-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="course-modal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h4 class="modal-title" id="add-course-modal-title">Ajouter un cours pour la saison</h4>
+            <h4 class="modal-title" id="course-modal-title">Ajouter un cours pour la saison</h4>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <form id="form-add-course" name="form-add-course">
+          <form id="form-course" name="form-course">
             <div class="modal-body">
-              <input type="text" id="course-season-add" class="form-control" required hidden/>
               <div class="form-outline mb-4">
-                <label class="form-label required" for="course-name-add">Nom du cours</label>
-                <input type="text" id="course-name-add" class="form-control" maxlength="150" required/>
-                <div id="invalid-course-name-add" class="invalid-feedback"></div>   
+                <label class="form-label required" for="course-name">Nom du cours</label>
+                <input type="text" id="course-name" class="form-control" maxlength="150" required/>
+                <div id="invalid-course-name" class="invalid-feedback"></div>   
               </div>
               <div class="row">
                 <div class="col-4">
                   <div class="form-outline mb-4">
-                    <label class="form-label required" for="course-weekday-add">Jour de la semaine</label>
-                    <select id="course-weekday-add" class="form-select"></select>
+                    <label class="form-label required" for="course-weekday">Jour de la semaine</label>
+                    <select id="course-weekday" class="form-select"></select>
                   </div>
                 </div>
                 <div class="col-4">
                   <div class="form-outline mb-4">
-                    <label class="form-label required" for="course-start-add">Heure de début</label>
-                    <input type="time" id="course-start-add" class="form-control" required/> 
+                    <label class="form-label required" for="course-start">Heure de début</label>
+                    <input type="time" id="course-start" class="form-control" required/> 
                   </div>
                 </div>
                 <div class="col-4">
                   <div class="form-outline mb-4">
-                    <label class="form-label required" for="course-end-add">Heure de fin</label>
-                    <input type="time" id="course-end-add" class="form-control" required/> 
+                    <label class="form-label required" for="course-end">Heure de fin</label>
+                    <input type="time" id="course-end" class="form-control" required/> 
                   </div>
                 </div>
               </div>
               <div class="row">
                 <div class="col-8">
                   <div class="form-outline mb-4">
-                    <label class="form-label required" for="course-teacher-add">Professeur</label>
-                    <select id="course-teacher-add" class="form-select"></select>
+                    <label class="form-label required" for="course-teacher">Professeur</label>
+                    <select id="course-teacher" class="form-select"></select>
                   </div>
                 </div>
                 <div class="col-4">
                   <div class="form-outline mb-4">
-                    <label class="form-label required" for="course-price-add">Tarif (€)</label>
-                    <input type="number" id="course-price-add" class="form-control" required/> 
+                    <label class="form-label required" for="course-price">Tarif (€)</label>
+                    <input type="number" id="course-price" class="form-control" required/> 
                   </div>
                 </div>
               </div>              
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-              <button id="add-course-btn" type="submit" class="btn btn-info">Ajouter</button>
+              <button id="course-btn" type="submit" class="btn btn-info">Ajouter</button>
             </div>
           </form>
         </div>
@@ -210,9 +209,23 @@
 							<div id="courses-courses" class="accordion-collapse show collapsed template-data"
 								data-bs-parent="#courses-accordion">
 								<div class="accordion-body">
-									<ul id="courses-list" class="list-group mb-3">
-									</ul>
-                  <button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#add-course-modal">
+									<div class="table-responsive">
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th scope="col">Nom</th>
+                          <th scope="col">Prof</th>
+                          <th scope="col">Créneau</th>
+                          <th scope="col" class="text-center">Tarif</th>
+                          <th scope="col" class="text-center">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody id="courses-list">
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  <button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#course-modal">
                     <i class="bi-patch-plus" style="color: purple;"></i>
                     Ajouter un nouveau cours
                   </button>
@@ -222,6 +235,7 @@
 					</div>
 				</div>
 
+        <!-- Template -->
 				<template id="teacher-item-template">
 					<li class="list-group-item d-flex justify-content-between align-items-center">
 						<div>
@@ -238,6 +252,23 @@
 						</div>
 					</li>
 				</template>
+
+        <template id="course-item-template">
+          <tr>     
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="text-center"></td>
+            <td class="text-center">
+              <button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#course-modal">
+								<i class="bi-pencil-fill"></i>
+							</button>
+							<button class="btn btn-outline-danger" type="button" data-bs-toggle="modal" data-bs-target="#delete-course-modal">
+								<i class="bi-trash3-fill"></i>
+							</button>
+            </td>
+          </tr>
+        </template>
 			</div>
 			{% else %}
 			<div class="text-center">

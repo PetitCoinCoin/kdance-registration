@@ -44,6 +44,7 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = (
+            "id",
             "name",
             "teacher",
             "season",
@@ -52,6 +53,10 @@ class CourseSerializer(serializers.ModelSerializer):
             "start_hour",
             "end_hour",
         )
+
+
+class CourseRetrieveSerializer(CourseSerializer):
+    teacher = TeacherSerializer()
 
 
 class MemberSerializer(serializers.ModelSerializer):

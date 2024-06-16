@@ -5,6 +5,7 @@ from members.models import (
     Teacher,
 )
 from members.api.serializers import (
+    CourseRetrieveSerializer,
     CourseSerializer,
     MemberSerializer,
     SeasonSerializer,
@@ -58,14 +59,18 @@ class CourseViewSet(
     DestroyModelMixin,
     GenericViewSet,
 ):
-    serializer_class = CourseSerializer
     http_method_names = ["get", "post", "patch", "delete"]
+
+    def get_serializer_class(self):
+        if self.request.method.lower() == "get":
+            return CourseRetrieveSerializer
+        return CourseSerializer
 
     def get_queryset(self):
         queryset = Course.objects.all()
         season = self.request.query_params.get("season")
         if season:
-            queryset = queryset.filter(season__year=season)
+            queryset = queryset.filter(season__id=season)
         return queryset.order_by("-season__year", "weekday")
 
 
