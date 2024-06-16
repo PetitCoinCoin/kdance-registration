@@ -235,11 +235,12 @@ function createUpdateCourse() {
       if (course !== null) {
         getCourse(course);
         $('#course-btn').html('Modifier');
-        patchCourse(course);
       } else {
+        seasonYear = seasonSelect[0].options[seasonSelect[0].selectedIndex].innerHTML
+        $('#course-modal-title').html(`Ajouter un cours pour la saison ${seasonYear}`);
         $('#course-btn').html('Ajouter');
-        postCourse();
       }
+      postOrPatchCourse(course);
     });
   }
 }
@@ -266,31 +267,28 @@ function getCourse(course) {
   });
 }
 
-function getCourseData() {
-  return {
-    name: $('#course-name').val(),
-    teacher: $('#course-teacher').val(),
-    season: seasonSelect.val(),
-    price: $('#course-price').val(),
-    weekday: $('#course-weekday').val(),
-    start_hour: $('#course-start').val(),
-    end_hour: $('#course-end').val(),
-  }
-}
-
-function postCourse() {
-  seasonYear = seasonSelect[0].options[seasonSelect[0].selectedIndex].innerHTML
-  $('#course-modal-title').html(`Ajouter un cours pour la saison ${seasonYear}`);
+function postOrPatchCourse(course) {
+  const method = course === null ? 'POST' : 'PATCH';
+  const url = course === null ? coursesUrl : coursesUrl + course + '/';
   $('#form-course').submit((event) => {
     $('.invalid-feedback').removeClass('d-inline');
     event.preventDefault();
+    const data = {
+      name: $('#course-name').val(),
+      teacher: $('#course-teacher').val(),
+      season: seasonSelect.val(),
+      price: $('#course-price').val(),
+      weekday: $('#course-weekday').val(),
+      start_hour: $('#course-start').val(),
+      end_hour: $('#course-end').val(),
+    }
     $.ajax({
-      url: coursesUrl,
-      type: 'POST',
+      url: url,
+      type: method,
       contentType: 'application/json',
       headers: { 'X-CSRFToken': csrftoken },
       mode: 'same-origin',
-      data: JSON.stringify(getCourseData()),
+      data: JSON.stringify(data),
       dataType: 'json',
       success: () => {
         event.currentTarget.submit();
@@ -302,28 +300,4 @@ function postCourse() {
       }
     });
   });
-}
-
-function patchCourse(course) {
-  $('#form-course').submit((event) => {
-    $('.invalid-feedback').removeClass('d-inline');
-    event.preventDefault();
-    $.ajax({
-      url: coursesUrl + course + '/',
-      type: 'PATCH',
-      contentType: 'application/json',
-      headers: { 'X-CSRFToken': csrftoken },
-      mode: 'same-origin',
-      data: JSON.stringify(getCourseData()),
-      dataType: 'json',
-      success: () => {
-        event.currentTarget.submit();
-      },
-      error: (error) => {
-        // if (!error.responseJSON) {
-        //   $('#message-error-signup').removeAttr('hidden');
-        // }
-      }
-    });
-  }); 
 }
