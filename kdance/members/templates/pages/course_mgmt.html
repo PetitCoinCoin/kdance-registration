@@ -5,51 +5,9 @@
 {% block content %}
 
 <main>
-	<section>
+  <section>
     <!-- Modal -->
     {% csrf_token %}
-    <div class="modal fade" id="teacher-modal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title" id="teacher-modal-title"></h4>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <form id="form-teacher" name="form-teacher">
-            <div class="modal-body">
-              <div class="form-outline mb-4">
-                <label class="form-label required" for="teacher-name">Nom du professeur</label>
-                <input type="text" id="teacher-name" class="form-control" maxlength="30" required/>
-                <div id="invalid-teacher-name" class="invalid-feedback"></div>   
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-              <button id="teacher-btn" type="submit" class="btn btn-info">Ajouter</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-    
-    <div class="modal fade" id="delete-teacher-modal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title">Supprimer un professeur</h4>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            Etes-vous sur.e de vouloir supprimer ce professeur ?
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-            <button id="delete-teacher-btn" type="submit" class="btn btn-danger">Supprimer</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div class="modal fade" id="add-season-modal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -61,8 +19,8 @@
             <div class="modal-body">
               <div class="form-outline mb-4">
                 <label class="form-label required" for="year-add">Nouvelle saison (format 20XX-20XY)</label>
-                <input type="text" id="year-add" class="form-control" maxlength="9" required/>
-                <div id="invalid-year-add" class="invalid-feedback"></div>   
+                <input type="text" id="year-add" class="form-control" maxlength="9" required />
+                <div id="invalid-year-add" class="invalid-feedback"></div>
               </div>
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" value="" id="current-add" checked>
@@ -70,11 +28,35 @@
                   Saison courante ?
                 </label>
               </div>
-              
+
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
               <button id="add-season-btn" type="submit" class="btn btn-info">Ajouter</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="teacher-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="teacher-modal-title"></h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form id="form-teacher" name="form-teacher">
+            <div class="modal-body">
+              <div class="form-outline mb-4">
+                <label class="form-label required" for="teacher-name">Nom du professeur</label>
+                <input type="text" id="teacher-name" class="form-control" maxlength="30" required />
+                <div id="invalid-teacher-name" class="invalid-feedback"></div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+              <button id="teacher-btn" type="submit" class="btn btn-info">Ajouter</button>
             </div>
           </form>
         </div>
@@ -92,8 +74,8 @@
             <div class="modal-body">
               <div class="form-outline mb-4">
                 <label class="form-label required" for="course-name">Nom du cours</label>
-                <input type="text" id="course-name" class="form-control" maxlength="150" required/>
-                <div id="invalid-course-name" class="invalid-feedback"></div>   
+                <input type="text" id="course-name" class="form-control" maxlength="150" required />
+                <div id="invalid-course-name" class="invalid-feedback"></div>
               </div>
               <div class="row">
                 <div class="col-4">
@@ -105,13 +87,13 @@
                 <div class="col-4">
                   <div class="form-outline mb-4">
                     <label class="form-label required" for="course-start">Heure de début</label>
-                    <input type="time" id="course-start" class="form-control" required/> 
+                    <input type="time" id="course-start" class="form-control" required />
                   </div>
                 </div>
                 <div class="col-4">
                   <div class="form-outline mb-4">
                     <label class="form-label required" for="course-end">Heure de fin</label>
-                    <input type="time" id="course-end" class="form-control" required/> 
+                    <input type="time" id="course-end" class="form-control" required />
                   </div>
                 </div>
               </div>
@@ -125,10 +107,10 @@
                 <div class="col-4">
                   <div class="form-outline mb-4">
                     <label class="form-label required" for="course-price">Tarif (€)</label>
-                    <input type="number" id="course-price" class="form-control" required/> 
+                    <input type="number" id="course-price" class="form-control" required />
                   </div>
                 </div>
-              </div>              
+              </div>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
@@ -139,53 +121,74 @@
       </div>
     </div>
 
+    <div class="modal fade" id="delete-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="delete-modal-title"></h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            Etes-vous sur.e de vouloir supprimer ce professeur ?
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button id="delete-btn" type="submit" class="btn btn-danger">Supprimer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
     <!-- Content -->
-		<div class="container">
-			<div class="text-center">
-				<h1 class="display-4 mb-5">Gestion des cours</h1>
-			</div>
-			{% if user.is_authenticated and user.is_superuser %}
-			<div class="container">
-				<div class="d-flex justify-content-between mb-5">
-					<select id="season-select" class="form-select max-w-300">
-					</select>
-					<button id="add-season-btn" class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#add-season-modal">
-						<i class="bi-patch-plus" style="color: purple;"></i>
-						Ajouter une nouvelle saison
-					</button>
-				</div>
-				<div class="row">
-					<div class="accordion" id="courses-accordion">
-						<div class="accordion-item">
-							<h2 class="accordion-header">
-								<button class="accordion-button" type="button" data-bs-toggle="collapse" aria-expanded="false"
-									data-bs-target="#courses-teachers" aria-controls="courses-teachers">
-									<span>Professeurs</span>
-								</button>
-							</h2>
-							<div id="courses-teachers" class="accordion-collapse collapse collapsed template-data"
-								data-bs-parent="#courses-accordion">
-								<div class="accordion-body">
-									<ul id="teachers-list" class="list-group mb-3">
-									</ul>
-                  <button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#teacher-modal">
+    <div class="container">
+      <div class="text-center">
+        <h1 class="display-4 mb-5">Gestion des cours</h1>
+      </div>
+      {% if user.is_authenticated and user.is_superuser %}
+      <div class="container">
+        <div class="d-flex justify-content-between mb-5">
+          <select id="season-select" class="form-select max-w-300">
+          </select>
+          <button id="add-season-btn" class="btn btn-outline-info" type="button" data-bs-toggle="modal"
+            data-bs-target="#add-season-modal">
+            <i class="bi-patch-plus" style="color: purple;"></i>
+            Ajouter une nouvelle saison
+          </button>
+        </div>
+        <div class="row">
+          <div class="accordion" id="courses-accordion">
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" aria-expanded="false"
+                  data-bs-target="#courses-teachers" aria-controls="courses-teachers">
+                  <span>Professeurs</span>
+                </button>
+              </h2>
+              <div id="courses-teachers" class="accordion-collapse collapse collapsed template-data"
+                data-bs-parent="#courses-accordion">
+                <div class="accordion-body">
+                  <ul id="teachers-list" class="list-group mb-3">
+                  </ul>
+                  <button class="btn btn-outline-info" type="button" data-bs-toggle="modal"
+                    data-bs-target="#teacher-modal">
                     <i class="bi-patch-plus" style="color: purple;"></i>
                     Ajouter un nouveau professeur
                   </button>
-								</div>
-							</div>
-						</div>
-						<div class="accordion-item">
-							<h2 class="accordion-header">
-								<button class="accordion-button" type="button" data-bs-toggle="collapse" aria-expanded="true"
-									data-bs-target="#courses-courses" aria-controls="courses-courses">
-									<span>Cours</span>
-								</button>
-							</h2>
-							<div id="courses-courses" class="accordion-collapse show collapsed template-data"
-								data-bs-parent="#courses-accordion">
-								<div class="accordion-body">
-									<div class="table-responsive">
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" aria-expanded="true"
+                  data-bs-target="#courses-courses" aria-controls="courses-courses">
+                  <span>Cours</span>
+                </button>
+              </h2>
+              <div id="courses-courses" class="accordion-collapse show collapsed template-data"
+                data-bs-parent="#courses-accordion">
+                <div class="accordion-body">
+                  <div class="table-responsive">
                     <table class="table">
                       <thead>
                         <tr>
@@ -200,66 +203,68 @@
                       </tbody>
                     </table>
                   </div>
-                  
-                  <button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#course-modal">
+
+                  <button class="btn btn-outline-info" type="button" data-bs-toggle="modal"
+                    data-bs-target="#course-modal">
                     <i class="bi-patch-plus" style="color: purple;"></i>
                     Ajouter un nouveau cours
                   </button>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- Template -->
-				<template id="teacher-item-template">
-					<li class="list-group-item d-flex justify-content-between align-items-center">
-						<div>
-							<img height="30">
-							<span></span>
-						</div>
-						<div>
-							<button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#teacher-modal">
-								<i class="bi-pencil-fill"></i>Modifier
-							</button>
-							<button class="btn btn-outline-danger" type="button" data-bs-toggle="modal" data-bs-target="#delete-teacher-modal">
-								<i class="bi-trash3-fill"></i>Supprimer
-							</button>
-						</div>
-					</li>
-				</template>
+        <template id="teacher-item-template">
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <img height="30">
+              <span></span>
+            </div>
+            <div>
+              <button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#teacher-modal">
+                <i class="bi-pencil-fill"></i>Modifier
+              </button>
+              <button class="btn btn-outline-danger" type="button" data-bs-toggle="modal"
+                data-bs-target="#delete-modal">
+                <i class="bi-trash3-fill"></i>Supprimer
+              </button>
+            </div>
+          </li>
+        </template>
 
         <template id="course-item-template">
-          <tr>     
+          <tr>
             <td></td>
             <td></td>
             <td></td>
             <td class="text-center"></td>
             <td class="text-center">
               <button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#course-modal">
-								<i class="bi-pencil-fill"></i>
-							</button>
-							<button class="btn btn-outline-danger" type="button" data-bs-toggle="modal" data-bs-target="#delete-course-modal">
-								<i class="bi-trash3-fill"></i>
-							</button>
+                <i class="bi-pencil-fill"></i>
+              </button>
+              <button class="btn btn-outline-danger" type="button" data-bs-toggle="modal" data-bs-target="#delete-modal">
+                <i class="bi-trash3-fill"></i>
+              </button>
             </td>
           </tr>
         </template>
-			</div>
-			{% else %}
-			<div class="text-center">
-				<h4 class="display-4 mb-5">Oh oh, vous n'avez rien à faire là !</h4>
-			</div>
-			{% endif %}
-		</div>
-	</section>
-	<script type="text/javascript">
-		const coursesUrl = "{% url 'api-courses-list' %}"
-		const seasonsUrl = "{% url 'api-seasons-list' %}"
-		const teachersUrl = "{% url 'api-teachers-list' %}"
+      </div>
+      {% else %}
+      <div class="text-center">
+        <h4 class="display-4 mb-5">Oh oh, vous n'avez rien à faire là !</h4>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+  <script type="text/javascript">
+    const coursesUrl = "{% url 'api-courses-list' %}"
+    const seasonsUrl = "{% url 'api-seasons-list' %}"
+    const teachersUrl = "{% url 'api-teachers-list' %}"
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-	</script>
-	<script src="{% static 'js/courses.js' %}"></script>
+  </script>
+  <script src="{% static 'js/courses.js' %}"></script>
 </main>
 
 {% endblock content %}

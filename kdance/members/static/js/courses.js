@@ -4,8 +4,8 @@ $(document).ready(() => {
   postSeason();
   getTeachers();
   createUpdateTeacher();
-  deleteTeacher();
   createUpdateCourse();
+  deleteItem();
   seasonSelect = document.querySelector('#season-select');
   seasonSelect.addEventListener('change', () => 
     onSeasonChange(seasonSelect.val())
@@ -193,39 +193,6 @@ function postOrPatchTeacher(teacher) {
   });
 }
 
-function deleteTeacher() {
-  const deleteTeacherModal = document.getElementById('delete-teacher-modal');
-  if (deleteTeacherModal) {
-    deleteTeacherModal.addEventListener('show.bs.modal', event => {
-      const button = event.relatedTarget;
-      const teacher = button.getAttribute('data-bs-tname');
-      const teacherId = button.getAttribute('data-bs-tId');
-      const modalBody = deleteTeacherModal.querySelector('.modal-body');
-      modalBody.textContent = `Etes-vous sur.e de vouloir supprimer ${teacher} de la liste des professeurs ?`;
-      $(document).on("click", "#delete-teacher-btn", function(){
-        deleteTeacherRequest(teacherId);
-      });
-    });
-  }
-}
-
-function deleteTeacherRequest(teacher) {
-  $.ajax({
-    url: teachersUrl + teacher,
-    type: 'DELETE',
-    headers: { 'X-CSRFToken': csrftoken },
-    mode: 'same-origin',
-    success: () => {
-      location.reload();
-    },
-    error: (error) => {
-      // if (!error.responseJSON) {
-      //   $('#message-error-signup').removeAttr('hidden');
-      // }
-    }
-  });
-}
-
 function createUpdateCourse() {
   const courseModal = document.getElementById('course-modal');
   if (courseModal) {
@@ -233,7 +200,7 @@ function createUpdateCourse() {
       const button = event.relatedTarget;
       const course = button.getAttribute('data-bs-cid');
       if (course !== null) {
-        getCourse(course);
+        getCourse(course, null);
         $('#course-btn').html('Modifier');
       } else {
         seasonYear = seasonSelect[0].options[seasonSelect[0].selectedIndex].innerHTML
@@ -245,13 +212,16 @@ function createUpdateCourse() {
   }
 }
 
-function getCourse(course) {
+function getCourse(course, deleteModalBody) {
   $.ajax({
     url: coursesUrl + course + '/',
     type: 'GET',
     success: (data) => {
       seasonYear = seasonSelect[0].options[seasonSelect[0].selectedIndex].innerHTML
       $('#course-modal-title').html(`Modifier le cours '${data.name}' pour la saison ${seasonYear}`);
+      if (deleteModalBody !== null) {
+        deleteModalBody.textContent = `Etes-vous sur.e de vouloir supprimer le cours '${data.name}' pour la saison ${seasonYear} ?`;
+      }
       $('#course-name').val(data.name);
       $('#course-teacher').val(data.teacher.id);
       $('#course-price').val(data.price);
@@ -300,4 +270,43 @@ function postOrPatchCourse(course) {
       }
     });
   });
+}
+
+function deleteItem() {
+  const deleteModal = document.getElementById('delete-modal');
+  if (deleteModal) {
+    deleteModal.addEventListener('show.bs.modal', event => {
+      const button = event.relatedTarget;
+      const teacher = button.getAttribute('data-bs-tname');
+      const teacherId = button.getAttribute('data-bs-tId');
+      const courseId = button.getAttribute('data-bs-cid');
+      const modalBody = deleteModal.querySelector('.modal-body');
+      if (teacherId !== null) {
+        // Teacher deletion
+        $('#delete-modal-title').html('Supprimer un professeur');
+        modalBody.textContent = `Etes-vous sur.e de vouloir supprimer ${teacher} de la liste des professeurs ?`;
+      } else {
+        // Course deletion
+        $('#delete-modal-title').html('Supprimer un cours');
+        getCourse(courseId, modalBody);
+      }
+      const url = teacherId !== null ? teachersUrl + teacherId : coursesUrl + courseId;
+      $(document).on("click", "#delete-btn", function(){
+        $.ajax({
+          url: url,
+          type: 'DELETE',
+          headers: { 'X-CSRFToken': csrftoken },
+          mode: 'same-origin',
+          success: () => {
+            location.reload();
+          },
+          error: (error) => {
+            // if (!error.responseJSON) {
+            //   $('#message-error-signup').removeAttr('hidden');
+            // }
+          }
+        });
+      });
+    });
+  }
 }
