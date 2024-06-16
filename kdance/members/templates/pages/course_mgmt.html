@@ -8,48 +8,24 @@
 	<section>
     <!-- Modal -->
     {% csrf_token %}
-    <div class="modal fade" id="add-teacher-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="teacher-modal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h4 class="modal-title">Ajouter un professeur</h4>
+            <h4 class="modal-title" id="teacher-modal-title"></h4>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <form id="form-add-teacher" name="form-add-teacher">
+          <form id="form-teacher" name="form-teacher">
             <div class="modal-body">
               <div class="form-outline mb-4">
-                <label class="form-label required" for="name-add">Nom du professeur</label>
-                <input type="text" id="name-add" class="form-control" maxlength="30" required/>
-                <div id="invalid-name-add" class="invalid-feedback"></div>   
+                <label class="form-label required" for="teacher-name">Nom du professeur</label>
+                <input type="text" id="teacher-name" class="form-control" maxlength="30" required/>
+                <div id="invalid-teacher-name" class="invalid-feedback"></div>   
               </div>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-              <button id="add-teacher-btn" type="submit" class="btn btn-info">Ajouter</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal fade" id="edit-teacher-modal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title">Modifier un professeur</h4>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <form id="form-edit-teacher" name="form-edit-teacher">
-            <div class="modal-body">
-              <div class="form-outline mb-4">
-                <label class="form-label required" for="name-edit">Nom du professeur</label>
-                <input type="text" id="name-edit" class="form-control" maxlength="30" required/>
-                <div id="invalid-name-edit" class="invalid-feedback"></div>   
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-              <button id="edit-teacher-btn" type="submit" class="btn btn-info">Enregistrer</button>
+              <button id="teacher-btn" type="submit" class="btn btn-info">Ajouter</button>
             </div>
           </form>
         </div>
@@ -109,7 +85,7 @@
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h4 class="modal-title" id="course-modal-title">Ajouter un cours pour la saison</h4>
+            <h4 class="modal-title" id="course-modal-title"></h4>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <form id="form-course" name="form-course">
@@ -156,7 +132,7 @@
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-              <button id="course-btn" type="submit" class="btn btn-info">Ajouter</button>
+              <button id="course-btn" type="submit" class="btn btn-info"></button>
             </div>
           </form>
         </div>
@@ -192,7 +168,7 @@
 								<div class="accordion-body">
 									<ul id="teachers-list" class="list-group mb-3">
 									</ul>
-                  <button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#add-teacher-modal">
+                  <button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#teacher-modal">
                     <i class="bi-patch-plus" style="color: purple;"></i>
                     Ajouter un nouveau professeur
                   </button>
@@ -243,7 +219,7 @@
 							<span></span>
 						</div>
 						<div>
-							<button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#edit-teacher-modal">
+							<button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#teacher-modal">
 								<i class="bi-pencil-fill"></i>Modifier
 							</button>
 							<button class="btn btn-outline-danger" type="button" data-bs-toggle="modal" data-bs-target="#delete-teacher-modal">

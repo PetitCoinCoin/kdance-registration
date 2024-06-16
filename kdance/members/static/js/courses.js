@@ -3,13 +3,12 @@ $(document).ready(() => {
   getSeasons();
   postSeason();
   getTeachers();
-  postTeacher();
-  patchTeacher();
+  createUpdateTeacher();
   deleteTeacher();
   createUpdateCourse();
   seasonSelect = document.querySelector('#season-select');
   seasonSelect.addEventListener('change', () => 
-    onSeasonChange(seasonSelect.val(), seasonSelect[0].options[seasonSelect[0].selectedIndex].innerHTML)
+    onSeasonChange(seasonSelect.val())
   );
 });
 
@@ -29,10 +28,6 @@ function getSeasons() {
       data.map((season) => {
         let label = season.year;
         if (season.is_current) {
-          // TODO: modifier pour que ce soit au moment où on ouvre la modale (pour changer si edit)
-          label += ' (en cours)'
-          $('#course-modal-title').html(`Ajouter un cours pour la saison ${season.year}`);
-          $('#course-season').val(season.id);
           getCourses(season.id);
         }
         seasonSelect.append($('<option>', { value: season.id, text: label, selected: season.is_current }));
@@ -78,9 +73,7 @@ function postSeason() {
   });
 }
 
-function onSeasonChange(seasonId, seasonYear) {
-  // $('#course-modal-title').html(`Ajouter un cours pour la saison ${seasonYear}`);
-  // $('#course-season').val(seasonId);
+function onSeasonChange(seasonId) {
   getCourses(seasonId);
 }
 
@@ -150,17 +143,39 @@ function getTeachers() {
   });
 }
 
-function postTeacher() {
-  $('#form-add-teacher').submit((event) => {
+function createUpdateTeacher() {
+  const teacherModal = document.getElementById('teacher-modal');
+  if (teacherModal) {
+    teacherModal.addEventListener('show.bs.modal', event => {
+      const button = event.relatedTarget;
+      const teacher = button.getAttribute('data-bs-Tid');
+      const teacherName = button.getAttribute('data-bs-Tname');
+      if (teacher !== null) {
+        $('#teacher-modal-title').html('Modifier un professeur');
+        $('#teacher-btn').html('Modifier');
+        $('#teacher-name').val(teacherName);
+      } else {
+        $('#teacher-modal-title').html('Ajouter un professeur');
+        $('#teacher-btn').html('Ajouter');
+      }
+      postOrPatchTeacher(teacher);
+    });
+  }
+}
+
+function postOrPatchTeacher(teacher) {
+  const method = teacher === null ? 'POST' : 'PATCH';
+  const url = teacher === null ? teachersUrl : teachersUrl + teacher + '/';
+  $('#form-teacher').submit((event) => {
     $('.invalid-feedback').removeClass('d-inline');
     event.preventDefault();
     $.ajax({
-      url: teachersUrl,
-      type: 'POST',
+      url: url,
+      type: method,
       contentType: 'application/json',
       headers: { 'X-CSRFToken': csrftoken },
       mode: 'same-origin',
-      data: JSON.stringify({ name: $('#name-add').val() }),
+      data: JSON.stringify({ name: $('#teacher-name').val() }),
       dataType: 'json',
       success: () => {
         event.currentTarget.submit();
@@ -170,54 +185,12 @@ function postTeacher() {
         //   $('#message-error-signup').removeAttr('hidden');
         // }
         if (error.responseJSON.name) {
-          $('#invalid-name-add').html(error.responseJSON.name[0]);
-          $('#invalid-name-add').addClass('d-inline');
+          $('#invalid-teacher-name').html(error.responseJSON.name[0]);
+          $('#invalid-teacher-name').addClass('d-inline');
         }
       }
     });
   });
-}
-
-function patchTeacher() {
-  const editTeacherModal = document.getElementById('edit-teacher-modal');
-  if (editTeacherModal) {
-    editTeacherModal.addEventListener('show.bs.modal', event => {
-      const button = event.relatedTarget;
-      const teacher = button.getAttribute('data-bs-tname');
-      const teacherId = button.getAttribute('data-bs-tid');
-      const modalBodyInput = editTeacherModal.querySelector('.modal-body input');
-      modalBodyInput.value = teacher;
-      $('#form-edit-teacher').submit((event) => {
-        $('.invalid-feedback').removeClass('d-inline');
-        event.preventDefault();
-        patchTeacherRequest(teacherId, event);
-      });
-    })
-  }
-}
-
-function patchTeacherRequest(teacher, event) {
-  $.ajax({
-    url: teachersUrl + teacher + '/',
-    type: 'PATCH',
-    contentType: 'application/json',
-    headers: { 'X-CSRFToken': csrftoken },
-    mode: 'same-origin',
-    data: JSON.stringify({ name: $('#name-edit').val() }),
-    dataType: 'json',
-    success: () => {
-      event.currentTarget.submit();
-    },
-    error: (error) => {
-      // if (!error.responseJSON) {
-      //   $('#message-error-signup').removeAttr('hidden');
-      // }
-      if (error.responseJSON.name) {
-        $('#invalid-name-edit').html(error.responseJSON.name[0]);
-        $('#invalid-name-edit').addClass('d-inline');
-      }
-    }
-  }); 
 }
 
 function deleteTeacher() {
