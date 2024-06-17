@@ -82,6 +82,8 @@ class MemberSerializer(serializers.ModelSerializer):
 
 
 class PaymentSerializer(serializers.ModelSerializer):
+    season = SeasonSerializer()
+
     class Meta:
         model = Payment
         fields = ("season", "paid", "due")

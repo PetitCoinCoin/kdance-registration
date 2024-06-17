@@ -31,6 +31,25 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class UserBaseSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        required=True,
+        allow_blank=False,
+    )
+    email = serializers.CharField(
+        required=True,
+        allow_blank=False,
+    )
+    first_name = serializers.CharField(
+        required=True,
+        allow_blank=False,
+    )
+    last_name = serializers.CharField(
+        required=True,
+        allow_blank=False,
+    )
+    date_joined = serializers.DateTimeField(format="%d/%m/%Y")
+    last_login = serializers.DateTimeField(format="%d/%m/%Y")
+
     def create(self, validated_data: dict) -> UserType:
         user: UserType = User.objects.create_user(
             username=validated_data["username"],
@@ -50,12 +69,13 @@ class UserBaseSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def save(self, **kwargs: UserType) -> UserType:
-        profile_data = self.validated_data.pop("profile")
+        profile_data = self.validated_data.pop("profile", None)
         user: UserType = super().save(**kwargs)
-        profile, _ = Profile.objects.get_or_create(user=user)
-        profile.address = profile_data.get("address")
-        profile.phone = profile_data.get("phone")
-        profile.save()
+        if profile_data:
+            profile, _ = Profile.objects.get_or_create(user=user)
+            profile.address = profile_data.get("address")
+            profile.phone = profile_data.get("phone")
+            profile.save()
         return user
 
 
@@ -109,7 +129,7 @@ class UserCreateSerializer(UserBaseSerializer):
             payment.save()
 
 class UserSerializer(UserBaseSerializer):
-    profile = ProfileSerializer(read_only=True)
+    profile = ProfileSerializer()
     payment = PaymentSerializer(read_only=True, many=True)
     members = MemberSerializer(read_only=True, many=True)
 

@@ -6,6 +6,83 @@
 
 <main>
   <section>
+    <!-- Modal -->
+    {% csrf_token %}
+    <div class="modal fade" id="edit-me-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" >Modifier mes informations</h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form id="form-me" name="form-me">
+            <div class="modal-body">
+              <div class="form-outline mb-4">
+                <label class="form-label required" for="edit-me-username">Nom d'utilisateur</label>
+                <input type="text" id="edit-me-username" class="form-control" required />
+                <div id="invalid-edit-me-username" class="invalid-feedback"></div>
+              </div>
+              <div class="row">
+                <div class="col-6">
+                  <div class="form-outline mb-4">
+                    <label class="form-label required" for="edit-me-firstname">Prénom</label>
+                    <input type="text" id="edit-me-firstname" class="form-control" required />
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="form-outline mb-4">
+                    <label class="form-label required" for="edit-me-lastname">Nom de famille</label>
+                    <input type="text" id="edit-me-lastname" class="form-control" required />
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-6">
+                  <div class="form-outline mb-4">
+                    <label class="form-label required" for="edit-me-phone">Téléphone</label>
+                    <input type="text" id="edit-me-phone" class="form-control" required />
+                    <div id="invalid-edit-me-phone" class="invalid-feedback"></div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="form-outline mb-4">
+                    <label class="form-label required" for="edit-me-email">Email</label>
+                    <input type="text" id="edit-me-email" class="form-control" required />
+                    <div id="invalid-edit-me-email" class="invalid-feedback"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="form-outline mb-4">
+                <label class="form-label required" for="edit-me-address">Adresse</label>
+                <textarea class="form-control" id="edit-me-address" rows="3" required></textarea>
+              </div>
+              <!-- <div class="row">
+                <div class="col-6">
+                  <div class="form-outline mb-4">
+                    <label class="form-label required" for="password">Mot de passe</label>
+                    <input type="password" id="password" class="form-control" required />
+                    <div id="invalid-pwd" class="invalid-feedback"></div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="form-outline mb-4">
+                    <label class="form-label required" for="password-confirmation">Confirmation du mot de passe</label>
+                    <input type="password" id="password-confirmation" class="form-control" required />
+                    <div id="invalid-pwd-confirmation" class="invalid-feedback">Le mot de passe ne correspond pas !</div>
+                  </div>
+                </div>
+              </div> -->
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+              <button type="submit" class="btn btn-info">Enregistrer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
     <div class="container">
       <div class="text-center">
         <h1 class="display-4 mb-5">Page Adhérent K'Dance</h1>
@@ -33,7 +110,12 @@
             </dl>
           </div>
           <div class="col-1">
-            Edit/Del
+            <button id="edit-me-btn" class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#edit-me-modal">
+              <i class="bi-pencil-fill"></i>
+            </button>
+            <button id="delete-me-btn" class="btn btn-outline-danger" type="button" data-bs-toggle="modal" data-bs-target="#delete-modal">
+              <i class="bi-trash3-fill"></i>
+            </button>
           </div>
         </div>
         <div class="row">
@@ -41,6 +123,7 @@
           </div>
         </div>
         
+        <!-- Template -->
         <template id="accordion-item-template">
           <div class="accordion-item">
             <h2 class="accordion-header">
@@ -82,7 +165,8 @@
     </div>
   </section>
   <script type="text/javascript">
-      const userMeUrl = "{% url 'api-user-me' %}"
+      const userMeUrl = "{% url 'api-user-me' %}";
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
   </script>
   <script src="{% static 'js/user.js' %}"></script>
 </main>

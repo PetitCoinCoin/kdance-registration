@@ -166,11 +166,11 @@ function getTeachers() {
         avatar.src = `https://api.dicebear.com/8.x/thumbs/svg?seed=${teacher.name}&radius=50`;
         let buttons = clone.querySelectorAll('button');
         buttons[0].id = `edit-${teacher.id}-btn`;
-        buttons[0].dataset.bsTname = `${teacher.name}`;
-        buttons[0].dataset.bsTid = `${teacher.id}`;
+        buttons[0].dataset.bsTname = teacher.name;
+        buttons[0].dataset.bsTid = teacher.id;
         buttons[1].id = `delete-${teacher.id}-btn`;
-        buttons[1].dataset.bsTname = `${teacher.name}`;
-        buttons[1].dataset.bsTid = `${teacher.id}`;
+        buttons[1].dataset.bsTname = teacher.name;
+        buttons[1].dataset.bsTid = teacher.id;
         listParent.appendChild(clone);
       });
     },
@@ -317,7 +317,7 @@ function deleteItem() {
     deleteModal.addEventListener('show.bs.modal', event => {
       const button = event.relatedTarget;
       const teacher = button.getAttribute('data-bs-tname');
-      const teacherId = button.getAttribute('data-bs-tId');
+      const teacherId = button.getAttribute('data-bs-tid');
       const courseId = button.getAttribute('data-bs-cid');
       const modalBody = deleteModal.querySelector('.modal-body');
       let url = '';

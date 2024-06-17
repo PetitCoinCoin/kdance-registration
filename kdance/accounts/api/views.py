@@ -74,6 +74,7 @@ class UserMeApiViewSet(
 ):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    http_method_names = ["get", "patch", "delete"]
 
     def get_object(self) -> UserType:
         return self.queryset.get(pk=self.request.user.pk)
