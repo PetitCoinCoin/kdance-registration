@@ -7,6 +7,7 @@ from members.models import (
 from members.api.serializers import (
     CourseRetrieveSerializer,
     CourseSerializer,
+    MemberRetrieveSerializer,
     MemberSerializer,
     SeasonSerializer,
     TeacherSerializer,
@@ -37,6 +38,14 @@ class SeasonViewSet(
     serializer_class = SeasonSerializer
     http_method_names = ["get", "post", "patch", "delete"]
 
+    def get_queryset(self):
+        queryset = Season.objects.all()
+        is_current = self.request.query_params.get("is_current", "")
+        if is_current.lower() in ["true", 1]:
+            queryset = queryset.filter(is_current=True)
+        elif is_current.lower() in ["false", 0]:
+            queryset = queryset.filter(is_current=False)
+        return queryset.order_by("-year")
 
 class TeacherViewSet(
     CreateModelMixin,
@@ -83,8 +92,12 @@ class MemberViewSet(
     GenericViewSet,
 ):
     queryset = Member.objects.all().order_by("-pk")
-    serializer_class = MemberSerializer
     http_method_names = ["get", "post", "patch", "delete"]
+
+    def get_serializer_class(self):
+        if self.request.method.lower() == "get":
+            return MemberRetrieveSerializer
+        return MemberSerializer
 
     def create(self, request: Request, *a, **k) -> Response:
         serializer = self.get_serializer(data=request.data)
@@ -92,3 +105,7 @@ class MemberViewSet(
         serializer.save(user=self.request.user)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def perform_update(self, serializer: MemberSerializer):
+        user = self.get_object().user
+        serializer.save(user=user)

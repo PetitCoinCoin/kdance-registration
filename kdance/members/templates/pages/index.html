@@ -12,7 +12,7 @@
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h4 class="modal-title" >Modifier mes informations</h4>
+            <h4 class="modal-title">Modifier mes informations</h4>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <form id="form-me" name="form-me">
@@ -82,6 +82,87 @@
       </div>
     </div>
 
+    <div class="modal fade" id="member-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="member-modal-title"></h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form id="form-member" name="form-member">
+            <div class="modal-body">
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="me-switch">
+                <label class="form-check-label" for="me-switch">Utiliser mes informations</label>
+              </div>
+              <div class="row">
+                <div class="col-6">
+                  <div class="form-outline mb-4">
+                    <label class="form-label required" for="member-firstname">Prénom</label>
+                    <input type="text" id="member-firstname" class="form-control" required />
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="form-outline mb-4">
+                    <label class="form-label required" for="member-lastname">Nom de famille</label>
+                    <input type="text" id="member-lastname" class="form-control" required />
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-6">
+                  <div class="form-outline mb-4">
+                    <label class="form-label required" for="member-phone">Téléphone</label>
+                    <input type="text" id="member-phone" class="form-control" required />
+                    <div id="invalid-member-phone" class="invalid-feedback"></div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="form-outline mb-4">
+                    <label class="form-label required" for="member-email">Email</label>
+                    <input type="text" id="member-email" class="form-control" required />
+                    <div id="invalid-member-email" class="invalid-feedback"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="form-outline mb-4">
+                <label class="form-label required" for="member-address">Adresse</label>
+                <textarea class="form-control" id="member-address" rows="3" required></textarea>
+              </div>
+              <div class="form-outline mb-4">
+                <label class="form-label required" for="member-birthday">Date de naissance</label>
+                <input type="date" id="member-birthday" class="form-control" required />
+              </div>
+              <div class="form-outline mb-4">
+                <label class="form-label" for="member-courses">Cours</label>
+                <select id="member-courses" class="form-select" multiple></select>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+              <button type="submit" class="btn btn-info">Enregistrer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="delete-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="delete-modal-title"></h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button id="delete-btn" type="submit" class="btn btn-danger">Supprimer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Content -->
     <div class="container">
       <div class="text-center">
@@ -100,29 +181,30 @@
               <dt class="col-sm-5">Nom:</dt>
               <dd id="desc-lastname" class="col-sm-7"></dd>
               <dt class="col-sm-5">Nom d'utilisateur:</dt>
-              <dd id="desc-username"class="col-sm-7"></dd>
+              <dd id="desc-username" class="col-sm-7"></dd>
               <dt class="col-sm-5">Email:</dt>
               <dd id="desc-email" class="col-sm-7"></dd>
               <dt class="col-sm-5">Téléphone:</dt>
               <dd id="desc-phone" class="col-sm-7"></dd>
               <dt class="col-sm-5">Adresse:</dt>
-              <dd id="desc-address"class="col-sm-7"></dd>
+              <dd id="desc-address" class="col-sm-7"></dd>
             </dl>
           </div>
           <div class="col-1">
-            <button id="edit-me-btn" class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#edit-me-modal">
+            <button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#edit-me-modal">
               <i class="bi-pencil-fill"></i>
             </button>
-            <button id="delete-me-btn" class="btn btn-outline-danger" type="button" data-bs-toggle="modal" data-bs-target="#delete-modal">
+            <button id="delete-me-btn" class="btn btn-outline-danger" type="button" data-bs-toggle="modal"
+              data-bs-target="#delete-modal">
               <i class="bi-trash3-fill"></i>
             </button>
           </div>
         </div>
         <div class="row">
-          <div class="accordion" id="member-accordion">          
+          <div class="accordion" id="member-accordion">
           </div>
         </div>
-        
+
         <!-- Template -->
         <template id="accordion-item-template">
           <div class="accordion-item">
@@ -133,31 +215,35 @@
             </h2>
             <div class="accordion-collapse collapse show template-data" data-bs-parent="#member-accordion">
               <div class="accordion-body">
-                <div class="row">
-                  <div class="col-6">
-                      <dl class="row">
-                          <dt class="col-sm-5">Total dû:</dt>
-                          <dd class="col-sm-7 payment">€</dd>
-                      </dl>
-                  </div>
-                  <div class="col-6">
-                      <dl class="row">
-                          <dt class="col-sm-5">Payé:</dt>
-                          <dd class="col-sm-7 payment">€</dd>
-                      </dl>
-                  </div>
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <dl class="d-flex">
+                    <dt class="me-2">Total dû:</dt>
+                    <dd class="payment">€</dd>
+                  </dl>
+                  <dl class="d-flex">
+                    <dt class="me-2">Payé:</dt>
+                    <dd class="payment">€</dd>
+                  </dl>
                 </div>
               </div>
             </div>
           </div>
         </template>
-        
+
         <template id="card-template">
-          <div class="card">
+          <div class="card mb-3">
             <div class="card-header">Membre</div>
             <div class="card-body">
             </div>
           </div>
+        </template>
+
+        <template id="member-btn-template">
+          <button class="btn btn-outline-info" type="button" data-bs-toggle="modal"
+          data-bs-target="#member-modal" id="add-member-btn">
+            <i class="bi-patch-plus" style="color: purple;"></i>
+            Ajouter un nouveau membre
+          </button>
         </template>
 
       </div>
@@ -165,7 +251,10 @@
     </div>
   </section>
   <script type="text/javascript">
-      const userMeUrl = "{% url 'api-user-me' %}";
+    const userMeUrl = "{% url 'api-user-me' %}";
+    const coursesUrl = "{% url 'api-courses-list' %}";
+    const membersUrl = "{% url 'api-members-list' %}";
+    const seasonsUrl = "{% url 'api-seasons-list' %}";
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
   </script>
   <script src="{% static 'js/user.js' %}"></script>

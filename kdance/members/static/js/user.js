@@ -1,6 +1,17 @@
 $(document).ready(() => {
-    getUser();
-    patchUser();
+  getUser();
+  patchUser();
+  createUpdateMember();
+  deleteItem();
+  const meSwitch = document.querySelector('#me-switch');
+  meSwitch.addEventListener('change', () => {
+    const isMe = $('#me-switch').is(':checked');
+    $('#member-firstname').val(isMe ? $('#desc-firstname').html() : ''),
+    $('#member-lastname').val(isMe ? $('#desc-lastname').html() : ''),
+    $('#member-email').val(isMe ? $('#desc-email').html() : ''),
+    $('#member-phone').val(isMe ? $('#desc-phone').html() : ''),
+    $('#member-address').val(isMe ? $('#desc-address').html() : '')
+  });
 });
 
 function getUser() {
@@ -24,9 +35,10 @@ function getUser() {
             const accordionParent = document.querySelector('#member-accordion');
             const accordionTemplate = document.querySelector('#accordion-item-template');
             const cardTemplate = document.querySelector('#card-template');
+            const memberBtnTemplate = document.querySelector('#member-btn-template');
             data.payment.map((item, i) => {
                 const season_members = data.members.filter((m) => {
-                    return m.courses.filter((c) => {return c.season === item.season}).length > 0
+                    return m.courses.filter((c) => { return c.season.id === item.season.id }).length > 0
                 });
 
                 const clone = accordionTemplate.content.cloneNode(true);
@@ -40,26 +52,32 @@ function getUser() {
                 let collapseBtn = clone.querySelector('button');
                 collapseBtn.dataset.bsTarget = `#accordion-${i}`;
                 collapseBtn.ariaControls = `accordion-${i}`;
-                let collapsing = clone.querySelectorAll('div.accordion-collapse')[0];
+                let collapsing = clone.querySelector('div.accordion-collapse');
                 collapsing.id = `accordion-${i}`;
-                // collapse older seasons
+                // collapse older seasons and add member button for current season
                 if (i > 0) {
                     collapseBtn.ariaExpanded = false;
                     collapseBtn.classList.add('collapsed');
                     collapsing.classList.remove('show');
+                } else {
+                  const memberBtnClone = memberBtnTemplate.content.cloneNode(true);
+                  const btnParent = clone.querySelector('div.accordion-body').children[0];
+                  btnParent.appendChild(memberBtnClone);
                 }
                 // Member info
-                let body = clone.querySelectorAll('div.accordion-body')[0];
-                season_members.map((member) => {
+                let body = clone.querySelector('div.accordion-body');
+                data.members.map((member) => {
                     const cardClone = cardTemplate.content.cloneNode(true);
-                    let memberTitle = cardClone.querySelectorAll('div.card-header')[0];
+                    let memberTitle = cardClone.querySelector('div.card-header');
                     memberTitle.textContent = `${member.first_name} ${member.last_name}`;
-                    let memberBody = cardClone.querySelectorAll('div.card-body')[0];
+                    let memberBody = cardClone.querySelector('div.card-body');
                     member.courses.map((course) => {
+                      if (course.season.id === item.season.id) {
                         let paragraphe = document.createElement('p');
                         const startHour = course.start_hour.split(':');
                         paragraphe.textContent = `${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
                         memberBody.appendChild(paragraphe);
+                      }
                     });
                     body.appendChild(cardClone);
                 });
@@ -119,4 +137,126 @@ function patchUser() {
           }
         });
       });
+}
+
+function getCurrentSeason() {
+  return $.ajax({
+    url: seasonsUrl + '?is_current=True',
+    type: 'GET',
+  });
+}
+
+function getCourses() {
+  getCurrentSeason().then(data => {
+    const seasonId = data[0].id;
+    $.ajax({
+      url: coursesUrl + `?season=${seasonId}`,
+      type: 'GET',
+      success: (data) => {
+        let memberCourses = $('#member-courses');
+        data.map((course) => {
+          const label = `${course.name} - ${course.price}€`;
+          memberCourses.append($('<option>', { value: course.id, text: label }));
+        });
+      },
+      error: (error) => {
+        // if (!error.responseJSON) {
+        //     $('#message-error-signup').removeAttr('hidden');
+        // }
+      }
+    })
+  }).catch(error => console.log(error));
+}
+
+function createUpdateMember() {
+  const memberModal = document.getElementById('member-modal');
+  if (memberModal) {
+    memberModal.addEventListener('show.bs.modal', event => {
+      getCourses();
+      const button = event.relatedTarget;
+      let url = membersUrl;
+      let method = 'POST';
+      if (button.getAttribute('id') === 'add-member-btn') {
+        $('#member-modal-title').html('Ajouter un nouveau membre');
+        $('#member-btn').html('Ajouter');
+      } else {
+        $('#member-modal-title').html('Modifier un membre');
+        $('#membre-btn').html('Modifier');
+        // get id
+        url = url +  + '/';
+        method = 'PATCH';
+      }
+      postOrPatchMember(url, method);
+    });
+  }
+}
+
+function postOrPatchMember(url, method) {
+  $('#form-member').submit((event) => {
+    $('.invalid-feedback').removeClass('d-inline');
+    event.preventDefault();
+    let data = {
+      first_name: $('#member-firstname').val(),
+      last_name: $('#member-lastname').val(),
+      email: $('#member-email').val(),
+      phone: $('#member-phone').val(),
+      address: $('#member-address').val(),
+      birthday: $('#member-birthday').val(),
+    };
+    const courses = $('#member-courses').val();
+    if (courses.length > 0) {
+      data['courses'] = courses;
+    }
+    $.ajax({
+      url: url,
+      type: method,
+      contentType: 'application/json',
+      headers: { 'X-CSRFToken': csrftoken },
+      mode: 'same-origin',
+      data: JSON.stringify(data),
+      dataType: 'json',
+      success: () => {
+        event.currentTarget.submit();
+      },
+      error: (error) => {
+        // if (!error.responseJSON) {
+        //   $('#message-error-signup').removeAttr('hidden');
+        // }
+      }
+    });
+  });
+}
+
+function deleteItem() {
+  const deleteModal = document.getElementById('delete-modal');
+  if (deleteModal) {
+    deleteModal.addEventListener('show.bs.modal', event => {
+      const button = event.relatedTarget;
+      const buttonId = button.getAttribute('id');
+      const modalBody = deleteModal.querySelector('.modal-body');
+      let url = '';
+      if (buttonId === 'delete-me-btn') {
+        // Teacher deletion
+        $('#delete-modal-title').html('Supprimer mon compte');
+        modalBody.textContent = `Etes-vous sur.e de vouloir supprimer votre compte ainsi que tous les membres associés ?`;
+        url =  userMeUrl;
+      }
+      $(document).on("click", "#delete-btn", function(){
+        $.ajax({
+          url: url,
+          type: 'DELETE',
+          headers: { 'X-CSRFToken': csrftoken },
+          mode: 'same-origin',
+          success: () => {
+            location.reload();
+          },
+          error: (error) => {
+            // if (!error.responseJSON) {
+            //   $('#message-error-signup').removeAttr('hidden');
+            // }
+          }
+        });
+      });
+    });
+  }
 }

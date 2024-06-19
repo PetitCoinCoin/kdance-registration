@@ -8,7 +8,7 @@ from rest_framework import serializers
 from accounts.models import Profile
 from members.models import Member, Payment, Season
 from members.api.serializers import (
-    MemberSerializer,
+    MemberRetrieveSerializer,
     PaymentSerializer,
 )
 
@@ -131,7 +131,7 @@ class UserCreateSerializer(UserBaseSerializer):
 class UserSerializer(UserBaseSerializer):
     profile = ProfileSerializer()
     payment = PaymentSerializer(read_only=True, many=True)
-    members = MemberSerializer(read_only=True, many=True)
+    members = MemberRetrieveSerializer(read_only=True, many=True)
 
     class Meta:
         model = User

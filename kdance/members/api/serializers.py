@@ -57,6 +57,7 @@ class CourseSerializer(serializers.ModelSerializer):
 
 class CourseRetrieveSerializer(CourseSerializer):
     teacher = TeacherSerializer()
+    season = SeasonSerializer()
 
 
 class MemberSerializer(serializers.ModelSerializer):
@@ -64,8 +65,10 @@ class MemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = Member
         fields = (
+            "id",
             "first_name",
             "last_name",
+            "is_active",
             "courses",
             "documents",
             "birthday",
@@ -73,6 +76,7 @@ class MemberSerializer(serializers.ModelSerializer):
             "email",
             "phone",
         )
+        extra_kwargs = {"courses": {"required": False}}
 
     @transaction.atomic
     def save(self, **kwargs) -> None:
@@ -81,26 +85,12 @@ class MemberSerializer(serializers.ModelSerializer):
         super().save()
 
 
+class MemberRetrieveSerializer(MemberSerializer):
+    courses = CourseRetrieveSerializer(many=True)
+
 class PaymentSerializer(serializers.ModelSerializer):
     season = SeasonSerializer()
 
     class Meta:
         model = Payment
         fields = ("season", "paid", "due")
-
-
-class MemberSerializer(serializers.ModelSerializer):
-    courses = CourseSerializer(many=True)
-
-    class Meta:
-        model = Member
-        fields = (
-            "first_name",
-            "last_name",
-            "courses",
-            "documents",
-            "birthday",
-            "address",
-            "email",
-            "phone",
-        )

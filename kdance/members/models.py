@@ -87,9 +87,10 @@ class Payment(models.Model):
         total = 0
         members = self.user.member_set.all()
         for member in members:
-            for course in member.courses.filter(season=self.season).all():
-                total += 1
-                due += course.price
+            if member.is_active:
+                for course in member.courses.filter(season=self.season).all():
+                    total += 1
+                    due += course.price
         # Reduction
         if total > 1:
             due *= 0.9
@@ -108,6 +109,10 @@ class Member(models.Model):
         blank=False,
         null=False,
         max_length=35,
+    )
+    is_active = models.BooleanField(
+        default=True,
+        null=False,
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     courses = models.ManyToManyField(Course)
@@ -133,3 +138,6 @@ class Member(models.Model):
 
     def __repr__(self) -> str:
         return self.first_name + self.last_name
+
+    class Meta:
+        unique_together = ("first_name", "last_name", "user")

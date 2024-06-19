@@ -6,9 +6,10 @@ $(document).ready(() => {
   createUpdateTeacher();
   createUpdateCourse();
   deleteItem();
-  seasonSelect = document.querySelector('#season-select');
+  const seasonSelect = document.querySelector('#season-select');
+  console.log(seasonSelect)
   seasonSelect.addEventListener('change', () => 
-    onSeasonChange(seasonSelect.val())
+    onSeasonChange(seasonSelect.value)
   );
 });
 
@@ -24,14 +25,13 @@ function getSeasons() {
     url: seasonsUrl,
     type: 'GET',
     success: (data) => {
-      seasonSelect = $('#season-select');
       data.map((season) => {
         let label = season.year;
         if (season.is_current) {
           label += ' (en cours)'
           getCourses(season.id);
         }
-        seasonSelect.append($('<option>', { value: season.id, text: label, selected: season.is_current }));
+        $('#season-select').append($('<option>', { value: season.id, text: label, selected: season.is_current }));
       });
     },
     error: (error) => {
@@ -71,8 +71,8 @@ function createUpdateSeason() {
       } else {
         $('#season-modal-title').html('Modifier une saison');
         $('#season-btn').html('Modifier');
-        getSeason(seasonSelect.val());
-        url = url + seasonSelect.val() + '/';
+        getSeason($('#season-select').val());
+        url = url + $('#season-select').val() + '/';
         method = 'PATCH';
       }
       postOrPatchSeason(url, method);
@@ -242,6 +242,7 @@ function createUpdateCourse() {
         getCourse(course, null);
         $('#course-btn').html('Modifier');
       } else {
+        const seasonSelect = $('#season-select');
         const seasonYear = seasonSelect[0].options[seasonSelect[0].selectedIndex].innerHTML
         $('#course-modal-title').html(`Ajouter un cours pour la saison ${seasonYear}`);
         $('#course-btn').html('Ajouter');
@@ -256,6 +257,7 @@ function getCourse(course, deleteModalBody) {
     url: coursesUrl + course + '/',
     type: 'GET',
     success: (data) => {
+      const seasonSelect = $('#season-select');
       const seasonYear = seasonSelect[0].options[seasonSelect[0].selectedIndex].innerHTML
       $('#course-modal-title').html(`Modifier le cours '${data.name}' pour la saison ${seasonYear}`);
       if (deleteModalBody !== null) {
@@ -285,7 +287,7 @@ function postOrPatchCourse(course) {
     const data = {
       name: $('#course-name').val(),
       teacher: $('#course-teacher').val(),
-      season: seasonSelect.val(),
+      season: $('#season-select').val(),
       price: $('#course-price').val(),
       weekday: $('#course-weekday').val(),
       start_hour: $('#course-start').val(),
@@ -334,6 +336,7 @@ function deleteItem() {
       } else {
         // Season deletion
         $('#delete-modal-title').html('Supprimer une saison');
+        const seasonSelect = $('#season-select');
         const seasonYear = seasonSelect[0].options[seasonSelect[0].selectedIndex].innerHTML;
         modalBody.textContent = `Etes-vous sur.e de vouloir supprimer la saison ${seasonYear} ainsi que ses cours associés ?`;
         url = seasonsUrl + seasonSelect.val() + '/';
