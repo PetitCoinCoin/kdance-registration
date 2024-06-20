@@ -91,9 +91,19 @@
           </div>
           <form id="form-member" name="form-member">
             <div class="modal-body">
-              <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" role="switch" id="me-switch">
-                <label class="form-check-label" for="me-switch">Utiliser mes informations</label>
+              <div class="row align-items-baseline">
+                <div class="col-6">
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" role="switch" id="me-switch">
+                    <label class="form-check-label" for="me-switch">Utiliser mes informations</label>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="form-outline mb-4 d-flex align-items-baseline">
+                    <label class="form-label me-2" for="member-season">Saison</label>
+                    <select id="member-season" class="form-select" disabled></select>
+                  </div>
+                </div>
               </div>
               <div class="row">
                 <div class="col-6">
@@ -232,7 +242,12 @@
 
         <template id="card-template">
           <div class="card mb-3">
-            <div class="card-header">Membre</div>
+            <div class="card-header d-flex justify-content-between">
+              <span></span>
+              <button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#member-modal">
+                <i class="bi-pencil-fill"></i>
+              </button>
+            </div>
             <div class="card-body">
             </div>
           </div>

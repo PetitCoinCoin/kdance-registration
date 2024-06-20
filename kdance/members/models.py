@@ -29,6 +29,9 @@ class Season(models.Model):
             for user in User.objects.all():
                 Payment(user=user, season=self).save()
 
+    def __repr__(self) -> str:
+        return self.year
+
 
 class Teacher(models.Model):
     name = models.CharField(
@@ -37,6 +40,9 @@ class Teacher(models.Model):
         blank=False,
         max_length=30,
     )
+
+    def __repr__(self) -> str:
+        return self.name
 
 
 class Course(models.Model):
@@ -63,7 +69,7 @@ class Course(models.Model):
     end_hour = models.TimeField()
 
     def __repr__(self) -> str:
-        return self.name
+        return f"{self.name} {self.season.year}"
     
     class Meta:
         unique_together = ("name", "season", "weekday", "start_hour")
@@ -85,12 +91,11 @@ class Payment(models.Model):
     def due(self) -> float:
         due = 0.0
         total = 0
-        members = self.user.member_set.all()
+        members = self.user.member_set.filter(is_active=True, season=self.season).all()
         for member in members:
-            if member.is_active:
-                for course in member.courses.filter(season=self.season).all():
-                    total += 1
-                    due += course.price
+            for course in member.courses.all():
+                total += 1
+                due += course.price
         # Reduction
         if total > 1:
             due *= 0.9
@@ -115,6 +120,7 @@ class Member(models.Model):
         null=False,
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    season = models.ForeignKey(Season, on_delete=models.CASCADE)
     courses = models.ManyToManyField(Course)
     documents = models.ForeignKey(Documents, null=True, on_delete=models.SET_NULL)
     birthday = models.DateField(blank=False)
@@ -137,7 +143,7 @@ class Member(models.Model):
     )
 
     def __repr__(self) -> str:
-        return self.first_name + self.last_name
+        return f"{self.first_name} {self.last_name}"
 
     class Meta:
-        unique_together = ("first_name", "last_name", "user")
+        unique_together = ("first_name", "last_name", "user", "season")

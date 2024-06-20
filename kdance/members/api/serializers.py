@@ -69,6 +69,7 @@ class MemberSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "is_active",
+            "season",
             "courses",
             "documents",
             "birthday",
@@ -77,6 +78,14 @@ class MemberSerializer(serializers.ModelSerializer):
             "phone",
         )
         extra_kwargs = {"courses": {"required": False}}
+
+    def validate(self, attr: dict) -> dict:
+        validated = super().validate(attr)
+        if validated.get("courses", []):
+            for course in validated.get("courses", []):
+                if course.season.id != validated["season"].id:
+                    raise serializers.ValidationError("Un cours ne correspond pas à la saison.")
+        return validated
 
     @transaction.atomic
     def save(self, **kwargs) -> None:
@@ -87,6 +96,7 @@ class MemberSerializer(serializers.ModelSerializer):
 
 class MemberRetrieveSerializer(MemberSerializer):
     courses = CourseRetrieveSerializer(many=True)
+    season = SeasonSerializer()
 
 class PaymentSerializer(serializers.ModelSerializer):
     season = SeasonSerializer()

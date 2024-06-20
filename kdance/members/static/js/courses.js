@@ -7,7 +7,6 @@ $(document).ready(() => {
   createUpdateCourse();
   deleteItem();
   const seasonSelect = document.querySelector('#season-select');
-  console.log(seasonSelect)
   seasonSelect.addEventListener('change', () => 
     onSeasonChange(seasonSelect.value)
   );

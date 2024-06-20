@@ -1,6 +1,7 @@
 $(document).ready(() => {
   getUser();
   patchUser();
+  getCourses();
   createUpdateMember();
   deleteItem();
   const meSwitch = document.querySelector('#me-switch');
@@ -11,6 +12,10 @@ $(document).ready(() => {
     $('#member-email').val(isMe ? $('#desc-email').html() : ''),
     $('#member-phone').val(isMe ? $('#desc-phone').html() : ''),
     $('#member-address').val(isMe ? $('#desc-address').html() : '')
+  });
+  const machin = document.querySelector('#member-courses');
+  machin.addEventListener('change', () => {
+    console.log($('#member-courses').val())
   });
 });
 
@@ -37,10 +42,6 @@ function getUser() {
             const cardTemplate = document.querySelector('#card-template');
             const memberBtnTemplate = document.querySelector('#member-btn-template');
             data.payment.map((item, i) => {
-                const season_members = data.members.filter((m) => {
-                    return m.courses.filter((c) => { return c.season.id === item.season.id }).length > 0
-                });
-
                 const clone = accordionTemplate.content.cloneNode(true);
                 // Payment info
                 let title = clone.querySelector('span');
@@ -67,19 +68,25 @@ function getUser() {
                 // Member info
                 let body = clone.querySelector('div.accordion-body');
                 data.members.map((member) => {
-                    const cardClone = cardTemplate.content.cloneNode(true);
-                    let memberTitle = cardClone.querySelector('div.card-header');
-                    memberTitle.textContent = `${member.first_name} ${member.last_name}`;
-                    let memberBody = cardClone.querySelector('div.card-body');
-                    member.courses.map((course) => {
-                      if (course.season.id === item.season.id) {
+                    if (member.season.id === item.season.id) {
+                      const cardClone = cardTemplate.content.cloneNode(true);
+                      let memberTitle = cardClone.querySelector('span');
+                      memberTitle.textContent = `${member.first_name} ${member.last_name}`;
+                      let button = cardClone.querySelector('button');
+                      button.dataset.bsMid = member.id;
+                      // button.dataset.bsSid = item.season.id; garder pour DELETE
+                      if (!item.season.is_current) {
+                        button.disabled = true;
+                      }
+                      let memberBody = cardClone.querySelector('div.card-body');
+                      member.courses.map((course) => {
                         let paragraphe = document.createElement('p');
                         const startHour = course.start_hour.split(':');
                         paragraphe.textContent = `${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
                         memberBody.appendChild(paragraphe);
-                      }
-                    });
-                    body.appendChild(cardClone);
+                      });
+                      body.appendChild(cardClone);
+                    }
                 });
                 accordionParent.appendChild(clone);
             })
@@ -164,7 +171,10 @@ function getCourses() {
         //     $('#message-error-signup').removeAttr('hidden');
         // }
       }
-    })
+    });
+    let memberSeason = $('#member-season');
+    memberSeason.append($('<option>', { value: seasonId, text: data[0].year }));
+    memberSeason.val(seasonId)
   }).catch(error => console.log(error));
 }
 
@@ -172,23 +182,46 @@ function createUpdateMember() {
   const memberModal = document.getElementById('member-modal');
   if (memberModal) {
     memberModal.addEventListener('show.bs.modal', event => {
-      getCourses();
+      // getCourses();
       const button = event.relatedTarget;
+      const member = button.getAttribute('data-bs-mid');
+      const season = $('#member-season').val();
       let url = membersUrl;
       let method = 'POST';
-      if (button.getAttribute('id') === 'add-member-btn') {
+      if (member === null) {
         $('#member-modal-title').html('Ajouter un nouveau membre');
         $('#member-btn').html('Ajouter');
       } else {
-        $('#member-modal-title').html('Modifier un membre');
+        getMember(member, season);
         $('#membre-btn').html('Modifier');
-        // get id
-        url = url +  + '/';
+        url = url + member + '/';
         method = 'PATCH';
       }
       postOrPatchMember(url, method);
     });
   }
+}
+
+function getMember(member, season) {
+  $.ajax({
+    url: membersUrl + member + '/',
+    type: 'GET',
+    success: (data) => {
+      $('#member-modal-title').html(`Modifier les informations de ${data.first_name} ${data.last_name}`);
+      $('#member-firstname').val(data.first_name);
+      $('#member-lastname').val(data.last_name);
+      $('#member-email').val(data.email);
+      $('#member-phone').val(data.phone);
+      $('#member-address').val(data.address);
+      $('#member-birthday').val(data.birthday);
+      $("#member-courses").val(data.courses.map((c) => c.id));
+    },
+    error: (error) => {
+      // if (!error.responseJSON) {
+      //     $('#message-error-signup').removeAttr('hidden');
+      // }
+    }
+  });
 }
 
 function postOrPatchMember(url, method) {
@@ -202,11 +235,9 @@ function postOrPatchMember(url, method) {
       phone: $('#member-phone').val(),
       address: $('#member-address').val(),
       birthday: $('#member-birthday').val(),
+      season: $('#member-season').val(),
+      courses: $('#member-courses').val(),
     };
-    const courses = $('#member-courses').val();
-    if (courses.length > 0) {
-      data['courses'] = courses;
-    }
     $.ajax({
       url: url,
       type: method,
