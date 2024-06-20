@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.core.validators import EmailValidator, MaxValueValidator, RegexValidator
 from django.db import models, transaction
+from django.db.utils import IntegrityError
 
 
 class Season(models.Model):
@@ -54,6 +55,20 @@ class Teacher(models.Model):
         return self.name
 
 
+class CourseManager(models.Manager):
+    def copy_from_season(self, from_season: int, to_season: int) -> None:
+        season = Season.objects.get(id=to_season)
+        for course in self.filter(season__id=from_season).values().all():
+            try:
+                course.pop("id")
+                new_course = {
+                    **course,
+                    "season_id": to_season,
+                }
+                Course(**new_course).save()
+            except IntegrityError:
+                # Mettre en place un logger propre
+                print("Cours non copié")
 class Course(models.Model):
     name = models.CharField(
         null=False,
@@ -76,6 +91,8 @@ class Course(models.Model):
     )
     start_hour = models.TimeField()
     end_hour = models.TimeField()
+
+    objects = CourseManager()
 
     def __repr__(self) -> str:
         return f"{self.name} {self.season.year}"

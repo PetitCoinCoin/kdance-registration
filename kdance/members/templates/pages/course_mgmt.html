@@ -46,6 +46,29 @@
       </div>
     </div>
 
+    <div class="modal fade" id="copy-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="copy-modal-title"></h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form id="form-copy" name="form-copy">
+            <div class="modal-body">
+              <div class="form-outline mb-4">
+                <label class="form-label required" for="copy-season">Copier tous les cours de la saison:</label>
+                <select id="copy-season" class="form-select"></select>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+              <button id="course-btn" type="submit" class="btn btn-info">Copier</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
     <div class="modal fade" id="teacher-modal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -214,11 +237,15 @@
                       </tbody>
                     </table>
                   </div>
-
                   <button class="btn btn-outline-info" type="button" data-bs-toggle="modal"
                     data-bs-target="#course-modal">
                     <i class="bi-patch-plus" style="color: purple;"></i>
                     Ajouter un nouveau cours
+                  </button>
+                  <button class="btn btn-outline-info" type="button" data-bs-toggle="modal"
+                    data-bs-target="#copy-modal">
+                    <i class="bi-patch-plus" style="color: purple;"></i>
+                    Copier tous les cours d'une autre saison
                   </button>
                 </div>
               </div>
@@ -271,6 +298,7 @@
   </section>
   <script type="text/javascript">
     const coursesUrl = "{% url 'api-courses-list' %}";
+    const copyCoursesUrl = "{% url 'api-courses-copy-season' %}";
     const seasonsUrl = "{% url 'api-seasons-list' %}";
     const teachersUrl = "{% url 'api-teachers-list' %}";
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;

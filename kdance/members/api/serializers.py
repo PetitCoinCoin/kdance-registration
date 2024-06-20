@@ -66,6 +66,23 @@ class CourseRetrieveSerializer(CourseSerializer):
     season = SeasonSerializer()
 
 
+class CourseCopySeasonSerializer(serializers.Serializer):
+    from_season = serializers.IntegerField(required=True)
+    to_season = serializers.IntegerField(required=True)
+
+    @staticmethod
+    def validate_from_season(season_id: int) -> int:
+        if not Season.objects.filter(id=season_id).exists():
+            raise serializers.ValidationError("Cette saison n'existe pas")
+        return season_id
+
+    @staticmethod
+    def validate_to_season(season_id: int) -> int:
+        if not Season.objects.filter(id=season_id).exists():
+            raise serializers.ValidationError("Cette saison n'existe pas")
+        return season_id
+
+
 class MemberSerializer(serializers.ModelSerializer):
 
     class Meta:

@@ -5,6 +5,7 @@ from members.models import (
     Teacher,
 )
 from members.api.serializers import (
+    CourseCopySeasonSerializer,
     CourseRetrieveSerializer,
     CourseSerializer,
     MemberRetrieveSerializer,
@@ -14,6 +15,7 @@ from members.api.serializers import (
 )
 
 from rest_framework import status
+from rest_framework.decorators import action
 from rest_framework.mixins import (
     CreateModelMixin,
     DestroyModelMixin,
@@ -81,6 +83,17 @@ class CourseViewSet(
         if season:
             queryset = queryset.filter(season__id=season)
         return queryset.order_by("-season__year", "weekday")
+
+    @action(methods=["post"], detail=False)
+    def copy_season(self, request: Request) -> Response:
+        body = CourseCopySeasonSerializer(data=request.data)
+        body.is_valid(raise_exception=True)
+        Course.objects.copy_from_season(**body.validated_data)
+        answer = CourseRetrieveSerializer(
+            Course.objects.filter(season_id=body.validated_data["to_season"]).all(),
+            many=True,
+        )
+        return Response(answer.data)
 
 
 class MemberViewSet(

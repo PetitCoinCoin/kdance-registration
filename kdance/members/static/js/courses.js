@@ -5,6 +5,7 @@ $(document).ready(() => {
   createUpdateSeason();
   createUpdateTeacher();
   createUpdateCourse();
+  copyCourseFromSeason();
   deleteItem();
   const seasonSelect = document.querySelector('#season-select');
   seasonSelect.addEventListener('change', () => 
@@ -29,6 +30,9 @@ function getSeasons() {
         if (season.is_current) {
           label += ' (en cours)'
           getCourses(season.id);
+          $('#copy-modal-title').html(`Ajouter des cours à la saison ${season.year}`);
+        } else {
+          $('#copy-season').append($('<option>', { value: season.id, text: season.year }));
         }
         $('#season-select').append($('<option>', { value: season.id, text: label, selected: season.is_current }));
       });
@@ -119,8 +123,52 @@ function postOrPatchSeason(url, method) {
   });
 }
 
+function copyCourseFromSeason() {
+  $('#form-copy').submit((event) => {
+    $('.invalid-feedback').removeClass('d-inline');
+    event.preventDefault();
+    $.ajax({
+      url: copyCoursesUrl,
+      type: 'POST',
+      contentType: 'application/json',
+      headers: { 'X-CSRFToken': csrftoken },
+      mode: 'same-origin',
+      data: JSON.stringify({
+        from_season: parseInt($('#copy-season').val(), 10),
+        to_season: parseInt($('#season-select').val(), 10),
+      }),
+      dataType: 'json',
+      success: (data) => {
+        event.currentTarget.submit();
+      },
+      error: (error) => {
+        console.log(error)
+        // if (!error.responseJSON) {
+        //   $('#message-error-signup').removeAttr('hidden');
+        // }
+      }
+    });
+  });
+}
+
 function onSeasonChange(seasonId) {
   getCourses(seasonId);
+  getPreviousSeason(seasonId);
+}
+
+function getPreviousSeason(seasonId) {
+  const seasonSelect = $('#season-select');
+  const seasonYear = seasonSelect[0].options[seasonSelect[0].selectedIndex].innerHTML
+  $('#copy-modal-title').html(`Ajouter des cours à la saison ${seasonYear}`);
+  let copySelect = $('#copy-season');
+  copySelect.empty();
+  for (var i = 0; i < seasonSelect[0].options.length; i++) {
+    option = seasonSelect[0].options[i]
+    if (option.value !== seasonId) {
+      copySelect.append($('<option>', { value: option.value, text: option.innerHTML }));
+    }
+  }
+  
 }
 
 function getCourses(seasonId) {
