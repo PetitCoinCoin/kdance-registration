@@ -217,6 +217,7 @@ function createUpdateMember() {
       let method = 'POST';
       if (member === null) {
         buttonId = button.getAttribute('id');
+        $('#form-member-courses').removeClass('d-none');
         if (buttonId === 'copy-btn') {
           getMember($('#copy-member-select').val(), false);
         } else {
@@ -225,6 +226,7 @@ function createUpdateMember() {
         $('#member-btn').html('Ajouter');
       } else {
         getMember(member, true);
+        $('#form-member-courses').addClass('d-none');
         $('#membre-btn').html('Modifier');
         url = url + member + '/';
         method = 'PATCH';

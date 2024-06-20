@@ -143,9 +143,13 @@
                 <label class="form-label required" for="member-birthday">Date de naissance</label>
                 <input type="date" id="member-birthday" class="form-control" required />
               </div>
-              <div class="form-outline mb-4">
+              <div class="form-outline mb-4" id="form-member-courses">
                 <label class="form-label" for="member-courses">Cours</label>
                 <select id="member-courses" class="form-select" multiple></select>
+                <div class="invalid-feedback d-block">
+                  Attention, toute modification, ajout ou suppression ultérieure de cours devra se faire auprès de l'équipe K'Dance.
+                </div>
+          
               </div>
             </div>
             <div class="modal-footer">
