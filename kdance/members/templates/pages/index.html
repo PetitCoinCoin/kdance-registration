@@ -157,6 +157,27 @@
       </div>
     </div>
 
+    <div class="modal fade" id="copy-member-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title">Renouveler un membre pour la nouvelle saison</h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="form-outline">
+              <label class="form-label" for="copy-member-select">Membre</label>
+              <select id="copy-member-select" class="form-select"></select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button id="copy-btn" type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#member-modal">Renouveler</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="modal fade" id="delete-modal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -243,7 +264,10 @@
         <template id="card-template">
           <div class="card mb-3">
             <div class="card-header d-flex justify-content-between">
-              <span></span>
+              <div>
+                <img height="30">
+                <span></span>
+              </div>
               <button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#member-modal">
                 <i class="bi-pencil-fill"></i>
               </button>
@@ -254,6 +278,11 @@
         </template>
 
         <template id="member-btn-template">
+          <button class="btn btn-outline-info" type="button" data-bs-toggle="modal"
+          data-bs-target="#copy-member-modal" id="copy-member-btn">
+            <i class="bi-patch-plus" style="color: purple;"></i>
+            Ajouter un membre d'une saison précédente
+          </button>
           <button class="btn btn-outline-info" type="button" data-bs-toggle="modal"
           data-bs-target="#member-modal" id="add-member-btn">
             <i class="bi-patch-plus" style="color: purple;"></i>

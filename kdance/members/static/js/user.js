@@ -13,11 +13,32 @@ $(document).ready(() => {
     $('#member-phone').val(isMe ? $('#desc-phone').html() : ''),
     $('#member-address').val(isMe ? $('#desc-address').html() : '')
   });
-  const machin = document.querySelector('#member-courses');
-  machin.addEventListener('change', () => {
-    console.log($('#member-courses').val())
-  });
 });
+
+function getPreviousMembers(members) {
+  let previousMembers = new Array
+  members.map((m) => {
+    let found = false;
+    let removeIndex = undefined;
+    for (var i = 0; i < previousMembers.length; i++) {
+      pm = previousMembers[i]
+      if (pm.first_name === m.first_name && pm.last_name === m.last_name) {
+        found = true;
+        if (m.season.year > pm.season.year) {
+          removeIndex = i;
+        }
+        break;
+      }
+    }
+    if (!found) {
+      previousMembers.push(m);
+    } else if (removeIndex !== undefined) {
+      previousMembers.splice(removeIndex, 1);
+      previousMembers.push(m);
+    }
+  })
+  return previousMembers
+}
 
 function getUser() {
     $.ajax({
@@ -41,6 +62,12 @@ function getUser() {
             const accordionTemplate = document.querySelector('#accordion-item-template');
             const cardTemplate = document.querySelector('#card-template');
             const memberBtnTemplate = document.querySelector('#member-btn-template');
+            // Previous seasons members
+            const previousMembers = getPreviousMembers(data.members.filter((m) => !m.season.is_current));
+            let memberSelect = $('#copy-member-select');
+            previousMembers.map((m) => {
+              memberSelect.append($('<option>', { value: m.id, text: `${m.first_name} ${m.last_name}` }));
+            })
             data.payment.map((item, i) => {
                 const clone = accordionTemplate.content.cloneNode(true);
                 // Payment info
@@ -72,6 +99,8 @@ function getUser() {
                       const cardClone = cardTemplate.content.cloneNode(true);
                       let memberTitle = cardClone.querySelector('span');
                       memberTitle.textContent = `${member.first_name} ${member.last_name}`;
+                      let avatar = cardClone.querySelector('img');
+                      avatar.src = `https://api.dicebear.com/8.x/thumbs/svg?seed=${member.first_name + member.last_name}&radius=50`;
                       let button = cardClone.querySelector('button');
                       button.dataset.bsMid = member.id;
                       // button.dataset.bsSid = item.season.id; garder pour DELETE
@@ -182,17 +211,20 @@ function createUpdateMember() {
   const memberModal = document.getElementById('member-modal');
   if (memberModal) {
     memberModal.addEventListener('show.bs.modal', event => {
-      // getCourses();
       const button = event.relatedTarget;
       const member = button.getAttribute('data-bs-mid');
-      const season = $('#member-season').val();
       let url = membersUrl;
       let method = 'POST';
       if (member === null) {
-        $('#member-modal-title').html('Ajouter un nouveau membre');
+        buttonId = button.getAttribute('id');
+        if (buttonId === 'copy-btn') {
+          getMember($('#copy-member-select').val(), false);
+        } else {
+          cleanMemberForm();
+        }
         $('#member-btn').html('Ajouter');
       } else {
-        getMember(member, season);
+        getMember(member, true);
         $('#membre-btn').html('Modifier');
         url = url + member + '/';
         method = 'PATCH';
@@ -202,19 +234,35 @@ function createUpdateMember() {
   }
 }
 
-function getMember(member, season) {
+function cleanMemberForm() {
+  $('#me-switch').prop('disabled', false);
+  $('#member-modal-title').html('Ajouter un nouveau membre');
+  $('#member-firstname').val(undefined);
+  $('#member-lastname').val(undefined);
+  $('#member-email').val(undefined);
+  $('#member-phone').val(undefined);
+  $('#member-address').val(undefined);
+  $('#member-birthday').val(undefined);
+  $("#member-courses").val(undefined);
+}
+
+function getMember(member, withCourses) {
   $.ajax({
     url: membersUrl + member + '/',
     type: 'GET',
     success: (data) => {
-      $('#member-modal-title').html(`Modifier les informations de ${data.first_name} ${data.last_name}`);
+      $('#me-switch').prop('disabled', true);
+      const action = withCourses ? 'Modifier' : 'Copier';
+      $('#member-modal-title').html(`${action} les informations de ${data.first_name} ${data.last_name}`);
       $('#member-firstname').val(data.first_name);
       $('#member-lastname').val(data.last_name);
       $('#member-email').val(data.email);
       $('#member-phone').val(data.phone);
       $('#member-address').val(data.address);
       $('#member-birthday').val(data.birthday);
-      $("#member-courses").val(data.courses.map((c) => c.id));
+      if (withCourses) {
+        $("#member-courses").val(data.courses.map((c) => c.id));
+      }
     },
     error: (error) => {
       // if (!error.responseJSON) {
@@ -267,10 +315,9 @@ function deleteItem() {
       const modalBody = deleteModal.querySelector('.modal-body');
       let url = '';
       if (buttonId === 'delete-me-btn') {
-        // Teacher deletion
         $('#delete-modal-title').html('Supprimer mon compte');
         modalBody.textContent = `Etes-vous sur.e de vouloir supprimer votre compte ainsi que tous les membres associés ?`;
-        url =  userMeUrl;
+        url = userMeUrl;
       }
       $(document).on("click", "#delete-btn", function(){
         $.ajax({
