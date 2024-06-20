@@ -48,6 +48,8 @@ function getSeason(season) {
     success: (data) => {
       $('#season-year').val(data.year);
       $('#season-current').prop('checked', data.is_current);
+      $('#season-discount-percent').val(data.discount_percent);
+      $('#season-discount-limit').val(data.discount_limit);
     },
     error: (error) => {
       // if (!error.responseJSON) {
@@ -87,6 +89,12 @@ function postOrPatchSeason(url, method) {
       year: $('#season-year').val(),
       is_current: $('#season-current').is(':checked'),
     };
+    if ($('#season-discount-percent').val() !== '') {
+      data['discount_percent'] = $('#season-discount-percent').val();
+    }
+    if ($('#season-discount-limit').val() !== '') {
+      data['discount_limit'] = $('#season-discount-limit').val();
+    }
     $.ajax({
       url: url,
       type: method,

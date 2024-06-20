@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from django.core.validators import EmailValidator, RegexValidator
+from django.core.validators import EmailValidator, MaxValueValidator, RegexValidator
 from django.db import models, transaction
 
 
@@ -11,6 +11,15 @@ class Season(models.Model):
         validators=[RegexValidator(r"\d{4}-\d{4}")]
     )
     is_current = models.BooleanField(null=False, blank=False, default=True)
+    discount_percent = models.PositiveIntegerField(
+        default=10,
+        blank=False,
+        validators=[MaxValueValidator(100)],
+    )
+    discount_limit = models.PositiveIntegerField(
+        default=2,
+        blank=False,
+    )
 
     @transaction.atomic
     def save(self, *args, **kwargs) -> None:
@@ -97,8 +106,8 @@ class Payment(models.Model):
                 total += 1
                 due += course.price
         # Reduction
-        if total > 1:
-            due *= 0.9
+        if total >= self.season.discount_limit:
+            due *= round(((100 - self.season.discount_percent) / 100), 2)
         # Adhesion
         due += len(members) * 10
         return due
