@@ -1,3 +1,4 @@
+from enum import Enum
 from django.contrib.auth.models import User
 from django.core.validators import EmailValidator, MaxValueValidator, RegexValidator
 from django.db import models, transaction
@@ -69,6 +70,8 @@ class CourseManager(models.Manager):
             except IntegrityError:
                 # Mettre en place un logger propre
                 print("Cours non copié")
+
+
 class Course(models.Model):
     name = models.CharField(
         null=False,
@@ -101,11 +104,20 @@ class Course(models.Model):
         unique_together = ("name", "season", "weekday", "start_hour")
 
 
+class MedicEnum(Enum):
+    MISSING = "Manquant"
+    CERTIFICATE = "Certificat"
+    TESTIMONIAL = "Attestation"
+
+
 class Documents(models.Model):
-    season = models.ForeignKey(Season, on_delete=models.CASCADE)
     authorise_photos = models.BooleanField(null=False)
-    authorise_emergency = models.BooleanField(null=True)
-    medical_document = models.BooleanField(null=False)
+    authorise_emergency = models.BooleanField(null=False)
+    medical_document = models.CharField(
+        max_length=11,
+        choices=[(e.value, e.value) for e in MedicEnum],
+        default=MedicEnum.MISSING.value,
+    )
 
 
 class Payment(models.Model):

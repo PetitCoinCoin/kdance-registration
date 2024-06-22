@@ -13,6 +13,15 @@ $(document).ready(() => {
     $('#member-phone').val(isMe ? $('#desc-phone').html() : ''),
     $('#member-address').val(isMe ? $('#desc-address').html() : '')
   });
+  const birthdaySelect = document.querySelector('#member-birthday');
+  birthdaySelect.addEventListener('change', () => {
+    const isMajor = Boolean(getAge($('#member-birthday').val()) >= 18);
+    if (isMajor) {
+      $('#emergency').addClass('d-none');
+    } else {
+      $('#emergency').removeClass('d-none');
+    }
+ });
 });
 
 function getPreviousMembers(members) {
@@ -40,6 +49,33 @@ function getPreviousMembers(members) {
   return previousMembers
 }
 
+function populateDocuments(member, memberInfos) {
+  const docTemplate = document.querySelector('#member-doc-template');
+  const clone = docTemplate.content.cloneNode(true);
+  let icons = clone.querySelectorAll('i');
+  let liItems = clone.querySelectorAll('li');
+  icons[0].className = member.documents?.authorise_photos ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
+  icons[0].style = member.documents?.authorise_photos ? 'color: #baffc9;' : 'color: #ffb3ba;';
+  icons[1].className = member.documents?.authorise_emergency ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
+  icons[1].style = member.documents?.authorise_emergency ? 'color: #baffc9;' : 'color: #ffb3ba;';
+  const medicalDocStatus = Boolean(member.documents != undefined && member.documents.medical_document !== 'Manquant')
+  icons[2].className = medicalDocStatus ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
+  icons[2].style = medicalDocStatus ? 'color: #baffc9;' : 'color: #ffb3ba;';
+  liItems[2].innerHTML += `Document médical: ${member.documents?.medical_document}`;
+  memberInfos.appendChild(clone);
+}
+
+function getAge(birthday) {
+  const today = new Date();
+  const birthDate = new Date(birthday);
+  const yearsDifference = today.getFullYear() - birthDate.getFullYear();
+  const isBeforeBirthday =
+      today.getMonth() < birthDate.getMonth() ||
+      (today.getMonth() === birthDate.getMonth() &&
+          today.getDate() < birthDate.getDate());
+  return isBeforeBirthday ? yearsDifference - 1 : yearsDifference;
+};
+
 function getUser() {
     $.ajax({
         url: userMeUrl,
@@ -51,7 +87,7 @@ function getUser() {
             $('#desc-email').html(data.email);
             $('#desc-phone').html(data.profile.phone);
             $('#desc-address').html(data.profile.address);
-            $('#desc-picture').attr('src', `https://api.dicebear.com/8.x/thumbs/svg?seed=${data.username}`);
+            $('#desc-picture').attr('src', `https://api.dicebear.com/8.x/thumbs/svg?seed=${data.first_name + data.last_name}`);
             $('#edit-me-firstname').val(data.first_name);
             $('#edit-me-lastname').val(data.last_name);
             $('#edit-me-username').val(data.username);
@@ -105,15 +141,17 @@ function getUser() {
                       button.dataset.bsMid = member.id;
                       // button.dataset.bsSid = item.season.id; garder pour DELETE
                       if (!item.season.is_current) {
-                        button.disabled = true;
+                        button.remove();
                       }
-                      let memberBody = cardClone.querySelector('div.card-body');
+                      let memberInfos =  cardClone.querySelector('ul');
                       member.courses.map((course) => {
-                        let paragraphe = document.createElement('p');
+                        let liItem = document.createElement('li');
+                        liItem.className = 'list-group-item';
                         const startHour = course.start_hour.split(':');
-                        paragraphe.textContent = `${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
-                        memberBody.appendChild(paragraphe);
-                      });
+                        liItem.textContent = `${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
+                        memberInfos.appendChild(liItem);
+                      })
+                      populateDocuments(member, memberInfos);
                       body.appendChild(cardClone);
                     }
                 });
@@ -216,17 +254,25 @@ function createUpdateMember() {
       let url = membersUrl;
       let method = 'POST';
       if (member === null) {
+        // Create member
         buttonId = button.getAttribute('id');
         $('#form-member-courses').removeClass('d-none');
+        $('#authorise-photos').prop('disabled', false);
+        $('#authorise-emergency').prop('disabled', false);
         if (buttonId === 'copy-btn') {
+          // From previous member
           getMember($('#copy-member-select').val(), false);
         } else {
+          // From scratch
           cleanMemberForm();
         }
         $('#member-btn').html('Ajouter');
       } else {
+        // Update member
         getMember(member, true);
         $('#form-member-courses').addClass('d-none');
+        $('#authorise-photos').prop('disabled', true);
+        $('#authorise-emergency').prop('disabled', true);
         $('#membre-btn').html('Modifier');
         url = url + member + '/';
         method = 'PATCH';
@@ -248,13 +294,13 @@ function cleanMemberForm() {
   $("#member-courses").val(undefined);
 }
 
-function getMember(member, withCourses) {
+function getMember(member, isEdition) {
   $.ajax({
     url: membersUrl + member + '/',
     type: 'GET',
     success: (data) => {
       $('#me-switch').prop('disabled', true);
-      const action = withCourses ? 'Modifier' : 'Copier';
+      const action = isEdition ? 'Modifier' : 'Copier';
       $('#member-modal-title').html(`${action} les informations de ${data.first_name} ${data.last_name}`);
       $('#member-firstname').val(data.first_name);
       $('#member-lastname').val(data.last_name);
@@ -262,8 +308,16 @@ function getMember(member, withCourses) {
       $('#member-phone').val(data.phone);
       $('#member-address').val(data.address);
       $('#member-birthday').val(data.birthday);
-      if (withCourses) {
+      $('#authorise-photos').prop('checked', isEdition ? data.documents.authorise_photos : true);
+      $('#authorise-emergency').prop('checked', isEdition ? data.documents.authorise_emergency: true);
+      if (isEdition) {
         $("#member-courses").val(data.courses.map((c) => c.id));
+      }
+      const isMajor = Boolean(getAge(data.birthday) >= 18);
+      if (isMajor) {
+        $('#emergency').addClass('d-none');
+      } else {
+        $('#emergency').removeClass('d-none');
       }
     },
     error: (error) => {
@@ -287,6 +341,10 @@ function postOrPatchMember(url, method) {
       birthday: $('#member-birthday').val(),
       season: $('#member-season').val(),
       courses: $('#member-courses').val(),
+      documents: {
+        authorise_photos: $('#authorise-photos').is(':checked'),
+        authorise_emergency: $('#authorise-emergency').is(':checked'),
+      }
     };
     $.ajax({
       url: url,

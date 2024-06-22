@@ -1,9 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework import serializers
 
 from members.models import (
     Course,
+    Documents,
     Member,
     Payment,
     Season,
@@ -83,7 +85,18 @@ class CourseCopySeasonSerializer(serializers.Serializer):
         return season_id
 
 
-class MemberSerializer(serializers.ModelSerializer):
+class DocumentsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Documents
+        fields = (
+            "authorise_photos",
+            "authorise_emergency",
+            "medical_document",
+        )
+
+
+class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerializer):
+    documents = DocumentsSerializer()
 
     class Meta:
         model = Member
