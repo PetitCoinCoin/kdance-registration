@@ -139,4 +139,17 @@ class PaymentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Payment
-        fields = ("season", "paid", "due")
+        fields = (
+            "id",
+            "season",
+            "paid",
+            "due",
+            "cash",
+            "sport_coupon",
+            "ancv",
+            "sport_pass",
+            "check",
+            "other_payment",
+            "comment",
+            "refund",
+        )

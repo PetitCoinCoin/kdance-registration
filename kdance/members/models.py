@@ -1,6 +1,6 @@
 from enum import Enum
 from django.contrib.auth.models import User
-from django.core.validators import EmailValidator, MaxValueValidator, RegexValidator
+from django.core.validators import EmailValidator, MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models, transaction
 from django.db.utils import IntegrityError
 
@@ -123,7 +123,9 @@ class Documents(models.Model):
 class Payment(models.Model):
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    paid = models.PositiveIntegerField(null=False, default=0)
+    cash = models.FloatField(null=False, default=0.0, validators=[MinValueValidator(0)])
+    comment = models.CharField(null=False, blank=True, max_length=700, default='')
+    refund = models.FloatField(null=False, default=0.0, validators=[MinValueValidator(0)])
 
     @property
     def due(self) -> float:
@@ -140,6 +142,77 @@ class Payment(models.Model):
         # Adhesion
         due += len(members) * 10
         return due
+
+    @property
+    def paid(self) -> float:
+        paid = self.cash - self.refund
+        if hasattr(self, "sport_coupon"):
+            paid += self.sport_coupon.amount
+        if hasattr(self, "ancv"):
+            paid += self.ancv.amount
+        for other in self.other_payment.all():
+            paid += other.amount
+        for sport_pass in self.sport_pass.all():
+            paid += sport_pass.amount
+        for check in self.check_payment.all():
+            paid += check.amount
+        return paid
+
+
+class SportCoupon(models.Model):
+    amount = models.PositiveIntegerField(null=False)
+    count = models.PositiveIntegerField(null=False)
+    payment = models.OneToOneField(Payment, related_name="sport_coupon", on_delete=models.CASCADE)
+
+
+class Ancv(models.Model):
+    amount = models.PositiveIntegerField(null=False)
+    count = models.PositiveIntegerField(null=False)
+    payment = models.OneToOneField(Payment, on_delete=models.CASCADE)
+
+
+class SportPass(models.Model):
+    amount = models.PositiveIntegerField(null=False, default=50)
+    code = models.CharField(null=False, blank=False, max_length=50)
+    payment = models.ForeignKey(Payment, related_name="sport_pass", on_delete=models.CASCADE)
+
+
+class Check(models.Model):
+    number = models.PositiveIntegerField(null=False)
+    name = models.CharField(
+        null=False,
+        blank=False,
+        max_length=100,
+    )
+    bank = models.CharField(
+        null=False,
+        blank=False,
+        max_length=100,
+    )
+    amount = models.FloatField(null=False, validators=[MinValueValidator(0)])
+    month = models.PositiveIntegerField(
+        choices=[
+            (1, "Janvier"),
+            (2, "Février"),
+            (3, "Mars"),
+            (4, "Avril"),
+            (5, "Mai"),
+            (6, "Juin"),
+            (7, "Juillet"),
+            (8, "Aout"),
+            (9, "Septembre"),
+            (10, "Octobre"),
+            (11, "Novembre"),
+            (12, "Décembre"),
+        ],
+    )
+    payment = models.ForeignKey(Payment, related_name="check_payment", on_delete=models.CASCADE)
+
+
+class OtherPayment(models.Model):
+    amount = models.FloatField(null=False, validators=[MinValueValidator(0)])
+    comment = models.CharField(null=False, blank=False, max_length=100)
+    payment = models.ForeignKey(Payment, related_name="other_payment", on_delete=models.CASCADE)
 
 
 class Member(models.Model):
