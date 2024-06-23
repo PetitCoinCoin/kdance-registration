@@ -131,7 +131,7 @@ class Payment(models.Model):
     def due(self) -> float:
         due = 0.0
         total = 0
-        members = self.user.member_set.filter(is_active=True, season=self.season).all()
+        members = self.user.member_set.filter(season=self.season).all()
         for member in members:
             for course in member.courses.all():
                 total += 1
@@ -225,10 +225,6 @@ class Member(models.Model):
         blank=False,
         null=False,
         max_length=35,
-    )
-    is_active = models.BooleanField(
-        default=True,
-        null=False,
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     season = models.ForeignKey(Season, on_delete=models.CASCADE)

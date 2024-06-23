@@ -139,7 +139,6 @@ function getUser() {
                       avatar.src = `https://api.dicebear.com/8.x/thumbs/svg?seed=${member.first_name + member.last_name}&radius=50`;
                       let button = cardClone.querySelector('button');
                       button.dataset.bsMid = member.id;
-                      // button.dataset.bsSid = item.season.id; garder pour DELETE
                       if (!item.season.is_current) {
                         button.remove();
                       }

@@ -104,7 +104,6 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             "id",
             "first_name",
             "last_name",
-            "is_active",
             "season",
             "courses",
             "documents",
