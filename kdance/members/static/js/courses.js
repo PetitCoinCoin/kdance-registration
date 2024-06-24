@@ -28,7 +28,7 @@ function getSeasons() {
       data.map((season) => {
         let label = season.year;
         if (season.is_current) {
-          label += ' (en cours)'
+          label += ' (en cours)';
           getCourses(season.id);
           $('#copy-modal-title').html(`Ajouter des cours à la saison ${season.year}`);
         } else {

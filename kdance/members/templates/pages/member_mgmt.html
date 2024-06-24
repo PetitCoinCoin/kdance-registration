@@ -1,0 +1,76 @@
+{% extends 'layouts/base.html' %}
+
+{% load static %}
+
+{% block content %}
+
+<main>
+  <section>
+    <!-- Modal -->
+    {% csrf_token %}
+    <div class="modal fade" id="member-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="member-modal-title"></h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form id="form-member" name="form-member">
+            <div class="modal-body">
+              <div class="form-check mb-1">
+                <input class="form-check-input" type="checkbox" value="" id="authorise-photos" disabled>
+                <label class="form-check-label" for="authorise-photos">Autorisation d'utilisation des photos</label>
+              </div>
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" value="" id="authorise-emergency" disabled>
+                <label class="form-check-label" for="authorise-emergency">Autorisation parentale (mineurs)</label>
+              </div>
+              <div class="form-outline mb-4">
+                <label class="form-label required" for="doc-select">Document médical</label>
+                <select id="doc-select" class="form-select">
+                  <option value="Manquant">Manquant</option>
+                  <option value="Attestation">Attestation</option>
+                  <option value="Certificat">Certificat</option>
+                </select>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+              <button type="submit" class="btn btn-info">Enregistrer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="container">
+      <div class="text-center">
+        <h1 class="display-4 mb-5">Gestion des adhérents</h1>
+      </div>
+      {% if user.is_authenticated and user.is_superuser %}
+      <div class="container">
+        <div class="mb-5">
+          <select id="season-select" class="form-select max-w-300">
+          </select>
+        </div>
+        <div>
+          <table id="members-table"></table>
+        </div>
+      </div>
+      {% else %}
+      <div class="text-center">
+        <h4 class="display-4 mb-5">Oh oh, vous n'avez rien à faire là !</h4>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+  <script type="text/javascript">
+    const seasonsUrl = "{% url 'api-seasons-list' %}";
+    const membersUrl = "{% url 'api-members-list' %}";
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  </script>
+  <script src="{% static 'js/members.js' %}"></script>
+</main>
+
+{% endblock content %}

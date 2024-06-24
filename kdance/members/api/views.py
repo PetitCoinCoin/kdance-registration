@@ -82,7 +82,7 @@ class CourseViewSet(
         season = self.request.query_params.get("season")
         if season:
             queryset = queryset.filter(season__id=season)
-        return queryset.order_by("-season__year", "weekday")
+        return queryset.order_by("-season__year", "weekday", "start_hour")
 
     @action(methods=["post"], detail=False)
     def copy_season(self, request: Request) -> Response:
@@ -104,13 +104,19 @@ class MemberViewSet(
     DestroyModelMixin,
     GenericViewSet,
 ):
-    queryset = Member.objects.all().order_by("-pk")
     http_method_names = ["get", "post", "patch", "delete"]
 
     def get_serializer_class(self):
         if self.request.method.lower() == "get":
             return MemberRetrieveSerializer
         return MemberSerializer
+
+    def get_queryset(self):
+        queryset = Member.objects.all()
+        season = self.request.query_params.get("season")
+        if season:
+            queryset = queryset.filter(season__id=season)
+        return queryset.order_by("-season__year", "last_name", "first_name")
 
     def create(self, request: Request, *a, **k) -> Response:
         serializer = self.get_serializer(data=request.data)
