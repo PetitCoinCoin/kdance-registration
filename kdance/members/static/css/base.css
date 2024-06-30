@@ -37,6 +37,10 @@ footer {
     min-width: 500px;
 }
 
+.min-w-200 {
+    min-width: 200px;
+}
+
 .max-w-300 {
     max-width: 300px;
 }
@@ -56,4 +60,16 @@ h1 {
 .form-check-input:checked {
     background-color: #0dcaf0;
     border-color: #0dcaf0;
+}
+
+.bg-alert {
+    background-color: #ffb3ba !important;
+}
+
+.bg-warning {
+    background-color: #ffdfba !important;
+}
+
+.bg-info {
+    background-color: #baffc9 !important;
 }

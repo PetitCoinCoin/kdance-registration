@@ -4,11 +4,15 @@ from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework import serializers
 
 from members.models import (
+    Ancv,
+    Check,
     Course,
     Documents,
     Member,
     Payment,
     Season,
+    SportCoupon,
+    SportPass,
     Teacher,
 )
 
@@ -95,8 +99,78 @@ class DocumentsSerializer(serializers.ModelSerializer):
         )
 
 
+class AncvSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Ancv
+        fields = ("amount", "count")
+
+
+class SportCouponSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SportCoupon
+        fields = ("amount", "count")
+
+
+class CheckSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Check
+        fields = (
+            "amount",
+            "bank",
+            "month",
+            "name",
+            "number",
+            "payment",
+        )
+
+
+class PaymentSerializer(WritableNestedModelSerializer, serializers.ModelSerializer):
+    season = SeasonSerializer()
+    ancv = AncvSerializer()
+    sport_coupon = SportCouponSerializer()
+    check_payment = CheckSerializer(many=True)
+
+    class Meta:
+        model = Payment
+        fields = (
+            "id",
+            "season",
+            "paid",
+            "due",
+            "cash",
+            "sport_coupon",
+            "ancv",
+            "check_payment",
+            "other_payment",
+            "comment",
+            "refund",
+        )
+
+    @transaction.atomic
+    def save(self, **kwargs: Payment):
+        checks_data = self.validated_data.pop("check_payment", [])
+        payment = super().save(**kwargs)
+        if checks_data:
+            for check in payment.check_payment.all():
+                check.delete()
+        for check_payment in checks_data:
+            Check(payment=payment, **check_payment).save()
+
+
+class SportPassSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SportPass
+        fields = ("amount", "code")
+
+
 class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerializer):
     documents = DocumentsSerializer()
+    payment = PaymentSerializer()
+    sport_pass = SportPassSerializer()
 
     class Meta:
         model = Member
@@ -107,12 +181,18 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             "season",
             "courses",
             "documents",
+            "payment",
+            "sport_pass",
             "birthday",
             "address",
             "email",
             "phone",
         )
-        extra_kwargs = {"courses": {"required": False}}
+        extra_kwargs = {
+            "courses": {"required": False},
+            "payment": {"read_only": True},
+            "sport_pass": {"required": False},
+        }
 
     def validate(self, attr: dict) -> dict:
         validated = super().validate(attr)
@@ -132,23 +212,3 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
 class MemberRetrieveSerializer(MemberSerializer):
     courses = CourseRetrieveSerializer(many=True)
     season = SeasonSerializer()
-
-class PaymentSerializer(serializers.ModelSerializer):
-    season = SeasonSerializer()
-
-    class Meta:
-        model = Payment
-        fields = (
-            "id",
-            "season",
-            "paid",
-            "due",
-            "cash",
-            "sport_coupon",
-            "ancv",
-            "sport_pass",
-            "check",
-            "other_payment",
-            "comment",
-            "refund",
-        )

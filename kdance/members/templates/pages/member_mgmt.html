@@ -9,7 +9,7 @@
     <!-- Modal -->
     {% csrf_token %}
     <div class="modal fade" id="member-modal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
             <h4 class="modal-title" id="member-modal-title"></h4>
@@ -17,6 +17,7 @@
           </div>
           <form id="form-member" name="form-member">
             <div class="modal-body">
+              <h5 class="border-bottom mb-3">Autorisations et documents</h5>
               <div class="form-check mb-1">
                 <input class="form-check-input" type="checkbox" value="" id="authorise-photos" disabled>
                 <label class="form-check-label" for="authorise-photos">Autorisation d'utilisation des photos</label>
@@ -25,13 +26,98 @@
                 <input class="form-check-input" type="checkbox" value="" id="authorise-emergency" disabled>
                 <label class="form-check-label" for="authorise-emergency">Autorisation parentale (mineurs)</label>
               </div>
-              <div class="form-outline mb-4">
-                <label class="form-label required" for="doc-select">Document médical</label>
+              <div class="form-outline mb-4 d-flex align-items-baseline">
+                <label class="form-label min-w-200" for="doc-select">Document médical</label>
                 <select id="doc-select" class="form-select">
                   <option value="Manquant">Manquant</option>
                   <option value="Attestation">Attestation</option>
                   <option value="Certificat">Certificat</option>
                 </select>
+              </div>
+              <h5 class="border-bottom mb-3">Paiement</h5>
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="cash-switch">
+                <label class="form-check-label" for="cash-switch">Espèces</label>
+              </div>
+              <div class="form-outline mb-4" id="cash-div" hidden>
+                <label class="form-label" for="payment-cash">Montant reçu en espèces (€)</label>
+                <input type="number" id="payment-cash" class="form-control" min="0"/>
+              </div>
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="check-switch">
+                <label class="form-check-label" for="check-switch">Chèques</label>
+              </div>
+              <div id="check-div" hidden>
+              </div>
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="ancv-switch">
+                <label class="form-check-label" for="ancv-switch">ANCV</label>
+              </div>
+              <div class="row" id="ancv-div" hidden>
+                <div class="col form-outline mb-4">
+                  <label class="form-label" for="payment-ancv-amount">Somme reçue (€)</label>
+                  <input type="number" id="payment-ancv-amount" class="form-control" min="0"/>
+                </div>
+                <div class="col form-outline mb-4">
+                  <label class="form-label" for="payment-ancv-count">Nombre de chèques vacances</label>
+                  <input type="number" id="payment-ancv-count" class="form-control" min="0"/>
+                </div>
+              </div>
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="pass-switch">
+                <label class="form-check-label" for="pass-switch">Pass Sport</label>
+              </div>
+              <div id="pass-div" hidden>
+                <div class="row align-items-end">
+                  <div class="col form-outline mb-4">
+                    <label class="form-label" for="payment-pass-code">Code</label>
+                    <input type="text" id="payment-pass-code" class="form-control" maxlength="11"/>
+                  </div>
+                  <div class="col form-outline mb-4">
+                    <label class="form-label" for="payment-pass-amount">Montant (€)</label>
+                    <input type="number" id="payment-pass-amount" class="form-control" min="0" value="50"/>
+                  </div>
+                </div>
+              </div>
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="coupon-switch">
+                <label class="form-check-label" for="coupon-switch">Coupon sport mairie</label>
+              </div>
+              <div class="row" id="coupon-div" hidden>
+                <div class="col form-outline mb-4">
+                  <label class="form-label" for="payment-coupon-amount">Somme reçue (€)</label>
+                  <input type="number" id="payment-coupon-amount" class="form-control" min="0"/>
+                </div>
+                <div class="col form-outline mb-4">
+                  <label class="form-label" for="payment-coupon-count">Nombre de coupons sport</label>
+                  <input type="number" id="payment-coupon-count" class="form-control" min="0"/>
+                </div>
+              </div>
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="other-switch">
+                <label class="form-check-label" for="other-switch">Autre</label>
+              </div>
+              <div class="row" id="other-div" hidden>
+                <div class="col form-outline mb-4">
+                  <label class="form-label" for="payment-other-amount">Somme reçue (€)</label>
+                  <input type="number" id="payment-other-amount" class="form-control" min="0"/>
+                </div>
+                <div class="col form-outline mb-4">
+                  <label class="form-label" for="payment-other-comment">Commentaire (type de paiement)</label>
+                  <input type="text" id="payment-other-comment" class="form-control" />
+                </div>
+              </div>
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="refund-switch">
+                <label class="form-check-label" for="refund-switch">Remboursement</label>
+              </div>
+              <div class="form-outline mb-4" id="refund-div" hidden>
+                <label class="form-label" for="payment-refund">Remboursement effectué</label>
+                <input type="number" id="payment-refund" class="form-control" min="0"/>
+              </div>
+              <div class="form-outline mb-4">
+                <label class="form-label" for="comment">Commentaire</label>
+                <textarea class="form-control" id="comment" rows="3"></textarea>
               </div>
             </div>
             <div class="modal-footer">
@@ -64,10 +150,57 @@
       </div>
       {% endif %}
     </div>
+
+    <!-- Template -->
+     <template id="check-template">
+      <div>
+        <div class="row">
+          <div class="col form-outline mb-4">
+            <label class="form-label" for="payment-check-number-">N° de chèque</label>
+            <input type="number" id="payment-check-number-" class="form-control"/>
+          </div>
+          <div class="col form-outline mb-4">
+            <label class="form-label" for="payment-check-amount-">Montant (€)</label>
+            <input type="number" id="payment-check-amount-" class="form-control" min="0"/>
+          </div>
+          <div class="col form-outline mb-4">
+            <label class="form-label" for="payment-check-month-">Encaissement</label>
+            <select id="payment-check-month-" class="form-select max-w-300"></select>
+          </div>
+        </div>
+        <div class="row align-items-end border-bottom">
+          <div class="col form-outline mb-4">
+            <label class="form-label" for="payment-check-name-">Emetteur</label>
+            <input type="text" id="payment-check-name-" class="form-control"/>
+          </div>
+          <div class="col form-outline mb-4">
+            <label class="form-label" for="payment-check-bank-">Banque</label>
+            <input type="text" id="payment-check-bank-" class="form-control" />
+          </div>
+        </div>
+      </div>
+     </template>
+
+     <template id="add-check-template">
+      <div class="col-1 mb-4">
+        <button class="btn btn-outline-info" type="button" >
+          <i class="bi-plus-square"></i>
+        </button>
+      </div>
+     </template>
+
+     <template id="remove-check-template">
+      <div class="col-1 mb-4">
+        <button class="btn btn-outline-danger" type="button" >
+          <i class="bi-trash3-fill"></i>
+        </button>
+      </div>
+     </template>
   </section>
   <script type="text/javascript">
     const seasonsUrl = "{% url 'api-seasons-list' %}";
     const membersUrl = "{% url 'api-members-list' %}";
+    const paymentssUrl = "{% url 'api-payments-list' %}";
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
   </script>
   <script src="{% static 'js/members.js' %}"></script>

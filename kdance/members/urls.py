@@ -4,6 +4,7 @@ from rest_framework import routers
 from members.api.views import (
     CourseViewSet,
     MemberViewSet,
+    PaymentViewSet,
     SeasonViewSet,
     TeacherViewSet,
 )
@@ -18,6 +19,7 @@ from members.views import (
 router = routers.DefaultRouter()
 router.register(r"courses", CourseViewSet, basename="api-courses")
 router.register(r"members", MemberViewSet, basename="api-members")
+router.register(r"payments", PaymentViewSet, basename="api-payments")
 router.register(r"seasons", SeasonViewSet, basename="api-seasons")
 router.register(r"teachers", TeacherViewSet, basename="api-teachers")
 

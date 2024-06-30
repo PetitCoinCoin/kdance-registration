@@ -396,7 +396,7 @@ function deleteItem() {
         modalBody.textContent = `Etes-vous sur.e de vouloir supprimer la saison ${seasonYear} ainsi que ses cours associés ?`;
         url = seasonsUrl + seasonSelect.val() + '/';
       }
-      $(document).on("click", "#delete-btn", function(){
+      $(document).on('click', '#delete-btn', function(){
         $.ajax({
           url: url,
           type: 'DELETE',

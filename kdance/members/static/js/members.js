@@ -1,11 +1,106 @@
 $(document).ready(() => {
+  displayPayments();
+  initCheckPayment();
+  handleCheckPayment();
   getSeasons();
   updateMember();
   const seasonSelect = document.querySelector('#season-select');
-  seasonSelect.addEventListener('change', () => 
+  seasonSelect.addEventListener('change', () =>
     onSeasonChange(seasonSelect.value)
   );
 });
+
+function populateMonths(itemId) {
+  monthSelectAdd = $(itemId);
+  for (let key in MONTH) {
+    monthSelectAdd.append($('<option>', { value: key, text: MONTH[key] }));
+  }
+}
+
+function displayPayments() {
+  const cashSwitch = document.querySelector('#cash-switch');
+  cashSwitch.addEventListener('change', () => {
+    $('#cash-div').attr('hidden', !$('#cash-switch').is(':checked'));
+  });
+  const checkSwitch = document.querySelector('#check-switch');
+  checkSwitch.addEventListener('change', () => {
+    $('#check-div').attr('hidden', !$('#check-switch').is(':checked'));
+  });
+  const ancvSwitch = document.querySelector('#ancv-switch');
+  ancvSwitch.addEventListener('change', () => {
+    $('#ancv-div').attr('hidden', !$('#ancv-switch').is(':checked'));
+  });
+  const passSwitch = document.querySelector('#pass-switch');
+  passSwitch.addEventListener('change', () => {
+    $('#pass-div').attr('hidden', !$('#pass-switch').is(':checked'));
+  });
+  const couponSwitch = document.querySelector('#coupon-switch');
+  couponSwitch.addEventListener('change', () => {
+    $('#coupon-div').attr('hidden', !$('#coupon-switch').is(':checked'));
+  });
+  const otherSwitch = document.querySelector('#other-switch');
+  otherSwitch.addEventListener('change', () => {
+    $('#other-div').attr('hidden', !$('#other-switch').is(':checked'));
+  });
+  const refundSwitch = document.querySelector('#refund-switch');
+  refundSwitch.addEventListener('change', () => {
+    $('#refund-div').attr('hidden', !$('#refund-switch').is(':checked'));
+  });
+}
+
+function initCheckPayment() {
+  const checkParent = document.querySelector('#check-div');
+  const checkTemplate = document.querySelector('#check-template');
+  for (let i = 0; i < MONTH_NUMBER; i++) {
+    const clone = checkTemplate.content.cloneNode(true);
+    const items = clone.querySelectorAll('.form-outline');
+    for (let k = 0; k < items.length; k++) {
+      items[k].children[0].htmlFor += i;
+      items[k].children[1].id += i;
+    }
+    // Add button except for last
+    if (i < 5) {
+      const addTemplate = document.querySelector('#add-check-template');
+      const addClone = addTemplate.content.cloneNode(true);
+      let addButton = addClone.querySelector('button');
+      addButton.id += `add-check-${i}`;
+      clone.querySelectorAll('.row')[1].appendChild(addClone);
+    }
+    // Delete button + hidden except for first
+    if (i > 0) {
+      const removeTemplate = document.querySelector('#remove-check-template');
+      const removeClone = removeTemplate.content.cloneNode(true);
+      let removeButton = removeClone.querySelector('button');
+      removeButton.id += `remove-check-${i}`;
+      removeButton.dataset.bsCnumber = i;
+      clone.querySelectorAll('.row')[1].appendChild(removeClone);
+      clone.querySelectorAll('div')[0].id = `check-item-${i}`;
+      clone.querySelectorAll('div')[0].hidden = true;
+    }
+    checkParent.appendChild(clone);
+    populateMonths(`#payment-check-month-${i}`);
+  }
+}
+
+function handleCheckPayment() {
+  for (let i = 0; i < MONTH_NUMBER - 1; i++) {
+    $(`#add-check-${i}`).on('click', () => {
+      $(`#check-item-${i + 1}`).attr('hidden', false);
+      $(`#payment-check-name-${i + 1}`).val($(`#payment-check-name-${i}`).val());
+      $(`#payment-check-bank-${i + 1}`).val($(`#payment-check-bank-${i}`).val());
+    });
+  }
+  for (let i = 1; i < MONTH_NUMBER; i++) {
+    $(`#remove-check-${i}`).on('click', () => {
+      $(`#payment-check-name-${i}`).val('');
+      $(`#payment-check-bank-${i}`).val('');
+      $(`#payment-check-number-${i}`).val('');
+      $(`#payment-check-amount-${i}`).val('');
+      $(`#payment-check-month-${i}`).val('0');
+      $(`#check-item-${i}`).attr('hidden', true);
+    });
+  }
+}
 
 function getSeasons() {
   $.ajax({
@@ -38,6 +133,7 @@ function getMembers(seasonId) {
     url: membersUrl + `?season=${seasonId}`,
     type: 'GET',
     success: (data) => {
+      // Bootstrap table not initialised
       if (document.querySelector('#members-table').className === '') {
         $('#members-table').bootstrapTable({
           search: true,
@@ -79,28 +175,46 @@ function getMembers(seasonId) {
             title: 'Doc médical',
             searchable: true,
             sortable: true,
+            cellStyle: function (value, row, index) {
+              return {
+                classes: value == 'Manquant' ? 'bg-alert' : 'bg-info'
+              };
+            }
+          }, {
+            field: 'solde',
+            title: 'Solde dû (€)',
+            searchable: true,
+            sortable: true,
+            cellStyle: function (value, row, index) {
+              return {
+                classes: value > 0 ? 'bg-alert' : value < 0 ? 'bg-warning' : 'bg-info'
+              };
+            }
           }, {
             field: 'operate',
             title: 'Modifier',
             align: 'center',
             clickToSelect: false,
-            formatter : function(value, row, index) {
-              return `<button class="btn btn-outline-info btn-sm" memberId="${row.id}" type="button" data-bs-toggle="modal" data-bs-target="#member-modal"><i class="bi-pencil-fill"></i></button>`;
+            formatter: function (value, row, index) {
+              return `<button class="btn btn-outline-info btn-sm" memberId="${row.id}" paymentId="${row.payment.id}" type="button" data-bs-toggle="modal" data-bs-target="#member-modal"><i class="bi-pencil-fill"></i></button>`;
             }
           }],
           data: data.map((m) => {
             return {
               ...m,
-              courses: m.courses.map((c) => c.name)
+              courses: m.courses.map((c) => c.name),
+              solde: m.payment.due - m.payment.paid,
             }
           })
         });
         $('input[type=search]').attr('placeholder', 'Rechercher');
+        // Already initialised
       } else {
         $('#members-table').bootstrapTable('load', data.map((m) => {
           return {
             ...m,
-            courses: m.courses.map((c) => c.name)
+            courses: m.courses.map((c) => c.name),
+            solde: m.payment.due - m.payment.paid,
           }
         }));
       }
@@ -122,6 +236,54 @@ function getMember(memberId) {
       $('#doc-select').val(data.documents?.medical_document || "Manquant");
       $('#authorise-photos').prop('checked', data.documents?.authorise_photos || false);
       $('#authorise-emergency').prop('checked', data.documents?.authorise_emergency || true);
+
+      $('#payment-cash').val(data.payment.cash);
+      const withCash = !(data.payment.cash === null || data.payment.cash === 0);
+      $('#cash-div').attr('hidden', !withCash);
+      $('#cash-switch').prop('checked', withCash);
+
+      $('#payment-pass-code').val(data.sport_pass?.code || '');
+      $('#payment-pass-amount').val(data.sport_pass?.amount || 50);
+      const withPass = !(data.sport_pass === null || data.sport_pass?.code === null || data.sport_pass?.code === '');
+      $('#pass-div').attr('hidden', !withPass);
+      $('#pass-switch').prop('checked', withPass);
+
+      $('#payment-coupon-count').val(data.payment.sport_coupon?.count || '');
+      $('#payment-coupon-amount').val(data.payment.sport_coupon?.amount || '');
+      const withCoupon = !(data.payment.sport_coupon?.amount === null || data.payment.sport_coupon?.amount === 0);
+      $('#coupon-div').attr('hidden', !withCoupon);
+      $('#coupon-switch').prop('checked', withCoupon);
+
+      $('#payment-ancv-count').val(data.payment.ancv?.count || '');
+      $('#payment-ancv-amount').val(data.payment.ancv?.amount);
+      const withAncv = !(data.payment.ancv?.amount === null || data.payment.ancv?.amount === 0);
+      $('#ancv-div').attr('hidden', !withAncv);
+      $('#ancv-switch').prop('checked', withAncv);
+
+      $('#payment-other-amount').val();
+      $('#payment-other-comment').val(data.payment.other_payment?.comment);
+      $('#payment-other-amount').val(data.payment.other_payment?.amount);
+      const withOther = !(data.payment.other_payment === null || data.payment.other_payment?.amount === null || data.payment.other_payment?.amount === 0);
+      $('#other-div').attr('hidden', !withOther);
+      $('#other-switch').prop('checked', withOther);
+
+      $('#comment').val(data.payment.comment);
+      $('#payment-refund').val(data.payment.refund);
+      const withRefund = !(data.payment.refund === null || data.payment.refund === 0);
+      $('#refund-div').attr('hidden', !withRefund);
+      $('#refund-switch').prop('checked', withRefund);
+
+      for (let i = 0; i < MONTH_NUMBER; i++) {
+        $(`#payment-check-name-${i}`).val(i < data.payment.check_payment.length ? data.payment.check_payment[i].name : '');
+        $(`#payment-check-bank-${i}`).val(i < data.payment.check_payment.length ? data.payment.check_payment[i].bank : '');
+        $(`#payment-check-number-${i}`).val(i < data.payment.check_payment.length ? data.payment.check_payment[i].number: '');
+        $(`#payment-check-amount-${i}`).val(i < data.payment.check_payment.length ? data.payment.check_payment[i].amount : '');
+        $(`#payment-check-month-${i}`).val(i < data.payment.check_payment.length ? data.payment.check_payment[i].month : '0');
+        $(`#check-item-${i}`).attr('hidden', i >= data.payment.check_payment.length);
+      }
+      const withCheck = data.payment.check_payment.length > 0;
+      $('#check-div').attr('hidden', !withCheck);
+      $('#check-switch').prop('checked', withCheck);
     },
     error: (error) => {
       // if (!error.responseJSON) {
@@ -134,25 +296,38 @@ function getMember(memberId) {
 function updateMember() {
   const memberModal = document.getElementById('member-modal');
   if (memberModal) {
-    memberModal.addEventListener('show.bs.modal', event => {
+    $('#member-modal').on('show.bs.modal', function(event) {
       const button = event.relatedTarget;
-      memberId = button.getAttribute('memberId');
+      const memberId = button.getAttribute('memberId');
+      const paymentId = button.getAttribute('paymentId');
       getMember(memberId);
-      patchMember(memberId);
+      $('#form-member').data('memberId', memberId);
+      $('#form-member').data('paymentId', paymentId);
     });
+    $('#member-modal').on('submit', '#form-member', function(event) {
+      event.preventDefault();
+      const memberId = $(this).data('memberId');
+      const paymentId = $(this).data('paymentId');
+      patchMember(memberId, paymentId, event);
+    })
   }
 }
 
-function patchMember(memberId) {
-  $('#form-member').submit((event) => {
+function patchMember(memberId, paymentId, event) {
     $('.invalid-feedback').removeClass('d-inline');
-    event.preventDefault();
-    const data = {
+    // PATCH member first
+    const memberData = {
       documents: {
         medical_document: $('#doc-select').val(),
         authorise_photos: $('#authorise-photos').is(':checked'),
         authorise_emergency: $('#authorise-emergency').is(':checked'),
       },
+    };
+    if ($('#payment-pass-code').val() !== '') {
+      memberData.sport_pass = {
+        code: $('#payment-pass-code').val(),
+        amount: $('#payment-pass-amount').val(),
+      };
     }
     $.ajax({
       url: membersUrl + memberId + '/',
@@ -160,10 +335,58 @@ function patchMember(memberId) {
       contentType: 'application/json',
       headers: { 'X-CSRFToken': csrftoken },
       mode: 'same-origin',
-      data: JSON.stringify(data),
+      data: JSON.stringify(memberData),
       dataType: 'json',
       success: () => {
-        event.currentTarget.submit();
+        // PATCH payment
+        // TODO: move outside first request once DB is not SQLite anymore
+        const paymentData = {
+          cash: $('#payment-cash').val(),
+          sport_coupon: {
+            amount: $('#payment-coupon-amount').val(),
+            count: $('#payment-coupon-count').val(),
+          },
+          ancv: {
+            amount: $('#payment-ancv-amount').val(),
+            count: $('#payment-ancv-count').val(),
+          },
+          other: {
+            amount: $('#payment-other-amount').val(),
+            comment: $('#payment-other-comment').val(),
+          },
+          comment: $('#comment').val(),
+          refund: $('#payment-refund').val(),
+        };
+        var checks = [];
+        for (let i = 0; i < MONTH_NUMBER; i++) {
+          if ($(`#payment-check-amount-${i}`).val() !== '') {
+            checks.push({
+              name: $(`#payment-check-name-${i}`).val(),
+              bank: $(`#payment-check-bank-${i}`).val(),
+              number: $(`#payment-check-number-${i}`).val(),
+              amount: $(`#payment-check-amount-${i}`).val(),
+              month: $(`#payment-check-month-${i}`).val(),
+            });
+          }
+        }
+        paymentData.check_payment = checks;
+        $.ajax({
+          url: paymentssUrl + paymentId + '/',
+          type: 'PATCH',
+          contentType: 'application/json',
+          headers: { 'X-CSRFToken': csrftoken },
+          mode: 'same-origin',
+          data: JSON.stringify(paymentData),
+          dataType: 'json',
+          success: () => {
+            event.currentTarget.submit();
+          },
+          error: (error) => {
+            // if (!error.responseJSON) {
+            //   $('#message-error-signup').removeAttr('hidden');
+            // }
+          }
+        });
       },
       error: (error) => {
         // if (!error.responseJSON) {
@@ -171,5 +394,5 @@ function patchMember(memberId) {
         // }
       }
     });
-  });
+  // });
 }

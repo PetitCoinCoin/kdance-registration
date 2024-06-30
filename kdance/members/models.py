@@ -120,10 +120,16 @@ class Documents(models.Model):
     )
 
 
+class OtherPayment(models.Model):
+    amount = models.FloatField(null=False, validators=[MinValueValidator(0)])
+    comment = models.CharField(null=False, blank=False, max_length=100)
+
+
 class Payment(models.Model):
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     cash = models.FloatField(null=False, default=0.0, validators=[MinValueValidator(0)])
+    other_payment = models.OneToOneField(OtherPayment, null=True, on_delete=models.SET_NULL)
     comment = models.CharField(null=False, blank=True, max_length=700, default='')
     refund = models.FloatField(null=False, default=0.0, validators=[MinValueValidator(0)])
 
@@ -150,12 +156,13 @@ class Payment(models.Model):
             paid += self.sport_coupon.amount
         if hasattr(self, "ancv"):
             paid += self.ancv.amount
-        for other in self.other_payment.all():
-            paid += other.amount
-        for sport_pass in self.sport_pass.all():
-            paid += sport_pass.amount
+        if self.other_payment is not None:
+            paid += self.other_payment.amount
         for check in self.check_payment.all():
             paid += check.amount
+        for member in Member.objects.filter(user=self.user, season=self.season).all():
+            if member.sport_pass_id:
+                paid += member.sport_pass.amount
         return paid
 
 
@@ -174,7 +181,6 @@ class Ancv(models.Model):
 class SportPass(models.Model):
     amount = models.PositiveIntegerField(null=False, default=50)
     code = models.CharField(null=False, blank=False, max_length=50)
-    payment = models.ForeignKey(Payment, related_name="sport_pass", on_delete=models.CASCADE)
 
 
 class Check(models.Model):
@@ -207,12 +213,6 @@ class Check(models.Model):
         ],
     )
     payment = models.ForeignKey(Payment, related_name="check_payment", on_delete=models.CASCADE)
-
-
-class OtherPayment(models.Model):
-    amount = models.FloatField(null=False, validators=[MinValueValidator(0)])
-    comment = models.CharField(null=False, blank=False, max_length=100)
-    payment = models.ForeignKey(Payment, related_name="other_payment", on_delete=models.CASCADE)
 
 
 class Member(models.Model):
@@ -248,9 +248,14 @@ class Member(models.Model):
         validators=[RegexValidator(r"\d{10}")],
         max_length=10,
     )
+    sport_pass = models.OneToOneField(SportPass, null=True, on_delete=models.SET_NULL)
 
     def __repr__(self) -> str:
         return f"{self.first_name} {self.last_name}"
 
     class Meta:
         unique_together = ("first_name", "last_name", "user", "season")
+
+    @property
+    def payment(self) -> Payment:
+        return Payment.objects.get(user=self.user, season=self.season)

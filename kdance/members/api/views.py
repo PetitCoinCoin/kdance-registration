@@ -1,6 +1,7 @@
 from members.models import (
     Course,
     Member,
+    Payment,
     Season,
     Teacher,
 )
@@ -10,6 +11,7 @@ from members.api.serializers import (
     CourseSerializer,
     MemberRetrieveSerializer,
     MemberSerializer,
+    PaymentSerializer,
     SeasonSerializer,
     TeacherSerializer,
 )
@@ -49,6 +51,7 @@ class SeasonViewSet(
             queryset = queryset.filter(is_current=False)
         return queryset.order_by("-year")
 
+
 class TeacherViewSet(
     CreateModelMixin,
     ListModelMixin,
@@ -60,6 +63,16 @@ class TeacherViewSet(
     queryset = Teacher.objects.all().order_by("pk")
     serializer_class = TeacherSerializer
     http_method_names = ["get", "post", "patch", "delete"]
+
+
+class PaymentViewSet(
+    ListModelMixin,
+    UpdateModelMixin,
+    GenericViewSet,
+):
+    queryset = Payment.objects.all().order_by("pk")
+    serializer_class = PaymentSerializer
+    http_method_names = ["get", "patch"]
 
 
 class CourseViewSet(
