@@ -170,11 +170,17 @@
     <!-- Content -->
     <div class="container">
       <div class="text-center">
-        <h1 class="display-4 mb-5">Gestion des cours</h1>
+        <h1 class="display-4 mb-3">Gestion des cours</h1>
       </div>
       {% if user.is_authenticated and user.is_superuser %}
-      <div class="container">
-        <div class="d-flex justify-content-between mb-5">
+      <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb" class="border-bottom">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Menu</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Gestion des cours</li>
+        </ol>
+      </nav>
+      <div class="container mt-3">
+        <div class="d-flex justify-content-between mb-3">
           <select id="season-select" class="form-select max-w-300">
           </select>
           <div>
