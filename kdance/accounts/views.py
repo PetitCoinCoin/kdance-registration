@@ -15,7 +15,7 @@ def login_view(request: HttpRequest) -> HttpResponse:
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect("index")
+            return redirect("super_index" if user.is_superuser else "index")
         else:
             message = "Utilisateur et/ou mot de passe incorrect(s). La connexion a échoué."
             return render(request, "registration/login.html", context={"error": message})

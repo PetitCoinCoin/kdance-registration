@@ -175,7 +175,7 @@
       {% if user.is_authenticated and user.is_superuser %}
       <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb" class="border-bottom">
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="/">Menu</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'super_index' %}">Admin</a></li>
           <li class="breadcrumb-item active" aria-current="page">Gestion des cours</li>
         </ol>
       </nav>

@@ -13,6 +13,7 @@ from members.views import (
     index,
     list_dl,
     member_mgmt,
+    super_index,
 )
 
 
@@ -25,8 +26,9 @@ router.register(r"teachers", TeacherViewSet, basename="api-teachers")
 
 urlpatterns = [
     path("", index, name="index"),
-    path("course_mgmt", course_mgmt, name="course_mgmt"),
-    path("member_mgmt", member_mgmt, name="member_mgmt"),
-    path("list_dl", list_dl, name="list_dl"),
+    path("super", super_index, name="super_index"),
+    path("super/course_mgmt", course_mgmt, name="course_mgmt"),
+    path("super/member_mgmt", member_mgmt, name="member_mgmt"),
+    path("super/list_dl", list_dl, name="list_dl"),
     path("api/", include(router.urls)),
 ]
