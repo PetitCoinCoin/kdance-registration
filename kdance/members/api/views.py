@@ -127,8 +127,11 @@ class MemberViewSet(
     def get_queryset(self):
         queryset = Member.objects.all()
         season = self.request.query_params.get("season")
+        course = self.request.query_params.get("course")
         if season:
             queryset = queryset.filter(season__id=season)
+        if course:
+            queryset = queryset.filter(courses__id=course)
         return queryset.order_by("-season__year", "last_name", "first_name")
 
     def create(self, request: Request, *a, **k) -> Response:

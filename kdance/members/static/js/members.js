@@ -111,7 +111,7 @@ function getSeasons() {
         let label = season.year;
         if (season.is_current) {
           label += ' (en cours)';
-          getMembers(season.id)
+          getMembers(season.id);
         }
         $('#season-select').append($('<option>', { value: season.id, text: label, selected: season.is_current }));
       });
