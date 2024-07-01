@@ -204,6 +204,11 @@ function getMembers(seasonId) {
               ...m,
               courses: m.courses.map((c) => c.name),
               solde: m.payment.due - m.payment.paid,
+              documents: m.documents ? {
+                ...m.documents,
+                authorise_photos: m.documents.authorise_photos ? 'Oui': 'Non',
+                authorise_emergency: m.documents.authorise_emergency ? 'Oui': 'Non',
+              } : null,
             }
           })
         });
@@ -215,6 +220,11 @@ function getMembers(seasonId) {
             ...m,
             courses: m.courses.map((c) => c.name),
             solde: m.payment.due - m.payment.paid,
+            documents: m.documents ? {
+              ...m.documents,
+              authorise_photos: m.documents.authorise_photos ? 'Oui': 'Non',
+              authorise_emergency: m.documents.authorise_emergency ? 'Oui': 'Non',
+            } : null,
           }
         }));
       }

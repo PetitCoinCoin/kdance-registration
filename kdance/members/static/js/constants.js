@@ -25,8 +25,3 @@ const LIST_MAIN_MAPPING = {
   '1': 'Les adhérents par cours',
   '2': 'Les chèques par mois',
 }
-
-const LIST_INFO_MAPPING = {
-  '0': 'Simple',
-  '1': 'Avec contacts (urgence et responsables)',
-}

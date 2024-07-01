@@ -1,4 +1,5 @@
 from members.models import (
+    Check,
     Course,
     Member,
     Payment,
@@ -6,6 +7,7 @@ from members.models import (
     Teacher,
 )
 from members.api.serializers import (
+    CheckSerializer,
     CourseCopySeasonSerializer,
     CourseRetrieveSerializer,
     CourseSerializer,
@@ -70,9 +72,27 @@ class PaymentViewSet(
     UpdateModelMixin,
     GenericViewSet,
 ):
-    queryset = Payment.objects.all().order_by("pk")
+    queryset = Payment.objects.all().order_by("-season__year", "user__last_name", "user__first_name")
     serializer_class = PaymentSerializer
     http_method_names = ["get", "patch"]
+
+
+class CheckViewSet(
+    ListModelMixin,
+    GenericViewSet,
+):
+    serializer_class = CheckSerializer
+    http_method_names = ["get"]
+
+    def get_queryset(self):
+        queryset = Check.objects.all()
+        season = self.request.query_params.get("season")
+        month = self.request.query_params.get("month")
+        if season:
+            queryset = queryset.filter(payment__season__id=season)
+        if month:
+            queryset = queryset.filter(month=month)
+        return queryset.order_by("-payment__season__year", "month", "bank")
 
 
 class CourseViewSet(

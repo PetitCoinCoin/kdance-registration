@@ -2,6 +2,7 @@ from django.urls import include, path
 from rest_framework import routers
 
 from members.api.views import (
+    CheckViewSet,
     CourseViewSet,
     MemberViewSet,
     PaymentViewSet,
@@ -18,6 +19,7 @@ from members.views import (
 
 
 router = routers.DefaultRouter()
+router.register(r"checks", CheckViewSet, basename="api-checks")
 router.register(r"courses", CourseViewSet, basename="api-courses")
 router.register(r"members", MemberViewSet, basename="api-members")
 router.register(r"payments", PaymentViewSet, basename="api-payments")

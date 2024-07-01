@@ -33,8 +33,6 @@
             </select>
             <select id="menu-2-select" class="form-select w-auto me-2" hidden>
             </select>
-            <select id="menu-3-select" class="form-select w-auto me-2" hidden>
-            </select>
           </div>
           <div class="d-flex col-1 justify-content-end">
             <button class="btn btn-info" type="button" id="search-btn">
@@ -44,6 +42,14 @@
         </div>
         <div class="border-top">
           <table id="data-table"></table>
+        </div>
+        <div class="d-flex mt-3">
+          <dt class="me-2">Nombre total:</dt>
+          <dd id="total-count">0</dd>
+        </div>
+        <div class="d-none" id="total-amount-div">
+          <dt class="me-2">Somme totale:</dt>
+          <dd id="total-amount"></dd>
         </div>
 
         <!-- Template -->
@@ -59,7 +65,7 @@
     const coursesUrl = "{% url 'api-courses-list' %}";
     const seasonsUrl = "{% url 'api-seasons-list' %}";
     const membersUrl = "{% url 'api-members-list' %}";
-    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const checksUrl = "{% url 'api-checks-list' %}";
   </script>
   <script src="{% static 'js/lists.js' %}"></script>
 </main>
