@@ -40,7 +40,6 @@ function populateSecondSelect(previousValue) {
   $('#menu-2-select').attr('hidden', false);
   switch (previousValue) {
     case '1':
-      clearSubSelects(false);
       getCourses($('#season-select').val());
       break
     case '2':
