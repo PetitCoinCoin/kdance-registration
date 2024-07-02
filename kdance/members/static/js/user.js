@@ -13,6 +13,10 @@ $(document).ready(() => {
     $('#member-phone').val(isMe ? $('#desc-phone').html() : ''),
     $('#member-address').val(isMe ? $('#desc-address').html() : '')
   });
+  const passSwitch = document.querySelector('#pass-switch');
+  passSwitch.addEventListener('change', () => {
+    $('#pass-div').attr('hidden', !$('#pass-switch').is(':checked'));
+  });
   const birthdaySelect = document.querySelector('#member-birthday');
   birthdaySelect.addEventListener('change', () => {
     const isMajor = Boolean(getAge($('#member-birthday').val()) >= 18);
@@ -309,6 +313,11 @@ function getMember(member, isEdition) {
       $('#member-birthday').val(data.birthday);
       $('#authorise-photos').prop('checked', isEdition ? data.documents.authorise_photos : true);
       $('#authorise-emergency').prop('checked', isEdition ? data.documents.authorise_emergency: true);
+      $('#member-pass-code').val(data.sport_pass?.code || '');
+      $('#member-pass-amount').val(data.sport_pass?.amount || 50);
+      const withPass = !(data.sport_pass === null || data.sport_pass?.code === null || data.sport_pass?.code === '');
+      $('#pass-div').attr('hidden', !withPass);
+      $('#pass-switch').prop('checked', withPass);
       if (isEdition) {
         $("#member-courses").val(data.courses.map((c) => c.id));
       }
@@ -345,6 +354,12 @@ function postOrPatchMember(url, method) {
         authorise_emergency: $('#authorise-emergency').is(':checked'),
       }
     };
+    if ($('#member-pass-code').val() !== '') {
+      data.sport_pass = {
+        code: $('#member-pass-code').val(),
+        amount: $('#member-pass-amount').val(),
+      };
+    }
     $.ajax({
       url: url,
       type: method,

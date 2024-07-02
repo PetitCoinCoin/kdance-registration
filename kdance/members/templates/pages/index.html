@@ -83,7 +83,7 @@
     </div>
 
     <div class="modal fade" id="member-modal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
+      <div class="modal-dialog modal-xl">
         <div class="modal-content">
           <div class="modal-header">
             <h4 class="modal-title" id="member-modal-title"></h4>
@@ -91,81 +91,143 @@
           </div>
           <form id="form-member" name="form-member">
             <div class="modal-body">
-              <div class="row align-items-baseline">
-                <div class="col-6">
-                  <div class="form-check form-switch mb-3">
-                    <input class="form-check-input" type="checkbox" role="switch" id="me-switch">
-                    <label class="form-check-label" for="me-switch">Utiliser mes informations</label>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="form-outline mb-4 d-flex align-items-baseline">
-                    <label class="form-label me-2" for="member-season">Saison</label>
-                    <select id="member-season" class="form-select" disabled></select>
-                  </div>
-                </div>
-              </div>
               <div class="row">
-                <div class="col-6">
-                  <div class="form-outline mb-4">
-                    <label class="form-label required" for="member-firstname">Prénom</label>
-                    <input type="text" id="member-firstname" class="form-control" required />
+                <div class="accordion" id="modal-accordion">
+                  <div class="accordion-item">
+                    <h2 class="accordion-header">
+                      <button class="accordion-button" type="button" data-bs-toggle="collapse" aria-expanded="true"
+                        data-bs-target="#member-info-section" aria-controls="member-info-section">
+                        <span>Informations de l'adhérent</span>
+                      </button>
+                    </h2>
+                    <div id="member-info-section" class="accordion-collapse collapse show template-data" data-bs-parent="#modal-accordion">
+                      <div class="accordion-body">
+                        <div class="row align-items-baseline">
+                          <div class="col-6">
+                            <div class="form-check form-switch mb-3">
+                              <input class="form-check-input" type="checkbox" role="switch" id="me-switch">
+                              <label class="form-check-label" for="me-switch">Utiliser mes informations</label>
+                            </div>
+                          </div>
+                          <div class="col-6">
+                            <div class="form-outline mb-4 d-flex align-items-baseline">
+                              <label class="form-label me-2" for="member-season">Saison</label>
+                              <select id="member-season" class="form-select" disabled></select>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-4">
+                            <div class="form-outline mb-4">
+                              <label class="form-label required" for="member-firstname">Prénom</label>
+                              <input type="text" id="member-firstname" class="form-control" required />
+                            </div>
+                          </div>
+                          <div class="col-4">
+                            <div class="form-outline mb-4">
+                              <label class="form-label required" for="member-lastname">Nom de famille</label>
+                              <input type="text" id="member-lastname" class="form-control" required />
+                            </div>
+                          </div>
+                          <div class="col-4">
+                            <div class="form-outline mb-4">
+                              <label class="form-label required" for="member-birthday">Date de naissance</label>
+                              <input type="date" id="member-birthday" class="form-control" required />
+                            </div>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-4">
+                            <div class="row">
+                              <div class="form-outline mb-1">
+                                <label class="form-label required" for="member-phone">Téléphone</label>
+                                <input type="text" id="member-phone" class="form-control" required />
+                                <div id="invalid-member-phone" class="invalid-feedback"></div>
+                              </div>
+                            </div>
+                            <div class="row">
+                              <div class="form-outline mb-4">
+                                <label class="form-label required" for="member-email">Email</label>
+                                <input type="text" id="member-email" class="form-control" required />
+                                <div id="invalid-member-email" class="invalid-feedback"></div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-8">
+                            <div class="form-outline mb-4">
+                              <label class="form-label required" for="member-address">Adresse</label>
+                              <textarea class="form-control" id="member-address" rows="4" required></textarea>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="form-check form-switch mb-3">
+                          <input class="form-check-input" type="checkbox" role="switch" id="pass-switch">
+                          <label class="form-check-label" for="pass-switch">J'ai un code Pass Sport</label>
+                        </div>
+                        <div id="pass-div" hidden>
+                          <div class="row align-items-end">
+                            <div class="col form-outline mb-4">
+                              <label class="form-label" for="member-pass-code">Code</label>
+                              <input type="text" id="member-pass-code" class="form-control" maxlength="11"/>
+                            </div>
+                            <div class="col form-outline mb-4">
+                              <label class="form-label" for="member-pass-amount">Montant (€)</label>
+                              <input type="number" id="member-pass-amount" class="form-control" min="0" value="50"/>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="accordion-item">
+                    <h2 class="accordion-header">
+                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" aria-expanded="false"
+                        data-bs-target="#member-courses-section" aria-controls="member-courses-section">
+                        <span>Cours</span>
+                      </button>
+                    </h2>
+                    <div id="member-courses-section" class="accordion-collapse collapse collapsed template-data" data-bs-parent="#modal-accordion">
+                      <div class="accordion-body">
+                        <div class="form-outline mb-4" id="form-member-courses">
+                          <label class="form-label" for="member-courses"><i>Maintenir la touche Ctrl enfoncée pour sélectionner plusieurs cours</i></label>
+                          <select id="member-courses" class="form-select" multiple></select>
+                          <div class="invalid-feedback d-block">
+                            Attention, toute modification, ajout ou suppression ultérieure de cours devra se faire auprès de
+                            l'équipe K'Dance.
+                          </div>
+                        </div>                        
+                      </div>
+                    </div>
+                  </div>
+                  <div class="accordion-item">
+                    <h2 class="accordion-header">
+                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" aria-expanded="false"
+                        data-bs-target="#member-authorise-section" aria-controls="member-authorise-section">
+                        <span>Autorisations</span>
+                      </button>
+                    </h2>
+                    <div id="member-authorise-section" class="accordion-collapse collapse collapsed template-data" data-bs-parent="#modal-accordion">
+                      <div class="accordion-body">
+                        <div class="form-check mb-4">
+                          <input class="form-check-input" type="checkbox" value="" id="authorise-photos" checked>
+                          <label class="form-check-label" for="authorise-photos">
+                            J'autorise l'association K'dance à utiliser les photos et/ou vidéos réalisées dans le cadre de ses
+                            activités à des fins promotionnelles y compris sur les réseaux sociaux de K’dance.
+                          </label>
+                        </div>
+                        <div class="form-check mb-4 d-none" id="emergency">
+                          <input class="form-check-input" type="checkbox" value="" id="authorise-emergency" checked>
+                          <label class="form-check-label" for="authorise-emergency">
+                            En tant que responsable légal de cet adhérent mineur, j'autorise l’encadrant de la section danse ou un
+                            membre du Conseil d’Administration à prendre, en cas d’accident, toutes mesures urgentes tant
+                            médicales que chirurgicales, y compris l’hospitalisation.
+                          </label>
+                        </div>                  
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div class="col-6">
-                  <div class="form-outline mb-4">
-                    <label class="form-label required" for="member-lastname">Nom de famille</label>
-                    <input type="text" id="member-lastname" class="form-control" required />
-                  </div>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-6">
-                  <div class="form-outline mb-4">
-                    <label class="form-label required" for="member-phone">Téléphone</label>
-                    <input type="text" id="member-phone" class="form-control" required />
-                    <div id="invalid-member-phone" class="invalid-feedback"></div>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="form-outline mb-4">
-                    <label class="form-label required" for="member-email">Email</label>
-                    <input type="text" id="member-email" class="form-control" required />
-                    <div id="invalid-member-email" class="invalid-feedback"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="form-outline mb-4">
-                <label class="form-label required" for="member-address">Adresse</label>
-                <textarea class="form-control" id="member-address" rows="3" required></textarea>
-              </div>
-              <div class="form-outline mb-4">
-                <label class="form-label required" for="member-birthday">Date de naissance</label>
-                <input type="date" id="member-birthday" class="form-control" required />
-              </div>
-              <div class="form-outline mb-4" id="form-member-courses">
-                <label class="form-label" for="member-courses">Cours</label>
-                <select id="member-courses" class="form-select" multiple></select>
-                <div class="invalid-feedback d-block">
-                  Attention, toute modification, ajout ou suppression ultérieure de cours devra se faire auprès de
-                  l'équipe K'Dance.
-                </div>
-              </div>
-              <h5 class="border-bottom">Autorisations</h5>
-              <div class="form-check mb-4">
-                <input class="form-check-input" type="checkbox" value="" id="authorise-photos" checked>
-                <label class="form-check-label" for="authorise-photos">
-                  J'autorise l'association K'dance à utiliser les photos et/ou vidéos réalisées dans le cadre de ses
-                  activités à des fins promotionnelles y compris sur les réseaux sociaux de K’dance.
-                </label>
-              </div>
-              <div class="form-check mb-4 d-none" id="emergency">
-                <input class="form-check-input" type="checkbox" value="" id="authorise-emergency" checked>
-                <label class="form-check-label" for="authorise-emergency">
-                  En tant que responsable légal de cet adhérent mineur, j'autorise l’encadrant de la section danse ou un
-                  membre du Conseil d’Administration à prendre, en cas d’accident, toutes mesures urgentes tant
-                  médicales que chirurgicales, y compris l’hospitalisation.
-                </label>
               </div>
             </div>
             <div class="modal-footer">
@@ -265,9 +327,9 @@
                 <span>Saison</span>
               </button>
             </h2>
-            <div class="accordion-collapse collapse show template-data" data-bs-parent="#member-accordion">
+            <div class="accordion-collapse collapse show template-data">
               <div class="accordion-body">
-                <div class="d-flex justify-content-between align-items-baseline">
+                <div class="d-flex flex-wrap justify-content-between align-items-baseline">
                   <dl class="d-flex">
                     <dt class="me-2">Total dû:</dt>
                     <dd class="payment">€</dd>
