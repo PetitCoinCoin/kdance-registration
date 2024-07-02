@@ -4,14 +4,18 @@ $(document).ready(() => {
   getCourses();
   createUpdateMember();
   deleteItem();
+  initContacts();
+  handleContacts();
   const meSwitch = document.querySelector('#me-switch');
   meSwitch.addEventListener('change', () => {
     const isMe = $('#me-switch').is(':checked');
-    $('#member-firstname').val(isMe ? $('#desc-firstname').html() : ''),
-    $('#member-lastname').val(isMe ? $('#desc-lastname').html() : ''),
-    $('#member-email').val(isMe ? $('#desc-email').html() : ''),
-    $('#member-phone').val(isMe ? $('#desc-phone').html() : ''),
-    $('#member-address').val(isMe ? $('#desc-address').html() : '')
+    $('#member-firstname').val(isMe ? $('#desc-firstname').html() : '');
+    $('#member-firstname').trigger('change');
+    $('#member-lastname').val(isMe ? $('#desc-lastname').html() : '');
+    $('#member-lastname').trigger('change');
+    $('#member-email').val(isMe ? $('#desc-email').html() : '');
+    $('#member-phone').val(isMe ? $('#desc-phone').html() : '');
+    $('#member-address').val(isMe ? $('#desc-address').html() : '');
   });
   const passSwitch = document.querySelector('#pass-switch');
   passSwitch.addEventListener('change', () => {
@@ -20,12 +24,8 @@ $(document).ready(() => {
   const birthdaySelect = document.querySelector('#member-birthday');
   birthdaySelect.addEventListener('change', () => {
     const isMajor = Boolean(getAge($('#member-birthday').val()) >= 18);
-    if (isMajor) {
-      $('#emergency').addClass('d-none');
-    } else {
-      $('#emergency').removeClass('d-none');
-    }
- });
+    majorityImpact(isMajor);
+  });
 });
 
 function getPreviousMembers(members) {
@@ -74,146 +74,156 @@ function getAge(birthday) {
   const birthDate = new Date(birthday);
   const yearsDifference = today.getFullYear() - birthDate.getFullYear();
   const isBeforeBirthday =
-      today.getMonth() < birthDate.getMonth() ||
-      (today.getMonth() === birthDate.getMonth() &&
-          today.getDate() < birthDate.getDate());
+    today.getMonth() < birthDate.getMonth() ||
+    (today.getMonth() === birthDate.getMonth() &&
+      today.getDate() < birthDate.getDate());
   return isBeforeBirthday ? yearsDifference - 1 : yearsDifference;
 };
 
+function majorityImpact(isMajor) {
+  if (isMajor) {
+    $('#emergency').addClass('d-none');
+    $('#contact-responsible-div').addClass('d-none');
+  } else {
+    $('#emergency').removeClass('d-none');
+    $('#contact-responsible-div').removeClass('d-none');
+  }
+}
+
 function getUser() {
-    $.ajax({
-        url: userMeUrl,
-        type: 'GET',
-        success: (data) => {
-            $('#desc-firstname').html(data.first_name);
-            $('#desc-lastname').html(data.last_name);
-            $('#desc-username').html(data.username);
-            $('#desc-email').html(data.email);
-            $('#desc-phone').html(data.profile.phone);
-            $('#desc-address').html(data.profile.address);
-            $('#desc-picture').attr('src', `https://api.dicebear.com/8.x/thumbs/svg?seed=${data.first_name + data.last_name}`);
-            $('#edit-me-firstname').val(data.first_name);
-            $('#edit-me-lastname').val(data.last_name);
-            $('#edit-me-username').val(data.username);
-            $('#edit-me-email').val(data.email);
-            $('#edit-me-phone').val(data.profile.phone);
-            $('#edit-me-address').val(data.profile.address);
-            const accordionParent = document.querySelector('#member-accordion');
-            const accordionTemplate = document.querySelector('#accordion-item-template');
-            const cardTemplate = document.querySelector('#card-template');
-            const memberBtnTemplate = document.querySelector('#member-btn-template');
-            // Previous seasons members
-            const previousMembers = getPreviousMembers(data.members.filter((m) => !m.season.is_current));
-            let memberSelect = $('#copy-member-select');
-            previousMembers.map((m) => {
-              memberSelect.append($('<option>', { value: m.id, text: `${m.first_name} ${m.last_name}` }));
-            })
-            data.payment.map((item, i) => {
-                const clone = accordionTemplate.content.cloneNode(true);
-                // Payment info
-                let title = clone.querySelector('span');
-                title.textContent = `Saison ${item.season.year}`;
-                let dd = clone.querySelectorAll('dd.payment');
-                dd[0].textContent = `${item.due}€`;
-                dd[1].textContent = `${item.paid}€`;
-                // Collapsible
-                let collapseBtn = clone.querySelector('button');
-                collapseBtn.dataset.bsTarget = `#accordion-${i}`;
-                collapseBtn.ariaControls = `accordion-${i}`;
-                let collapsing = clone.querySelector('div.accordion-collapse');
-                collapsing.id = `accordion-${i}`;
-                // collapse older seasons and add member button for current season
-                if (i > 0) {
-                    collapseBtn.ariaExpanded = false;
-                    collapseBtn.classList.add('collapsed');
-                    collapsing.classList.remove('show');
-                } else {
-                  const memberBtnClone = memberBtnTemplate.content.cloneNode(true);
-                  const btnParent = clone.querySelector('div.accordion-body').children[0];
-                  btnParent.appendChild(memberBtnClone);
-                }
-                // Member info
-                let body = clone.querySelector('div.accordion-body');
-                data.members.map((member) => {
-                    if (member.season.id === item.season.id) {
-                      const cardClone = cardTemplate.content.cloneNode(true);
-                      let memberTitle = cardClone.querySelector('span');
-                      memberTitle.textContent = `${member.first_name} ${member.last_name}`;
-                      let avatar = cardClone.querySelector('img');
-                      avatar.src = `https://api.dicebear.com/8.x/thumbs/svg?seed=${member.first_name + member.last_name}&radius=50`;
-                      let button = cardClone.querySelector('button');
-                      button.dataset.bsMid = member.id;
-                      if (!item.season.is_current) {
-                        button.remove();
-                      }
-                      let memberInfos =  cardClone.querySelector('ul');
-                      member.courses.map((course) => {
-                        let liItem = document.createElement('li');
-                        liItem.className = 'list-group-item';
-                        const startHour = course.start_hour.split(':');
-                        liItem.textContent = `${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
-                        memberInfos.appendChild(liItem);
-                      })
-                      populateDocuments(member, memberInfos);
-                      body.appendChild(cardClone);
-                    }
-                });
-                accordionParent.appendChild(clone);
-            })
-        },
-        error: (error) => {
-            // if (!error.responseJSON) {
-            //     $('#message-error-signup').removeAttr('hidden');
-            // }
+  $.ajax({
+    url: userMeUrl,
+    type: 'GET',
+    success: (data) => {
+      $('#desc-firstname').html(data.first_name);
+      $('#desc-lastname').html(data.last_name);
+      $('#desc-username').html(data.username);
+      $('#desc-email').html(data.email);
+      $('#desc-phone').html(data.profile.phone);
+      $('#desc-address').html(data.profile.address);
+      $('#desc-picture').attr('src', `https://api.dicebear.com/8.x/thumbs/svg?seed=${data.first_name + data.last_name}`);
+      $('#edit-me-firstname').val(data.first_name);
+      $('#edit-me-lastname').val(data.last_name);
+      $('#edit-me-username').val(data.username);
+      $('#edit-me-email').val(data.email);
+      $('#edit-me-phone').val(data.profile.phone);
+      $('#edit-me-address').val(data.profile.address);
+      const accordionParent = document.querySelector('#member-accordion');
+      const accordionTemplate = document.querySelector('#accordion-item-template');
+      const cardTemplate = document.querySelector('#card-template');
+      const memberBtnTemplate = document.querySelector('#member-btn-template');
+      // Previous seasons members
+      const previousMembers = getPreviousMembers(data.members.filter((m) => !m.season.is_current));
+      let memberSelect = $('#copy-member-select');
+      previousMembers.map((m) => {
+        memberSelect.append($('<option>', { value: m.id, text: `${m.first_name} ${m.last_name}` }));
+      })
+      data.payment.map((item, i) => {
+        const clone = accordionTemplate.content.cloneNode(true);
+        // Payment info
+        let title = clone.querySelector('span');
+        title.textContent = `Saison ${item.season.year}`;
+        let dd = clone.querySelectorAll('dd.payment');
+        dd[0].textContent = `${item.due}€`;
+        dd[1].textContent = `${item.paid}€`;
+        // Collapsible
+        let collapseBtn = clone.querySelector('button');
+        collapseBtn.dataset.bsTarget = `#accordion-${i}`;
+        collapseBtn.ariaControls = `accordion-${i}`;
+        let collapsing = clone.querySelector('div.accordion-collapse');
+        collapsing.id = `accordion-${i}`;
+        // collapse older seasons and add member button for current season
+        if (i > 0) {
+          collapseBtn.ariaExpanded = false;
+          collapseBtn.classList.add('collapsed');
+          collapsing.classList.remove('show');
+        } else {
+          const memberBtnClone = memberBtnTemplate.content.cloneNode(true);
+          const btnParent = clone.querySelector('div.accordion-body').children[0];
+          btnParent.appendChild(memberBtnClone);
         }
-    });
+        // Member info
+        let body = clone.querySelector('div.accordion-body');
+        data.members.map((member) => {
+          if (member.season.id === item.season.id) {
+            const cardClone = cardTemplate.content.cloneNode(true);
+            let memberTitle = cardClone.querySelector('span');
+            memberTitle.textContent = `${member.first_name} ${member.last_name}`;
+            let avatar = cardClone.querySelector('img');
+            avatar.src = `https://api.dicebear.com/8.x/thumbs/svg?seed=${member.first_name + member.last_name}&radius=50`;
+            let button = cardClone.querySelector('button');
+            button.dataset.bsMid = member.id;
+            if (!item.season.is_current) {
+              button.remove();
+            }
+            let memberInfos = cardClone.querySelector('ul');
+            member.courses.map((course) => {
+              let liItem = document.createElement('li');
+              liItem.className = 'list-group-item';
+              const startHour = course.start_hour.split(':');
+              liItem.textContent = `${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
+              memberInfos.appendChild(liItem);
+            })
+            populateDocuments(member, memberInfos);
+            body.appendChild(cardClone);
+          }
+        });
+        accordionParent.appendChild(clone);
+      })
+    },
+    error: (error) => {
+      // if (!error.responseJSON) {
+      //     $('#message-error-signup').removeAttr('hidden');
+      // }
+    }
+  });
 }
 
 function patchUser() {
-    $('#form-me').submit((event) => {
-        $('.invalid-feedback').removeClass('d-inline');
-        event.preventDefault();
-        const data = {
-          first_name: $('#edit-me-firstname').val(),
-          last_name: $('#edit-me-lastname').val(),
-          username: $('#edit-me-username').val(),
-          email: $('#edit-me-email').val(),
-          profile: {
-            phone: $('#edit-me-phone').val(),
-            address: $('#edit-me-address').val(),
-          }
-        };
-        $.ajax({
-          url: userMeUrl,
-          type: 'PATCH',
-          contentType: 'application/json',
-          headers: { 'X-CSRFToken': csrftoken },
-          mode: 'same-origin',
-          data: JSON.stringify(data),
-          dataType: 'json',
-          success: () => {
-            // Check pwd update
-            event.currentTarget.submit();
-          },
-          error: (error) => {
-            if (!error.responseJSON) {
-            //   $('#message-error-signup').removeAttr('hidden');
-            }
-            if (error.responseJSON.username) {
-              $('#invalid-edit-me-username').html(error.responseJSON.username[0]);
-              $('#invalid-edit-me-username').addClass('d-inline');
-            }
-            if (error.responseJSON.phone) {
-              $('#invalid-edit-me-phone').html(error.responseJSON.phone[0]);
-              $('#invalid-edit-me-phone').addClass('d-inline');
-            }
-            if (error.responseJSON.email) {
-              $('#invalid-edit-me-email').html(error.responseJSON.email[0]);
-              $('#invalid-edit-me-email').addClass('d-inline');
-            }
-          }
-        });
-      });
+  $('#form-me').submit((event) => {
+    $('.invalid-feedback').removeClass('d-inline');
+    event.preventDefault();
+    const data = {
+      first_name: $('#edit-me-firstname').val(),
+      last_name: $('#edit-me-lastname').val(),
+      username: $('#edit-me-username').val(),
+      email: $('#edit-me-email').val(),
+      profile: {
+        phone: $('#edit-me-phone').val(),
+        address: $('#edit-me-address').val(),
+      }
+    };
+    $.ajax({
+      url: userMeUrl,
+      type: 'PATCH',
+      contentType: 'application/json',
+      headers: { 'X-CSRFToken': csrftoken },
+      mode: 'same-origin',
+      data: JSON.stringify(data),
+      dataType: 'json',
+      success: () => {
+        // Check pwd update
+        event.currentTarget.submit();
+      },
+      error: (error) => {
+        if (!error.responseJSON) {
+          //   $('#message-error-signup').removeAttr('hidden');
+        }
+        if (error.responseJSON.username) {
+          $('#invalid-edit-me-username').html(error.responseJSON.username[0]);
+          $('#invalid-edit-me-username').addClass('d-inline');
+        }
+        if (error.responseJSON.phone) {
+          $('#invalid-edit-me-phone').html(error.responseJSON.phone[0]);
+          $('#invalid-edit-me-phone').addClass('d-inline');
+        }
+        if (error.responseJSON.email) {
+          $('#invalid-edit-me-email').html(error.responseJSON.email[0]);
+          $('#invalid-edit-me-email').addClass('d-inline');
+        }
+      }
+    });
+  });
 }
 
 function getCurrentSeason() {
@@ -259,7 +269,7 @@ function createUpdateMember() {
       if (member === null) {
         // Create member
         buttonId = button.getAttribute('id');
-        $('#form-member-courses').removeClass('d-none');
+        $('#member-courses-accordion').removeClass('d-none');
         $('#authorise-photos').prop('disabled', false);
         $('#authorise-emergency').prop('disabled', false);
         if (buttonId === 'copy-btn') {
@@ -273,7 +283,7 @@ function createUpdateMember() {
       } else {
         // Update member
         getMember(member, true);
-        $('#form-member-courses').addClass('d-none');
+        $('#member-courses-accordion').addClass('d-none');
         $('#authorise-photos').prop('disabled', true);
         $('#authorise-emergency').prop('disabled', true);
         $('#membre-btn').html('Modifier');
@@ -312,21 +322,18 @@ function getMember(member, isEdition) {
       $('#member-address').val(data.address);
       $('#member-birthday').val(data.birthday);
       $('#authorise-photos').prop('checked', isEdition ? data.documents.authorise_photos : true);
-      $('#authorise-emergency').prop('checked', isEdition ? data.documents.authorise_emergency: true);
+      $('#authorise-emergency').prop('checked', isEdition ? data.documents.authorise_emergency : true);
       $('#member-pass-code').val(data.sport_pass?.code || '');
       $('#member-pass-amount').val(data.sport_pass?.amount || 50);
       const withPass = !(data.sport_pass === null || data.sport_pass?.code === null || data.sport_pass?.code === '');
       $('#pass-div').attr('hidden', !withPass);
       $('#pass-switch').prop('checked', withPass);
       if (isEdition) {
-        $("#member-courses").val(data.courses.map((c) => c.id));
+        $('#member-courses').val(data.courses.map((c) => c.id));
+        
       }
       const isMajor = Boolean(getAge(data.birthday) >= 18);
-      if (isMajor) {
-        $('#emergency').addClass('d-none');
-      } else {
-        $('#emergency').removeClass('d-none');
-      }
+      majorityImpact(isMajor);
     },
     error: (error) => {
       // if (!error.responseJSON) {
@@ -393,7 +400,7 @@ function deleteItem() {
         modalBody.textContent = `Etes-vous sur.e de vouloir supprimer votre compte ainsi que tous les membres associés ?`;
         url = userMeUrl;
       }
-      $(document).on("click", "#delete-btn", function(){
+      $(document).on("click", "#delete-btn", function () {
         $.ajax({
           url: url,
           type: 'DELETE',
@@ -411,4 +418,73 @@ function deleteItem() {
       });
     });
   }
+}
+
+function initContacts() {
+  const emergencyParent = document.querySelector('#contact-emergency-div');
+  const responsibleParent = document.querySelector('#contact-responsible-div');
+  const contactTemplate = document.querySelector('#contact-template');
+  for (let i = 0; i < CONTACT_NUMBER; i++) {
+    ['emergency', 'responsible'].forEach(contactType => {
+      const clone = contactTemplate.content.cloneNode(true);
+      const items = clone.querySelectorAll('.form-outline');
+      for (let k = 0; k < items.length; k++) {
+        items[k].children[0].htmlFor += `${contactType}-${i}`;
+        items[k].children[1].id += `${contactType}-${i}`;
+        if (items[k].children.length > 2) {
+          items[k].children[2].id += `${contactType}-${i}`;
+        }
+      }
+      // Add button except for last
+      if (i < CONTACT_NUMBER - 1) {
+        const addTemplate = document.querySelector('#add-contact-template');
+        const addClone = addTemplate.content.cloneNode(true);
+        let addContactButton = addClone.querySelector('button');
+        addContactButton.id += `add-contact-${contactType}-${i}`;
+        clone.querySelector('.row').appendChild(addClone);
+      }
+      // Delete button + hidden except for first
+      if (i > 0) {
+        const removeTemplate = document.querySelector('#remove-contact-template');
+        const removeClone = removeTemplate.content.cloneNode(true);
+        let removeContactButton = removeClone.querySelector('button');
+        removeContactButton.id += `remove-contact-${contactType}-${i}`;
+        removeContactButton.dataset.bsEnumber = i;
+        clone.querySelector('.row').appendChild(removeClone);
+        clone.querySelectorAll('div')[0].id = `contact-${contactType}-${i}`;
+        clone.querySelectorAll('div')[0].hidden = true;
+      }
+      if (contactType === 'emergency') {
+        emergencyParent.appendChild(clone);
+      } else {
+        responsibleParent.appendChild(clone);
+      }
+    });
+  }
+}
+
+function handleContacts() {
+  ['emergency', 'responsible'].forEach(contactType => {
+    for (let i = 0; i < CONTACT_NUMBER - 1; i++) {
+      $(`#add-contact-${contactType}-${i}`).on('click', () => {
+        $(`#contact-${contactType}-${i + 1}`).attr('hidden', false);
+      });
+    }
+    for (let i = 1; i < CONTACT_NUMBER; i++) {
+      $(`#remove-contact-${contactType}-${i}`).on('click', () => {
+        ['firstname', 'lastname', 'phone', 'email'].forEach(item => {
+          $(`#${item}-${contactType}-${i}`).val('');
+        });
+        $(`#contact-${contactType}-${i}`).attr('hidden', true);
+      });
+    }
+  });
+  ['firstname', 'lastname'].forEach(name => {
+    $(`#member-${name}`).change(function () {
+      if (($('#member-firstname').val().toLowerCase() === $('#desc-firstname').html().toLowerCase()) && ($('#member-lastname').val().toLowerCase() === $('#desc-lastname').html().toLowerCase())) {
+        $('#emergency-me-switch').attr('disabled', true);
+        $('#emergency-me-switch').prop('checked', false);
+      }
+    });
+  });
 }

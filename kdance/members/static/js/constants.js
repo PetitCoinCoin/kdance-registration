@@ -8,7 +8,8 @@ const WEEKDAY = {
   6: 'Dimanche',
 }
 
-const MONTH_NUMBER = 6;
+const CHECK_NUMBER = 8;
+const CONTACT_NUMBER = 2;
 
 const MONTH = {
   0: 'Sélectionner...',

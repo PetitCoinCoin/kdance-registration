@@ -51,7 +51,7 @@ function displayPayments() {
 function initCheckPayment() {
   const checkParent = document.querySelector('#check-div');
   const checkTemplate = document.querySelector('#check-template');
-  for (let i = 0; i < MONTH_NUMBER; i++) {
+  for (let i = 0; i < CHECK_NUMBER; i++) {
     const clone = checkTemplate.content.cloneNode(true);
     const items = clone.querySelectorAll('.form-outline');
     for (let k = 0; k < items.length; k++) {
@@ -59,7 +59,7 @@ function initCheckPayment() {
       items[k].children[1].id += i;
     }
     // Add button except for last
-    if (i < 5) {
+    if (i < CHECK_NUMBER - 1) {
       const addTemplate = document.querySelector('#add-check-template');
       const addClone = addTemplate.content.cloneNode(true);
       let addButton = addClone.querySelector('button');
@@ -83,14 +83,14 @@ function initCheckPayment() {
 }
 
 function handleCheckPayment() {
-  for (let i = 0; i < MONTH_NUMBER - 1; i++) {
+  for (let i = 0; i < CHECK_NUMBER - 1; i++) {
     $(`#add-check-${i}`).on('click', () => {
       $(`#check-item-${i + 1}`).attr('hidden', false);
       $(`#payment-check-name-${i + 1}`).val($(`#payment-check-name-${i}`).val());
       $(`#payment-check-bank-${i + 1}`).val($(`#payment-check-bank-${i}`).val());
     });
   }
-  for (let i = 1; i < MONTH_NUMBER; i++) {
+  for (let i = 1; i < CHECK_NUMBER; i++) {
     $(`#remove-check-${i}`).on('click', () => {
       $(`#payment-check-name-${i}`).val('');
       $(`#payment-check-bank-${i}`).val('');
@@ -283,7 +283,7 @@ function getMember(memberId) {
       $('#refund-div').attr('hidden', !withRefund);
       $('#refund-switch').prop('checked', withRefund);
 
-      for (let i = 0; i < MONTH_NUMBER; i++) {
+      for (let i = 0; i < CHECK_NUMBER; i++) {
         $(`#payment-check-name-${i}`).val(i < data.payment.check_payment.length ? data.payment.check_payment[i].name : '');
         $(`#payment-check-bank-${i}`).val(i < data.payment.check_payment.length ? data.payment.check_payment[i].bank : '');
         $(`#payment-check-number-${i}`).val(i < data.payment.check_payment.length ? data.payment.check_payment[i].number: '');
@@ -368,7 +368,7 @@ function patchMember(memberId, paymentId, event) {
           refund: $('#payment-refund').val(),
         };
         var checks = [];
-        for (let i = 0; i < MONTH_NUMBER; i++) {
+        for (let i = 0; i < CHECK_NUMBER; i++) {
           if ($(`#payment-check-amount-${i}`).val() !== '') {
             checks.push({
               name: $(`#payment-check-name-${i}`).val(),

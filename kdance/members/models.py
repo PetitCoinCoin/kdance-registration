@@ -215,7 +215,7 @@ class Check(models.Model):
     payment = models.ForeignKey(Payment, related_name="check_payment", on_delete=models.CASCADE)
 
 
-class Member(models.Model):
+class PersonModel(models.Model):
     first_name = models.CharField(
         blank=False,
         null=False,
@@ -225,16 +225,6 @@ class Member(models.Model):
         blank=False,
         null=False,
         max_length=35,
-    )
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    season = models.ForeignKey(Season, on_delete=models.CASCADE)
-    courses = models.ManyToManyField(Course)
-    documents = models.ForeignKey(Documents, null=True, on_delete=models.SET_NULL)
-    birthday = models.DateField(blank=False)
-    address = models.CharField(
-        null=False,
-        blank=False,
-        max_length=500,
     )
     email = models.CharField(
         blank=False,
@@ -248,10 +238,41 @@ class Member(models.Model):
         validators=[RegexValidator(r"\d{10}")],
         max_length=10,
     )
-    sport_pass = models.OneToOneField(SportPass, null=True, on_delete=models.SET_NULL)
+    season = models.ForeignKey(Season, on_delete=models.CASCADE)
+
+    class Meta:
+        abstract = True
 
     def __repr__(self) -> str:
         return f"{self.first_name} {self.last_name}"
+
+
+class ContactEnum(Enum):
+    RESPONSIBLE = "Responsable légal"
+    EMERGENCY = "Contact d'urgence"
+
+
+class Contact(PersonModel):
+    contact_type = models.CharField(
+        max_length=17,
+        choices=[(e.value, e.value) for e in ContactEnum],
+    )
+    class Meta:
+        unique_together = ("first_name", "last_name", "season")
+
+
+class Member(PersonModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    courses = models.ManyToManyField(Course)
+    contacts = models.ManyToManyField(Contact)
+    documents = models.ForeignKey(Documents, null=True, on_delete=models.SET_NULL)
+    birthday = models.DateField(blank=False)
+    address = models.CharField(
+        null=False,
+        blank=False,
+        max_length=500,
+    )
+    sport_pass = models.OneToOneField(SportPass, null=True, on_delete=models.SET_NULL)
 
     class Meta:
         unique_together = ("first_name", "last_name", "user", "season")
