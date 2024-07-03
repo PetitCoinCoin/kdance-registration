@@ -264,6 +264,20 @@ function createUpdateMember() {
   const memberModal = document.getElementById('member-modal');
   if (memberModal) {
     memberModal.addEventListener('show.bs.modal', event => {
+      // Reset accordion collapsed items and focus
+      ['contact', 'courses', 'authorise'].forEach(item => {
+        $(`#member-${item}-section`).removeClass('show');
+        $(`#member-${item}-section`).addClass('collapsed');
+        const headerButton = $(`*[data-bs-target="#member-${item}-section"]`)
+        headerButton.addClass('collapsed');
+        headerButton.attr('aria-expanded', false);
+      });
+      $('#member-info-section').removeClass('collapsed');
+      $('#member-info-section').addClass('show');
+      const headerButton =  $('*[data-bs-target="#member-info-section"]');
+      headerButton.removeClass('collapsed');
+      headerButton.attr('aria-expanded', true);
+      // Handle data
       const button = event.relatedTarget;
       const member = button.getAttribute('data-bs-mid');
       let url = membersUrl;
@@ -332,7 +346,7 @@ function getMember(member, isEdition) {
       $('#pass-switch').prop('checked', withPass);
       if (isEdition) {
         $('#member-courses').val(data.courses.map((c) => c.id));
-        
+
       }
       const isMajor = Boolean(getAge(data.birthday) >= 18);
       majorityImpact(isMajor);
