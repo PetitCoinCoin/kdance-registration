@@ -288,7 +288,7 @@ function createUpdateMember() {
         $('#member-courses-accordion').addClass('d-none');
         $('#authorise-photos').prop('disabled', true);
         $('#authorise-emergency').prop('disabled', true);
-        $('#membre-btn').html('Modifier');
+        $('#member-btn').html('Modifier');
         url = url + member + '/';
         method = 'PATCH';
       }
@@ -299,7 +299,7 @@ function createUpdateMember() {
 
 function cleanMemberForm() {
   $('#me-switch').prop('disabled', false);
-  $('#member-modal-title').html('Ajouter un nouveau membre');
+  $('#member-modal-title').html('Ajouter un nouvel adhérent');
   $('#member-firstname').val(undefined);
   $('#member-lastname').val(undefined);
   $('#member-email').val(undefined);
@@ -399,7 +399,7 @@ function deleteItem() {
       let url = '';
       if (buttonId === 'delete-me-btn') {
         $('#delete-modal-title').html('Supprimer mon compte');
-        modalBody.textContent = `Etes-vous sur.e de vouloir supprimer votre compte ainsi que tous les membres associés ?`;
+        modalBody.textContent = `Etes-vous sur.e de vouloir supprimer votre compte ainsi que tous les adhérents associés ?`;
         url = userMeUrl;
       }
       $(document).on("click", "#delete-btn", function () {

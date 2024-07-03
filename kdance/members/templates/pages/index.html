@@ -289,12 +289,12 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h4 class="modal-title">Renouveler un membre pour la nouvelle saison</h4>
+            <h4 class="modal-title">Renouveler un adhérent pour la nouvelle saison</h4>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <div class="form-outline">
-              <label class="form-label" for="copy-member-select">Membre</label>
+              <label class="form-label" for="copy-member-select">Adhérent</label>
               <select id="copy-member-select" class="form-select"></select>
             </div>
           </div>
@@ -326,7 +326,7 @@
     <!-- Content -->
     <div class="container">
       <div class="text-center">
-        <h1 class="display-4 mb-3">Page Adhérent K'Dance</h1>
+        <h1 class="display-4 mb-3">Mon compte K'Dance</h1>
       </div>
       {% if user.is_authenticated %}
       <div class="container">
@@ -411,12 +411,12 @@
           <button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#copy-member-modal"
             id="copy-member-btn">
             <i class="bi-plus-square" style="color: purple;"></i>
-            Ajouter un membre d'une saison précédente
+            Ajouter un adhérent d'une saison précédente
           </button>
           <button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#member-modal"
             id="add-member-btn">
             <i class="bi-plus-square" style="color: purple;"></i>
-            Ajouter un nouveau membre
+            Ajouter un nouvel adhérent
           </button>
         </template>
 
