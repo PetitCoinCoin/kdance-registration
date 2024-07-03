@@ -242,7 +242,9 @@ function getCourses() {
       success: (data) => {
         let memberCourses = $('#member-courses');
         data.map((course) => {
-          const label = `${course.name} - ${course.price}€`;
+          const startHour = course.start_hour.split(':');
+          const endHour = course.end_hour.split(':');
+          const label = `${course.name} - ${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]} à ${endHour[0]}h${endHour[1]} - ${course.price}€`;
           memberCourses.append($('<option>', { value: course.id, text: label }));
         });
       },
