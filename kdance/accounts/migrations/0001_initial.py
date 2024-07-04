@@ -6,6 +6,11 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 
+def _create_superuser(apps, *_):
+    User = apps.get_model("accounts", "User")
+    User.objects.create_superuser("kdance-bureau", settings.SUPERUSER_EMAIL, settings.DEFAULT_PWD)
+
+
 class Migration(migrations.Migration):
 
     initial = True
@@ -24,4 +29,5 @@ class Migration(migrations.Migration):
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
+        migrations.RunPython(_create_superuser),
     ]
