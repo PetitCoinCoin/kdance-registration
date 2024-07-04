@@ -350,7 +350,7 @@ function patchMember(memberId, paymentId, event) {
       success: () => {
         // PATCH payment
         // TODO: move outside first request once DB is not SQLite anymore
-        const paymentData = {
+        let paymentData = {
           cash: $('#payment-cash').val(),
           sport_coupon: {
             amount: $('#payment-coupon-amount').val(),

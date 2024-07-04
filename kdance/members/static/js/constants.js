@@ -11,6 +11,11 @@ const WEEKDAY = {
 const CHECK_NUMBER = 8;
 const CONTACT_NUMBER = 2;
 
+const CONTACT_MAPPING = {
+  'responsible': 'Responsable légal',
+  'emergency': 'Contact d\'urgence',
+}
+
 const MONTH = {
   0: 'Sélectionner...',
   1: 'Janvier',

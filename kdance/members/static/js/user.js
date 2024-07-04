@@ -263,7 +263,7 @@ function getCourses() {
 function createUpdateMember() {
   const memberModal = document.getElementById('member-modal');
   if (memberModal) {
-    memberModal.addEventListener('show.bs.modal', event => {
+    $('#member-modal').on('show.bs.modal', function(event) {
       // Reset accordion collapsed items and focus
       ['contact', 'courses', 'authorise'].forEach(item => {
         $(`#member-${item}-section`).removeClass('show');
@@ -306,8 +306,15 @@ function createUpdateMember() {
         url = url + member + '/';
         method = 'PATCH';
       }
-      postOrPatchMember(url, method);
+      $('#form-member').data('url', url);
+      $('#form-member').data('method', method);
     });
+    $('#member-modal').on('submit', '#form-member', function(event) {
+      event.preventDefault();
+      const url = $(this).data('url');
+      const method = $(this).data('method');
+      postOrPatchMember(url, method, event);
+    })
   }
 }
 
@@ -344,12 +351,30 @@ function getMember(member, isEdition) {
       const withPass = !(data.sport_pass === null || data.sport_pass?.code === null || data.sport_pass?.code === '');
       $('#pass-div').attr('hidden', !withPass);
       $('#pass-switch').prop('checked', withPass);
-      if (isEdition) {
-        $('#member-courses').val(data.courses.map((c) => c.id));
-
+      $('#member-courses').val(isEdition ? data.courses.map((c) => c.id) : undefined);
+      if (isMe(data)) {
+        $('#emergency-me-switch').attr('disabled', true);
+        $('#emergency-me-switch').prop('checked', false);
       }
       const isMajor = Boolean(getAge(data.birthday) >= 18);
       majorityImpact(isMajor);
+      Object.keys(CONTACT_MAPPING).forEach(key => {
+        $(`#${key}-me-switch`).prop('checked', false);
+        const subContacts = data.contacts.filter((c) => c.contact_type === key);
+        let delta = 0;
+        for (let i = 0; i < CONTACT_NUMBER; i++) {
+          if (i < subContacts.length && isMe(subContacts[i])) {
+            $(`#${key}-me-switch`).prop('checked', true);
+            delta++;
+          } else {
+            $(`#firstname-${key}-${i-delta}`).val(i < subContacts.length ? subContacts[i].first_name : '');
+            $(`#lastname-${key}-${i-delta}`).val(i < subContacts.length ? subContacts[i].last_name : '');
+            $(`#email-${key}-${i-delta}`).val(i < subContacts.length ? subContacts[i].email : '');
+            $(`#phone-${key}-${i-delta}`).val(i < subContacts.length ? subContacts[i].phone : '');
+            $(`#contact-${key}-${i-delta}`).attr('hidden', i-delta > 0 && i-delta >= subContacts.length);
+          }
+        }
+      });
     },
     error: (error) => {
       // if (!error.responseJSON) {
@@ -359,10 +384,13 @@ function getMember(member, isEdition) {
   });
 }
 
-function postOrPatchMember(url, method) {
-  $('#form-member').submit((event) => {
+function isMe(contact) {
+  return contact.first_name.toLowerCase() === $('#desc-firstname').html().toLowerCase()
+  && contact.last_name.toLowerCase() === $('#desc-lastname').html().toLowerCase()
+}
+
+function postOrPatchMember(url, method, event) {
     $('.invalid-feedback').removeClass('d-inline');
-    event.preventDefault();
     let data = {
       first_name: $('#member-firstname').val(),
       last_name: $('#member-lastname').val(),
@@ -372,6 +400,7 @@ function postOrPatchMember(url, method) {
       birthday: $('#member-birthday').val(),
       season: $('#member-season').val(),
       courses: $('#member-courses').val(),
+      contacts: buildContactsData(),
       documents: {
         authorise_photos: $('#authorise-photos').is(':checked'),
         authorise_emergency: $('#authorise-emergency').is(':checked'),
@@ -399,8 +428,56 @@ function postOrPatchMember(url, method) {
         //   $('#message-error-signup').removeAttr('hidden');
         // }
       }
-    });
   });
+}
+
+function buildContactsData() {
+  let contacts = [];
+  const isMajor = Boolean(getAge($('#member-birthday').val()) >= 18);
+  if (!isMajor) {
+    if ($('#responsible-me-switch').is(':checked')) {
+      contacts.push({
+        first_name: $('#desc-firstname').html(),
+        last_name: $('#desc-lastname').html(),
+        phone: $('#desc-phone').html(),
+        email: $('#desc-email').html(),
+        contact_type: 'responsible',
+      });
+    }
+    for (let i = 0; i < CONTACT_NUMBER; i++) {
+      if ($(`#firstname-responsible-${i}`).val() !== '') {
+        contacts.push({
+          first_name: $(`#firstname-responsible-${i}`).val(),
+          last_name: $(`#lastname-responsible-${i}`).val(),
+          phone: $(`#phone-responsible-${i}`).val(),
+          email: $(`#email-responsible-${i}`).val(),
+          contact_type: 'responsible',
+        });
+      }
+    }
+  }
+    
+  if ($('#emergency-me-switch').is(':checked')) {
+    contacts.push({
+      first_name: $('#desc-firstname').html(),
+      last_name: $('#desc-lastname').html(),
+      phone: $('#desc-phone').html(),
+      email: $('#desc-email').html(),
+      contact_type: 'emergency',
+    });
+  }
+  for (let i = 0; i < CONTACT_NUMBER; i++) {
+    if ($(`#firstname-emergency-${i}`).val() !== '') {
+      contacts.push({
+        first_name: $(`#firstname-emergency-${i}`).val(),
+        last_name: $(`#lastname-emergency-${i}`).val(),
+        phone: $(`#phone-emergency-${i}`).val(),
+        email: $(`#email-emergency-${i}`).val(),
+        contact_type: 'emergency',
+      });
+    }
+  }
+  return contacts
 }
 
 function deleteItem() {
@@ -441,14 +518,14 @@ function initContacts() {
   const responsibleParent = document.querySelector('#contact-responsible-div');
   const contactTemplate = document.querySelector('#contact-template');
   for (let i = 0; i < CONTACT_NUMBER; i++) {
-    ['emergency', 'responsible'].forEach(contactType => {
+    Object.keys(CONTACT_MAPPING).forEach(key => {
       const clone = contactTemplate.content.cloneNode(true);
       const items = clone.querySelectorAll('.form-outline');
       for (let k = 0; k < items.length; k++) {
-        items[k].children[0].htmlFor += `${contactType}-${i}`;
-        items[k].children[1].id += `${contactType}-${i}`;
+        items[k].children[0].htmlFor += `${key}-${i}`;
+        items[k].children[1].id += `${key}-${i}`;
         if (items[k].children.length > 2) {
-          items[k].children[2].id += `${contactType}-${i}`;
+          items[k].children[2].id += `${key}-${i}`;
         }
       }
       // Add button except for last
@@ -456,7 +533,7 @@ function initContacts() {
         const addTemplate = document.querySelector('#add-contact-template');
         const addClone = addTemplate.content.cloneNode(true);
         let addContactButton = addClone.querySelector('button');
-        addContactButton.id += `add-contact-${contactType}-${i}`;
+        addContactButton.id += `add-contact-${key}-${i}`;
         clone.querySelector('.row').appendChild(addClone);
       }
       // Delete button + hidden except for first
@@ -464,13 +541,13 @@ function initContacts() {
         const removeTemplate = document.querySelector('#remove-contact-template');
         const removeClone = removeTemplate.content.cloneNode(true);
         let removeContactButton = removeClone.querySelector('button');
-        removeContactButton.id += `remove-contact-${contactType}-${i}`;
+        removeContactButton.id += `remove-contact-${key}-${i}`;
         removeContactButton.dataset.bsEnumber = i;
         clone.querySelector('.row').appendChild(removeClone);
-        clone.querySelectorAll('div')[0].id = `contact-${contactType}-${i}`;
+        clone.querySelectorAll('div')[0].id = `contact-${key}-${i}`;
         clone.querySelectorAll('div')[0].hidden = true;
       }
-      if (contactType === 'emergency') {
+      if (key === 'emergency') {
         emergencyParent.appendChild(clone);
       } else {
         responsibleParent.appendChild(clone);
@@ -480,24 +557,24 @@ function initContacts() {
 }
 
 function handleContacts() {
-  ['emergency', 'responsible'].forEach(contactType => {
+  Object.keys(CONTACT_MAPPING).forEach(key => {
     for (let i = 0; i < CONTACT_NUMBER - 1; i++) {
-      $(`#add-contact-${contactType}-${i}`).on('click', () => {
-        $(`#contact-${contactType}-${i + 1}`).attr('hidden', false);
+      $(`#add-contact-${key}-${i}`).on('click', () => {
+        $(`#contact-${key}-${i + 1}`).attr('hidden', false);
       });
     }
     for (let i = 1; i < CONTACT_NUMBER; i++) {
-      $(`#remove-contact-${contactType}-${i}`).on('click', () => {
+      $(`#remove-contact-${key}-${i}`).on('click', () => {
         ['firstname', 'lastname', 'phone', 'email'].forEach(item => {
-          $(`#${item}-${contactType}-${i}`).val('');
+          $(`#${item}-${key}-${i}`).val('');
         });
-        $(`#contact-${contactType}-${i}`).attr('hidden', true);
+        $(`#contact-${key}-${i}`).attr('hidden', true);
       });
     }
   });
   ['firstname', 'lastname'].forEach(name => {
     $(`#member-${name}`).change(function () {
-      if (($('#member-firstname').val().toLowerCase() === $('#desc-firstname').html().toLowerCase()) && ($('#member-lastname').val().toLowerCase() === $('#desc-lastname').html().toLowerCase())) {
+      if (isMe({first_name: $('#member-firstname').val(), last_name: $('#member-lastname').val()})) {
         $('#emergency-me-switch').attr('disabled', true);
         $('#emergency-me-switch').prop('checked', false);
       }

@@ -6,6 +6,7 @@ from rest_framework import serializers
 from members.models import (
     Ancv,
     Check,
+    Contact,
     Course,
     Documents,
     Member,
@@ -99,6 +100,18 @@ class DocumentsSerializer(serializers.ModelSerializer):
         )
 
 
+class ContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contact
+        fields = (
+            "first_name",
+            "last_name",
+            "email",
+            "phone",
+            "contact_type",
+        )
+
+
 class AncvSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -171,6 +184,7 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
     documents = DocumentsSerializer()
     payment = PaymentSerializer()
     sport_pass = SportPassSerializer()
+    contacts = ContactSerializer(many=True)
 
     class Meta:
         model = Member
@@ -180,6 +194,7 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             "last_name",
             "season",
             "courses",
+            "contacts",
             "documents",
             "payment",
             "sport_pass",
@@ -190,7 +205,7 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
         )
         extra_kwargs = {
             "courses": {"required": False},
-            "payment": {"read_only": True},
+            "payment": {"write_only": True},
             "sport_pass": {"required": False},
         }
 
@@ -203,10 +218,23 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
         return validated
 
     @transaction.atomic
-    def save(self, **kwargs) -> None:
+    def save(self, **kwargs: Member) -> None:
         username = kwargs.get("user")
         self.validated_data["user"] = User.objects.get(username=username)
-        super().save()
+        contacts = self.validated_data.pop("contacts", None)
+        documents = self.validated_data.pop("documents", None) if self.partial else None
+        member = super().save()
+        if contacts is not None:
+            member.contacts.clear()
+            for contact in contacts:
+                contact_instance, _ = Contact.objects.get_or_create(**contact)
+                member.contacts.add(contact_instance)
+            Contact.objects.clean_orphan()
+        if documents is not None:
+            doc = Documents.objects.get(member=member)
+            for key, value in documents.items():
+                setattr(doc, key, value)
+            doc.save()
 
 
 class MemberRetrieveSerializer(MemberSerializer):

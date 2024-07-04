@@ -2,7 +2,9 @@ from enum import Enum
 from django.contrib.auth.models import User
 from django.core.validators import EmailValidator, MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models, transaction
+from django.db.models.signals import post_delete
 from django.db.utils import IntegrityError
+from django.dispatch import receiver
 
 
 class Season(models.Model):
@@ -238,7 +240,6 @@ class PersonModel(models.Model):
         validators=[RegexValidator(r"\d{10}")],
         max_length=10,
     )
-    season = models.ForeignKey(Season, on_delete=models.CASCADE)
 
     class Meta:
         abstract = True
@@ -247,25 +248,35 @@ class PersonModel(models.Model):
         return f"{self.first_name} {self.last_name}"
 
 
-class ContactEnum(Enum):
-    RESPONSIBLE = "Responsable légal"
-    EMERGENCY = "Contact d'urgence"
+# class ContactEnum(Enum):
+
+
+class ContactManager(models.Manager):
+    def clean_orphan(self) -> None:
+        """If contact is linked to no one, we delete it."""
+        for contact in self.all():
+            if not contact.member_set.all():
+                contact.delete()
 
 
 class Contact(PersonModel):
+    class ContactEnum(models.TextChoices):
+        RESPONSIBLE = "responsible", "Responsable légal"
+        EMERGENCY = "emergency", "Contact d'urgence"
+
     contact_type = models.CharField(
         max_length=17,
-        choices=[(e.value, e.value) for e in ContactEnum],
+        choices= ContactEnum.choices,
     )
-    class Meta:
-        unique_together = ("first_name", "last_name", "season")
+    objects = ContactManager()
 
 
 class Member(PersonModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     courses = models.ManyToManyField(Course)
     contacts = models.ManyToManyField(Contact)
-    documents = models.ForeignKey(Documents, null=True, on_delete=models.SET_NULL)
+    season = models.ForeignKey(Season, on_delete=models.CASCADE)
+    documents = models.OneToOneField(Documents, null=True, on_delete=models.SET_NULL)
     birthday = models.DateField(blank=False)
     address = models.CharField(
         null=False,
@@ -280,3 +291,8 @@ class Member(PersonModel):
     @property
     def payment(self) -> Payment:
         return Payment.objects.get(user=self.user, season=self.season)
+
+@receiver(post_delete, sender=Member)
+def post_delete_documents(_s, instance, *args, **kwargs):
+    if instance.documents:
+        instance.documents.delete()
