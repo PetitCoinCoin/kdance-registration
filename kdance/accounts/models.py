@@ -4,7 +4,6 @@ from django.core.validators import RegexValidator
 from django.db import models
 
 
-
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     address = models.CharField(

@@ -57,10 +57,13 @@ class Teacher(models.Model):
     def __repr__(self) -> str:
         return self.name
 
+    def save(self, *args, **kwargs) -> None:
+        self.name = self.name.title()
+        super().save(*args, **kwargs)
+
 
 class CourseManager(models.Manager):
     def copy_from_season(self, from_season: int, to_season: int) -> None:
-        season = Season.objects.get(id=to_season)
         for course in self.filter(season__id=from_season).values().all():
             try:
                 course.pop("id")
@@ -247,8 +250,11 @@ class PersonModel(models.Model):
     def __repr__(self) -> str:
         return f"{self.first_name} {self.last_name}"
 
-
-# class ContactEnum(Enum):
+    def save(self, *args, **kwargs) -> None:
+        self.first_name = self.first_name.title()
+        self.last_name = self.last_name.title()
+        self.email = self.email.lower()
+        super().save(*args, **kwargs)
 
 
 class ContactManager(models.Manager):

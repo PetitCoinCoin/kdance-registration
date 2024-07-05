@@ -99,6 +99,7 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+SUPERUSER = os.getenv("SUPERUSER")
 SUPERUSER_EMAIL = os.getenv("SUPERUSER_EMAIL")
 DEFAULT_PWD = os.getenv("DEFAULT_PWD")
 LOGIN_REDIRECT_URL = "/"

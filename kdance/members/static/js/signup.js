@@ -19,7 +19,7 @@ function postSignup() {
         first_name: $('#firstname').val(),
         last_name: $('#lastname').val(),
         phone: $('#phone').val(),
-        email: $('#email').val(),
+        email: $('#email').val().toLowerCase(),
         address: $('#address').val(),
         password: $('#password').val(),
       }

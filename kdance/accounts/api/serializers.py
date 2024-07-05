@@ -1,5 +1,6 @@
 from typing import Any
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User as UserType
 from django.db import transaction
@@ -50,6 +51,13 @@ class UserBaseSerializer(serializers.ModelSerializer):
     date_joined = serializers.DateTimeField(format="%d/%m/%Y")
     last_login = serializers.DateTimeField(format="%d/%m/%Y")
 
+    @staticmethod
+    def validate_username(username: str) -> str:
+        print("username")
+        if User.objects.filter(username__iexact=username).exists():
+            raise serializers.ValidationError("Ce nom d'utilisateur est déjà pris.")
+        return username
+
     def create(self, validated_data: dict) -> UserType:
         user: UserType = User.objects.create_user(
             username=validated_data["username"],
@@ -63,7 +71,7 @@ class UserBaseSerializer(serializers.ModelSerializer):
     @classmethod
     @transaction.atomic
     def delete(cls, user: UserType) -> None:
-        if user.is_superuser:
+        if user.username == settings.SUPERUSER:
             raise serializers.ValidationError("Cet utilisateur ne peut pas être supprimé.")
         user.delete()
 

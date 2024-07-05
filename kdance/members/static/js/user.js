@@ -187,7 +187,7 @@ function patchUser() {
       first_name: $('#edit-me-firstname').val(),
       last_name: $('#edit-me-lastname').val(),
       username: $('#edit-me-username').val(),
-      email: $('#edit-me-email').val(),
+      email: $('#edit-me-email').val().toLowerCase(),
       profile: {
         phone: $('#edit-me-phone').val(),
         address: $('#edit-me-address').val(),
@@ -423,7 +423,7 @@ function postOrPatchMember(url, method, event) {
       data: JSON.stringify(data),
       dataType: 'json',
       success: () => {
-        // event.currentTarget.submit();
+        event.currentTarget.submit();
       },
       error: (error) => {
         // if (!error.responseJSON) {
