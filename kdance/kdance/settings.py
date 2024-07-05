@@ -13,6 +13,11 @@ import os
 
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
 # Build paths inside the project like this: BASE_DIR / "subdir".
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,10 +25,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-1%vdbu46*%mg!dv$hql8nulam^)32)fd%&ito&ix5sm4uq_v7y"
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don"t run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG")
 ALLOWED_HOSTS = []
 
 # Application definition
@@ -94,8 +99,8 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
-SUPERUSER_EMAIL = "kdance31340@gmail.com"
-DEFAULT_PWD = "Kdance2024!"  # Of course this will change :)
+SUPERUSER_EMAIL = os.getenv("SUPERUSER_EMAIL")
+DEFAULT_PWD = os.getenv("DEFAULT_PWD")
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 CSRF_COOKIE_HTTPONLY = True

@@ -1,3 +1,7 @@
+# settings
+.env
+
+# workspace
 venv
 *-workspace
 __pycache__
