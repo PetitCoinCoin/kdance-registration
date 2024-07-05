@@ -362,16 +362,18 @@ function getMember(member, isEdition) {
         $(`#${key}-me-switch`).prop('checked', false);
         const subContacts = data.contacts.filter((c) => c.contact_type === key);
         let delta = 0;
-        for (let i = 0; i < CONTACT_NUMBER; i++) {
+        for (let i = 0; i < CONTACT_ALL_NUMBER; i++) {
           if (i < subContacts.length && isMe(subContacts[i])) {
             $(`#${key}-me-switch`).prop('checked', true);
             delta++;
           } else {
             $(`#firstname-${key}-${i-delta}`).val(i < subContacts.length ? subContacts[i].first_name : '');
             $(`#lastname-${key}-${i-delta}`).val(i < subContacts.length ? subContacts[i].last_name : '');
-            $(`#email-${key}-${i-delta}`).val(i < subContacts.length ? subContacts[i].email : '');
             $(`#phone-${key}-${i-delta}`).val(i < subContacts.length ? subContacts[i].phone : '');
             $(`#contact-${key}-${i-delta}`).attr('hidden', i-delta > 0 && i-delta >= subContacts.length);
+            if (key === 'responsible') {
+              $(`#email-${key}-${i-delta}`).val(i < subContacts.length ? subContacts[i].email : '');
+            }
           }
         }
       });
@@ -421,7 +423,7 @@ function postOrPatchMember(url, method, event) {
       data: JSON.stringify(data),
       dataType: 'json',
       success: () => {
-        event.currentTarget.submit();
+        // event.currentTarget.submit();
       },
       error: (error) => {
         // if (!error.responseJSON) {
@@ -444,13 +446,13 @@ function buildContactsData() {
         contact_type: 'responsible',
       });
     }
-    for (let i = 0; i < CONTACT_NUMBER; i++) {
+    for (let i = 0; i < CONTACT_CUSTOM_NUMBER; i++) {
       if ($(`#firstname-responsible-${i}`).val() !== '') {
         contacts.push({
           first_name: $(`#firstname-responsible-${i}`).val(),
           last_name: $(`#lastname-responsible-${i}`).val(),
           phone: $(`#phone-responsible-${i}`).val(),
-          email: $(`#email-responsible-${i}`).val(),
+          email: undefined,
           contact_type: 'responsible',
         });
       }
@@ -466,7 +468,7 @@ function buildContactsData() {
       contact_type: 'emergency',
     });
   }
-  for (let i = 0; i < CONTACT_NUMBER; i++) {
+  for (let i = 0; i < CONTACT_CUSTOM_NUMBER; i++) {
     if ($(`#firstname-emergency-${i}`).val() !== '') {
       contacts.push({
         first_name: $(`#firstname-emergency-${i}`).val(),
@@ -517,19 +519,25 @@ function initContacts() {
   const emergencyParent = document.querySelector('#contact-emergency-div');
   const responsibleParent = document.querySelector('#contact-responsible-div');
   const contactTemplate = document.querySelector('#contact-template');
-  for (let i = 0; i < CONTACT_NUMBER; i++) {
+  for (let i = 0; i < CONTACT_CUSTOM_NUMBER; i++) {
     Object.keys(CONTACT_MAPPING).forEach(key => {
       const clone = contactTemplate.content.cloneNode(true);
       const items = clone.querySelectorAll('.form-outline');
       for (let k = 0; k < items.length; k++) {
-        items[k].children[0].htmlFor += `${key}-${i}`;
-        items[k].children[1].id += `${key}-${i}`;
-        if (items[k].children.length > 2) {
-          items[k].children[2].id += `${key}-${i}`;
+        // No email for emergency contacts
+        if (key === 'emergency' && k === items.length - 1) {
+          items[k].parentElement.remove();
+        } else {
+          items[k].children[0].htmlFor += `${key}-${i}`;
+          items[k].children[1].id += `${key}-${i}`;
+          // For invalid feedbacks
+          if (items[k].children.length > 2) {
+            items[k].children[2].id += `${key}-${i}`;
+          }
         }
       }
       // Add button except for last
-      if (i < CONTACT_NUMBER - 1) {
+      if (i < CONTACT_CUSTOM_NUMBER - 1) {
         const addTemplate = document.querySelector('#add-contact-template');
         const addClone = addTemplate.content.cloneNode(true);
         let addContactButton = addClone.querySelector('button');
@@ -558,12 +566,12 @@ function initContacts() {
 
 function handleContacts() {
   Object.keys(CONTACT_MAPPING).forEach(key => {
-    for (let i = 0; i < CONTACT_NUMBER - 1; i++) {
+    for (let i = 0; i < CONTACT_CUSTOM_NUMBER - 1; i++) {
       $(`#add-contact-${key}-${i}`).on('click', () => {
         $(`#contact-${key}-${i + 1}`).attr('hidden', false);
       });
     }
-    for (let i = 1; i < CONTACT_NUMBER; i++) {
+    for (let i = 1; i < CONTACT_CUSTOM_NUMBER; i++) {
       $(`#remove-contact-${key}-${i}`).on('click', () => {
         ['firstname', 'lastname', 'phone', 'email'].forEach(item => {
           $(`#${item}-${key}-${i}`).val('');

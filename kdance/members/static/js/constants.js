@@ -9,7 +9,8 @@ const WEEKDAY = {
 }
 
 const CHECK_NUMBER = 8;
-const CONTACT_NUMBER = 2;
+const CONTACT_CUSTOM_NUMBER = 2;
+const CONTACT_ALL_NUMBER = CONTACT_CUSTOM_NUMBER + 1; // Plus user
 
 const CONTACT_MAPPING = {
   'responsible': 'Responsable légal',
@@ -30,4 +31,5 @@ const LIST_MAIN_MAPPING = {
   '0': '...',
   '1': 'Les adhérents par cours',
   '2': 'Les chèques par mois',
+  '3': 'La liste des Pass Sport',
 }

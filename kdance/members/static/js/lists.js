@@ -56,13 +56,12 @@ function populateSecondSelect(previousValue) {
 
 function onMainChange(mainValue) {
   $('#menu-2-select').empty();
-  if (mainValue == '0') {
+  if (mainValue === '0' || mainValue === '3') {
     $('#menu-2-select').attr('hidden', true);
   } else {
     populateSecondSelect(mainValue);
   }
 }
-
 
 function getCourses(seasonId) {
   $.ajax({
@@ -84,9 +83,11 @@ function getCourses(seasonId) {
 
 function searchData() {
   $('#search-btn').on('click', () => {
-    switch ($('#menu-1-select').val()) {
+    const mainValue = $('#menu-1-select').val();
+    switch (mainValue) {
       case '1':
-        getMembersPerCourse();
+      case '3':
+        getMembersPerCourse(mainValue);
         break
       case '2':
         getChecksPerMonth();
@@ -97,85 +98,38 @@ function searchData() {
   });
 }
 
-function getMembersPerCourse() {
+function getMembersPerCourse(mainValue) {
   document.querySelector('#total-amount-div').className = 'd-none';
   var url;
-  if ($('#menu-2-select').val() === '0') {
-    url = membersUrl + `?season=${$('#season-select').val()}`
-  } else {
-    url = membersUrl + `?course=${$('#menu-2-select').val()}`
+  const subValue = $('#menu-2-select').val()
+  switch (subValue) {
+    case null:
+      url = `${membersUrl}?season=${$('#season-select').val()}&with_pass=true`;
+      break
+    case '0':
+      url = `${membersUrl}?season=${$('#season-select').val()}`;
+      break
+    default:
+      url = `${membersUrl}?course=${subValue}`;
   }
   $.ajax({
     url: url,
     type: 'GET',
     success: (data) => {
       $('#data-table').bootstrapTable('destroy');
-      $('#data-table').bootstrapTable({
-        search: true,
-        stickyHeader: true,
-        showFullscreen: true,
-        showColumns: true,
-        showExport: true,
-        exportTypes: ['csv', 'xlsx', 'pdf', 'json'],
-        exportOptions: {
-          fileName: function () {
-            const suffix = $('#menu-2-select').val() === '0' ? 'tous' : $('#menu-2-select option:selected').text();
-            return `adherents_${$('#season-select option:selected').text()}_${suffix}`
-          }
-        },
-        // TODO: add responsibles and emergency contacts once available
-        columns: [
-          {
-            field: 'last_name',
-            title: 'Nom de famille',
-            searchable: true,
-            sortable: true,
-          }, {
-            field: 'first_name',
-            title: 'Prénom',
-            searchable: true,
-            sortable: true,
-          }, {
-            field: 'phone',
-            title: 'Téléphone',
-            searchable: false,
-            sortable: false,
-          }, {
-            field: 'email',
-            title: 'Email',
-            searchable: false,
-            sortable: false,
-          }, {
-            field: 'courses',
-            title: 'Cours',
-            searchable: true,
-            sortable: true,
-            visible: false,
-          }, {
-            field: 'documents.authorise_photos',
-            title: 'Autorisation photos',
-            searchable: true,
-            sortable: true,
-            visible: false,
-          }, {
-            field: 'documents.authorise_emergency',
-            title: 'Autorisation parentale',
-            searchable: true,
-            sortable: true,
-            visible: false,
-          }],
-        data: data.map((m) => {
-          return {
-            ...m,
-            courses: m.courses.map((c) => c.name),
-            documents: {
-              ...m.documents,
-              authorise_photos: m.documents.authorise_photos ? 'Oui': 'Non',
-              authorise_emergency: m.documents.authorise_emergency ? 'Oui': 'Non',
-            }
-          }
-        })
-      });
+      switch (mainValue) {
+        case '1':
+          buildMembersInfo(data);
+          break
+        case '2':
+          console.log('This should not happen');
+          return
+        case '3':
+          buildSportPassInfo(data);
+          break
+        default:
+          return
+      }
       $('input[type=search]').attr('placeholder', 'Rechercher');
       $('#total-count').text(data.length);
     },
@@ -184,6 +138,181 @@ function getMembersPerCourse() {
       //     $('#message-error-signup').removeAttr('hidden');
       // }
     }
+  });
+}
+
+function buildMembersInfo(data) {
+  $('#data-table').bootstrapTable({
+    search: true,
+    stickyHeader: true,
+    showFullscreen: true,
+    showColumns: true,
+    showExport: true,
+    exportTypes: ['csv', 'xlsx', 'pdf', 'json'],
+    exportOptions: {
+      fileName: function () {
+        const suffix = $('#menu-2-select').val() === '0' ? 'tous' : $('#menu-2-select option:selected').text();
+        return `adherents_${$('#season-select option:selected').text()}_${suffix}`
+      }
+    },
+    columns: [
+      {
+        field: 'name',
+        title: 'Adhérent',
+        searchable: true,
+        sortable: true,
+      }, {
+        field: 'phone',
+        title: 'Téléphone',
+        searchable: false,
+        sortable: false,
+      }, {
+        field: 'email',
+        title: 'Email',
+        searchable: false,
+        sortable: false,
+      }, {
+        field: 'name-responsible-1',
+        title: 'Responsable légal 1',
+        searchable: true,
+        sortable: true,
+        visible: false,
+      }, {
+        field: 'phone-responsible-1',
+        title: 'Tél 1',
+        searchable: false,
+        sortable: false,
+        visible: false,
+      }, {
+        field: 'email-responsible-1',
+        title: 'Email 1',
+        searchable: false,
+        sortable: false,
+        visible: false,
+      }, {
+        field: 'name-responsible-2',
+        title: 'Responsable légal 2',
+        searchable: true,
+        sortable: true,
+        visible: false,
+      }, {
+        field: 'phone-responsible-2',
+        title: 'Tél 2',
+        searchable: false,
+        sortable: false,
+        visible: false,
+      }, {
+        field: 'email-responsible-2',
+        title: 'Email 2',
+        searchable: false,
+        sortable: false,
+        visible: false,
+      }, {
+        field: 'name-emergency-1',
+        title: 'Contact urgence 1',
+        searchable: true,
+        sortable: true,
+      }, {
+        field: 'phone-emergency-1',
+        title: 'Tél urgence 1',
+        searchable: false,
+        sortable: false,
+      }, {
+        field: 'name-emergency-2',
+        title: 'Contact urgence 2',
+        searchable: true,
+        sortable: true,
+      }, {
+        field: 'phone-emergency-2',
+        title: 'Tél urgence 2',
+        searchable: false,
+        sortable: false,
+      }, {
+        field: 'courses',
+        title: 'Cours',
+        searchable: true,
+        sortable: true,
+        visible: false,
+      }, {
+        field: 'documents.authorise_photos',
+        title: 'Autorisation photos',
+        searchable: true,
+        sortable: true,
+        visible: false,
+      }, {
+        field: 'documents.authorise_emergency',
+        title: 'Autorisation parentale',
+        searchable: true,
+        sortable: true,
+        visible: false,
+      }],
+    data: data.map(m => {
+      return {
+        ...m,
+        name: `${m.last_name} ${m.first_name}`,
+        courses: m.courses.map((c) => c.name),
+        documents: {
+          ...m.documents,
+          authorise_photos: m.documents.authorise_photos ? 'Oui': 'Non',
+          authorise_emergency: m.documents.authorise_emergency ? 'Oui': 'Non',
+        },
+        ...buildContactsData(m.contacts),
+      }
+    })
+  });
+}
+
+function buildContactsData(data) {
+  let contacts = {};
+  Object.keys(CONTACT_MAPPING).forEach(key => {
+    const subContacts = data.filter(c => c.contact_type === key);
+    // Technically, we could have 3 contacts per type. But this is higly unusual
+    for (i=0; i<CONTACT_ALL_NUMBER; i++) {
+      contacts[`name-${key}-${i+1}`] = i < subContacts.length ? `${subContacts[i].first_name} ${subContacts[i].last_name}` : undefined;
+      contacts[`phone-${key}-${i+1}`] = i < subContacts.length ? subContacts[i].phone : undefined;
+      if (key === 'responsible') {
+        contacts[`email-${key}-${i+1}`] = i < subContacts.length ? subContacts[i].phone : undefined;
+      }
+    }
+  });
+  return contacts
+}
+
+function buildSportPassInfo(data) {
+  $('#data-table').bootstrapTable({
+    search: true,
+    stickyHeader: true,
+    showFullscreen: true,
+    showExport: true,
+    exportTypes: ['csv', 'xlsx', 'pdf', 'json'],
+    exportOptions: {
+      fileName: function () {
+        return `pass-sport_${$('#season-select option:selected').text()}`
+      }
+    },
+    columns: [
+      {
+        field: 'sport_pass.code',
+        title: 'Code Pass Sport',
+        searchable: true,
+        sortable: true,
+      }, {
+        field: 'member',
+        title: 'Adhérent',
+        searchable: true,
+        sortable: true,
+      }, {
+        field: 'sport_pass.amount',
+        title: 'Montant (€)',
+        searchable: false,
+        sortable: false,
+      }],
+    data: data.filter(m => m.sport_pass !== null).map((m) => {
+      return {
+        ...m,
+        member: `${m.first_name} ${m.last_name}`
+      }
+    })
   });
 }
 
