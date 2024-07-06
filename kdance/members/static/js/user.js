@@ -1,4 +1,5 @@
 $(document).ready(() => {
+  activatePopovers();
   getUser();
   patchUser();
   getCourses();
@@ -6,6 +7,21 @@ $(document).ready(() => {
   deleteItem();
   initContacts();
   handleContacts();
+  handleSwitches();
+  updatePwd();
+  const birthdaySelect = document.querySelector('#member-birthday');
+  birthdaySelect.addEventListener('change', () => {
+    const isMajor = Boolean(getAge($('#member-birthday').val()) >= 18);
+    majorityImpact(isMajor);
+  });
+});
+
+function activatePopovers() {
+  const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+  [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
+}
+
+function handleSwitches() {
   const meSwitch = document.querySelector('#me-switch');
   meSwitch.addEventListener('change', () => {
     const isMe = $('#me-switch').is(':checked');
@@ -20,13 +36,7 @@ $(document).ready(() => {
   const passSwitch = document.querySelector('#pass-switch');
   passSwitch.addEventListener('change', () => {
     $('#pass-div').attr('hidden', !$('#pass-switch').is(':checked'));
-  });
-  const birthdaySelect = document.querySelector('#member-birthday');
-  birthdaySelect.addEventListener('change', () => {
-    const isMajor = Boolean(getAge($('#member-birthday').val()) >= 18);
-    majorityImpact(isMajor);
-  });
-});
+  });}
 
 function getPreviousMembers(members) {
   let previousMembers = new Array
@@ -355,6 +365,8 @@ function getMember(member, isEdition) {
       if (isMe(data)) {
         $('#emergency-me-switch').attr('disabled', true);
         $('#emergency-me-switch').prop('checked', false);
+      } else {
+        $('#emergency-me-switch').attr('disabled', false);
       }
       const isMajor = Boolean(getAge(data.birthday) >= 18);
       majorityImpact(isMajor);
@@ -587,5 +599,56 @@ function handleContacts() {
         $('#emergency-me-switch').prop('checked', false);
       }
     });
+  });
+}
+
+function confirmPassword() {
+  const pwd = $('#password');
+  const pwdConfirmation = $('#password-confirmation');
+  return pwdConfirmation.val() === pwd.val()
+}
+
+function updatePwd() {
+  $('#edit-pwd-modal').on('submit', '#form-pwd', function(event) {
+    $('.invalid-feedback').removeClass('d-inline');
+    event.preventDefault();
+    if (confirmPassword()) {
+      $.ajax({
+        url: userMePwdUrl,
+        type: 'PUT',
+        contentType: 'application/json',
+        headers: { 'X-CSRFToken': csrftoken },
+        mode: 'same-origin',
+        data: JSON.stringify({
+          old_password: $('#old-password').val(),
+          new_password: $('#password').val(),
+        }),
+        dataType: 'json',
+        success: () => {
+          const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('pwd-success-toast'));
+          toast.show();
+          document.getElementById('form-pwd').reset();
+          const myModalEl = document.getElementById('edit-pwd-modal');
+          const modal = bootstrap.Modal.getInstance(myModalEl);
+          modal.hide();
+        },
+        error: (error) => {
+          if (!error.responseJSON) {
+            $('#message-error-signup').removeAttr('hidden');
+          }
+          if (error.responseJSON.old_password) {
+            $('#invalid-pwd-old').html(error.responseJSON.old_password[0]);
+            $('#invalid-pwd-old').addClass('d-inline');
+          }
+          if (error.responseJSON.new_password) {
+            $('#invalid-pwd').html(error.responseJSON.new_password[0]);
+            $('#invalid-pwd').addClass('d-inline');
+          }
+        }
+      });
+    } else {
+      $('#invalid-pwd-confirmation').addClass('d-inline');
+      return
+    }
   });
 }

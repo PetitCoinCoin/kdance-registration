@@ -1,75 +1,80 @@
 /*** LAYOUT ***/
 html {
-    height: 100%;
+  height: 100%;
 }
 
 body {
-    min-height: 100%;
-    display: grid;
-    grid-gap: 10px;
-    grid-template-areas:
-        "header"
-        "main"
-        "footer";
-    grid-template-rows: 70px 1fr 50px;
+  min-height: 100%;
+  display: grid;
+  grid-gap: 10px;
+  grid-template-areas:
+    "header"
+    "main"
+    "footer";
+  grid-template-rows: 70px 1fr 50px;
 }
 
 header {
-    grid-area: header;
+  grid-area: header;
 }
 
 main {
-    grid-area: main;
+  grid-area: main;
 }
 
 footer {
-    grid-area: footer;
+  grid-area: footer;
 }
 
 #navbar-main {
-    justify-content: space-between;
-    align-items: center;
-    margin-left: 20px;
-    margin-right: 20px;
+  justify-content: space-between;
+  align-items: center;
+  margin-left: 20px;
+  margin-right: 20px;
 }
 
 .min-w-500 {
-    min-width: 500px;
+  min-width: 500px;
 }
 
 .min-w-200 {
-    min-width: 200px;
+  min-width: 200px;
 }
 
 .max-w-300 {
-    max-width: 300px;
+  max-width: 300px;
 }
 
 /*** Forms ***/
 .required:after {
-    content:" *";
-    color: red;
+  content: " *";
+  color: red;
+}
+
+/*** Toasts ***/
+.toast-success {
+  background-color: #baffc9;
 }
 
 /*** Design ***/
 h1 {
-    color: purple;
-    border-bottom: 0.5rem solid orange;
+  color: purple;
+  border-bottom: 0.5rem solid orange;
 }
 
 .form-check-input:checked {
-    background-color: #0dcaf0;
-    border-color: #0dcaf0;
+  background-color: #0dcaf0;
+  border-color: #0dcaf0;
 }
 
 .bg-alert {
-    background-color: #ffb3ba !important;
+  background-color: #ffb3ba !important;
 }
 
 .bg-warning {
-    background-color: #ffdfba !important;
+  background-color: #ffdfba !important;
 }
 
 .bg-info {
-    background-color: #baffc9 !important;
+  background-color: #baffc9 !important;
 }
