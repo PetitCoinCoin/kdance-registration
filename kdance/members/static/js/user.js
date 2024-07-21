@@ -605,10 +605,9 @@ function handleContacts() {
   });
   ['firstname', 'lastname'].forEach(name => {
     $(`#member-${name}`).change(function () {
-      if (isMe({first_name: $('#member-firstname').val(), last_name: $('#member-lastname').val()})) {
-        $('#emergency-me-switch').attr('disabled', true);
-        $('#emergency-me-switch').prop('checked', false);
-      }
+      const isMeMember = isMe({first_name: $('#member-firstname').val(), last_name: $('#member-lastname').val()});
+      $('#emergency-me-switch').attr('disabled', isMeMember);
+      $('#emergency-me-switch').prop('checked', !isMeMember);
     });
   });
 }
