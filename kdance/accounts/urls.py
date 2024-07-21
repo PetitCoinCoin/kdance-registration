@@ -20,4 +20,7 @@ urlpatterns = [
     path("api/user/me/password", UserMeApiViewSet.as_view(actions={
         "put": "password",
     }), name="api-user-me-password"),
+    path("api/users/admin/<str:action>", UsersApiViewSet.as_view(actions={
+        "put": "admin",
+    }), name="api-users-admin"),
 ]

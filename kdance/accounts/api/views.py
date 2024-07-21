@@ -20,11 +20,10 @@ from rest_framework.serializers import Serializer, ValidationError
 from rest_framework.viewsets import GenericViewSet
 
 from accounts.api.serializers import (
-    DetailSerializer,
+    UserAdminActionSerializer,
     UserChangePwdSerializer,
     UserCreateSerializer,
     UserSerializer,
-    validate_pwd,
 )
 
 User = get_user_model()
@@ -34,36 +33,37 @@ class UsersApiViewSet(
     CreateModelMixin,
     DestroyModelMixin,
     ListModelMixin,
-    UpdateModelMixin,
     GenericViewSet,
 ):
-    queryset = User.objects.prefetch_related("profile").all().order_by("last_name")
+    def get_queryset(self):
+        queryset = User.objects.prefetch_related("profile").all()
+        admin = self.request.query_params.get("admin")
+        if admin:
+            queryset = queryset.filter(is_superuser=(admin.lower() in ['true', '1', 'y']))
+        return queryset.order_by("last_name")
 
     def get_serializer_class(self) -> Serializer:
         if self.request.method and self.request.method.lower() == "post":
             return UserCreateSerializer
+        if self.request.method and self.request.method.lower() == "put":
+            return UserAdminActionSerializer
         return UserSerializer
 
     @action(detail=False, methods=["put"])
-    def password(self, _r: Request) -> Response:
-        user = self.get_object()
-        i = 0
-        try_max = 100
-        while i < try_max:
-            pwd = "".join(Fernet.generate_key().decode("utf-8") for _ in range(3))[:12]
-            try:
-                validate_pwd(pwd)
-            except ValidationError:
-                i += 1
+    def admin(self, request: Request, action: str) -> Response:
+        if action not in ("activate", "deactivate"):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        details = serializer.save(is_admin=action=="activate")
+        if not details["processed"]:
+            # only emails not found
+            if not details["other"]:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
             else:
-                break
-        if i == try_max:
-            raise APIException("Impossible de regénérer un mot de passe. Merci de réessayer")
-        user.set_password(pwd)
-        user.save()
-        answer = DetailSerializer(data={"detail": pwd})
-        answer.is_valid(raise_exception=True)
-        return Response(answer)
+                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # TODO: spécifier plus de détails dans le retour pour savoir qui a été processed ou pas
+        return Response(data=details)
 
 
 class UserMeApiViewSet(

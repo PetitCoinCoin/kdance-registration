@@ -16,15 +16,6 @@ from members.api.serializers import (
 User = get_user_model()
 
 
-class DetailSerializer(serializers.Serializer):
-    detail = serializers.CharField(
-        read_only=True,
-        required=False,
-        default="",
-        allow_blank=True,
-    )
-
-
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
@@ -135,6 +126,7 @@ class UserCreateSerializer(UserBaseSerializer):
             payment = Payment(user=user, season=Season.objects.get(is_current=True))
             payment.save()
 
+
 class UserSerializer(UserBaseSerializer):
     profile = ProfileSerializer()
     payment = PaymentSerializer(read_only=True, many=True)
@@ -169,9 +161,33 @@ class UserSerializer(UserBaseSerializer):
         super().__init__(*args, **kwargs)
 
 
+class UserAdminActionSerializer(serializers.Serializer):
+    emails = serializers.ListField(child=serializers.CharField())
+
+    def save(self, *, is_admin: bool, **k_) -> dict:
+        emails = self.validated_data.get("emails", [])
+        details = {
+            "processed": [],
+            "not_found": [],
+            "other": [],
+        }
+        for email in emails:
+            try:
+                user = User.objects.get(email=email)
+                user.is_superuser = is_admin
+                user.save()
+            except User.DoesNotExist:
+                details["not_found"].append(email)
+            except:
+                details["other"].append(email)
+            else:
+                details["processed"].append(email)
+        return details
+
+
 class UserChangePwdSerializer(serializers.Serializer):
-    old_password = serializers.CharField(required=True)
-    new_password = serializers.CharField(required=True)
+    old_password = serializers.CharField()
+    new_password = serializers.CharField()
 
     def __init__(self, user: UserType, **kwargs: Any) -> None:
         self._user = user

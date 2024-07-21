@@ -28,6 +28,12 @@ def member_mgmt(request: HttpRequest) -> HttpResponse:
     raise PermissionDenied
 
 @login_required(login_url="login/")
+def admin_mgmt(request: HttpRequest) -> HttpResponse:
+    if request.user.is_authenticated and request.user.is_superuser:
+        return render(request, "pages/admin_mgmt.html", context={"user": request.user})
+    raise PermissionDenied
+
+@login_required(login_url="login/")
 def list_dl(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated and request.user.is_superuser:
         return render(request, "pages/list_dl.html", context={"user": request.user})

@@ -141,10 +141,6 @@ function getMembers(seasonId) {
           showFullscreen: true,
           showColumns: true,
           columns: [{
-            field: 'id',
-            title: 'ID',
-            visible: false,
-          }, {
             field: 'last_name',
             title: 'Nom de famille',
             searchable: true,
