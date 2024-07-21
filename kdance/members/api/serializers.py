@@ -205,20 +205,24 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
         model = Member
         fields = (
             "id",
+            "created",
             "first_name",
             "last_name",
-            "season",
-            "courses",
-            "contacts",
-            "documents",
-            "payment",
-            "sport_pass",
             "birthday",
             "address",
             "email",
             "phone",
+            "season",
+            "courses",
             "ffd_license",
+            "documents",
+            "contacts",
+            "payment",
+            "sport_pass",
         )
+        extra_kwargs = {
+            "created": {"read_only": True}
+        }
 
     def validate(self, attr: dict) -> dict:
         validated = super().validate(attr)

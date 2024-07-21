@@ -279,6 +279,7 @@ class Contact(PersonModel):
 
 
 class Member(PersonModel):
+    created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     courses = models.ManyToManyField(Course)
     contacts = models.ManyToManyField(Contact)

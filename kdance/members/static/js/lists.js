@@ -58,9 +58,9 @@ function onMainChange(mainValue) {
   $('#menu-2-select').empty();
   const empty_one = ['0', '3', '4'];
   if (empty_one.indexOf(mainValue) > -1) {
-    populateSecondSelect(mainValue);
-  } else {
     $('#menu-2-select').attr('hidden', true);
+  } else {
+    populateSecondSelect(mainValue);
   }
 }
 
@@ -178,6 +178,12 @@ function buildMembersInfo(data) {
         title: 'Adhérent',
         searchable: true,
         sortable: true,
+      }, 
+      {
+        field: 'created',
+        title: 'Inscrit le',
+        searchable: false,
+        sortable: true,
       }, {
         field: 'phone',
         title: 'Téléphone',
@@ -266,6 +272,7 @@ function buildMembersInfo(data) {
     data: data.map(m => {
       return {
         ...m,
+        created: (new Date(m.created)).toLocaleString('fr-FR'),
         name: `${m.last_name} ${m.first_name}`,
         courses: m.courses.map((c) => c.name),
         documents: {
