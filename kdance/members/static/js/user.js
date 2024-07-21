@@ -1,5 +1,6 @@
 $(document).ready(() => {
   activatePopovers();
+  populateLicense();
   getUser();
   patchUser();
   getCourses();
@@ -77,6 +78,13 @@ function populateDocuments(member, memberInfos) {
   icons[2].style = medicalDocStatus ? 'color: #baffc9;' : 'color: #ffb3ba;';
   liItems[2].innerHTML += `Document médical: ${member.documents?.medical_document}`;
   memberInfos.appendChild(clone);
+}
+
+function populateLicense() {
+  for (let [key, value] of Object.entries(LICENSES)) {
+    const label = key === '0' ? value : `${value} (${key}€)`;
+    $('#member-license').append($('<option>', { value: key, text: label, selected: key == '0' }));
+  }
 }
 
 function getAge(birthday) {
@@ -338,6 +346,7 @@ function cleanMemberForm() {
   $('#member-address').val(undefined);
   $('#member-birthday').val(undefined);
   $("#member-courses").val(undefined);
+  $("#member-license").val(0);
 }
 
 function getMember(member, isEdition) {
@@ -362,6 +371,7 @@ function getMember(member, isEdition) {
       $('#pass-div').attr('hidden', !withPass);
       $('#pass-switch').prop('checked', withPass);
       $('#member-courses').val(isEdition ? data.courses.map((c) => c.id) : undefined);
+      $('#member-license').val(isEdition ? data.ffd_license : 0);
       if (isMe(data)) {
         $('#emergency-me-switch').attr('disabled', true);
         $('#emergency-me-switch').prop('checked', false);
@@ -414,6 +424,7 @@ function postOrPatchMember(url, method, event) {
       birthday: $('#member-birthday').val(),
       season: $('#member-season').val(),
       courses: $('#member-courses').val(),
+      ffd_license: $('#member-license').val(),
       contacts: buildContactsData(),
       documents: {
         authorise_photos: $('#authorise-photos').is(':checked'),

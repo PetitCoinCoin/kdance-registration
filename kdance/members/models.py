@@ -147,11 +147,12 @@ class Payment(models.Model):
             for course in member.courses.all():
                 total += 1
                 due += course.price
-        # Reduction
+        # Discount
         if total >= self.season.discount_limit:
             due *= round(((100 - self.season.discount_percent) / 100), 2)
-        # Adhesion
+        # Adhesion and license
         due += len(members) * 10
+        due += sum([member.ffd_license for member in members])
         return due
 
     @property
@@ -290,6 +291,16 @@ class Member(PersonModel):
         max_length=500,
     )
     sport_pass = models.OneToOneField(SportPass, null=True, on_delete=models.SET_NULL)
+    ffd_license = models.PositiveIntegerField(
+        choices=[
+            (0, "Aucune"),
+            (19, "Licence A Loisir"),
+            (21, "Licence B Compétiteur"),
+            (38, "Licence C Compétiteur national"),
+            (50, "Licence D Compétiteur international"),
+        ],
+        default=0,
+    )
 
     class Meta:
         unique_together = ("first_name", "last_name", "user", "season")

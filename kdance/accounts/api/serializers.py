@@ -53,7 +53,6 @@ class UserBaseSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def validate_username(username: str) -> str:
-        print("username")
         if User.objects.filter(username__iexact=username).exists():
             raise serializers.ValidationError("Ce nom d'utilisateur est déjà pris.")
         return username

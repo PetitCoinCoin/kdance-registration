@@ -56,10 +56,11 @@ function populateSecondSelect(previousValue) {
 
 function onMainChange(mainValue) {
   $('#menu-2-select').empty();
-  if (mainValue === '0' || mainValue === '3') {
-    $('#menu-2-select').attr('hidden', true);
-  } else {
+  const empty_one = ['0', '3', '4'];
+  if (empty_one.indexOf(mainValue) > -1) {
     populateSecondSelect(mainValue);
+  } else {
+    $('#menu-2-select').attr('hidden', true);
   }
 }
 
@@ -87,6 +88,7 @@ function searchData() {
     switch (mainValue) {
       case '1':
       case '3':
+      case '4':
         getMembersPerCourse(mainValue);
         break
       case '2':
@@ -104,7 +106,19 @@ function getMembersPerCourse(mainValue) {
   const subValue = $('#menu-2-select').val()
   switch (subValue) {
     case null:
-      url = `${membersUrl}?season=${$('#season-select').val()}&with_pass=true`;
+      let filter = '';
+      switch (mainValue) {
+        case '3':
+          filter = 'with_pass';
+          break
+        case '4':
+          filter = 'with_license';
+          break
+        default:
+          console.log('This should not happen');
+          return
+      }
+      url = `${membersUrl}?season=${$('#season-select').val()}&${filter}=true`;
       break
     case '0':
       url = `${membersUrl}?season=${$('#season-select').val()}`;
@@ -126,6 +140,9 @@ function getMembersPerCourse(mainValue) {
           return
         case '3':
           buildSportPassInfo(data);
+          break
+        case '4':
+          buildLicenseInfo(data);
           break
         default:
           return
@@ -311,6 +328,39 @@ function buildSportPassInfo(data) {
       return {
         ...m,
         member: `${m.first_name} ${m.last_name}`
+      }
+    })
+  });
+}
+
+function buildLicenseInfo(data) {
+  $('#data-table').bootstrapTable({
+    search: true,
+    stickyHeader: true,
+    showFullscreen: true,
+    showExport: true,
+    exportTypes: ['csv', 'xlsx', 'pdf', 'json'],
+    exportOptions: {
+      fileName: function () {
+        return `licences_${$('#season-select option:selected').text()}`
+      }
+    },
+    columns: [
+      {
+        field: 'member',
+        title: 'Adhérent',
+        searchable: true,
+        sortable: true,
+      }, {
+        field: 'license',
+        title: 'Licence FFD',
+        searchable: true,
+        sortable: true,
+      }],
+    data: data.map((m) => {
+      return {
+        member: `${m.first_name} ${m.last_name}`,
+        license: LICENSES[m.ffd_license],
       }
     })
   });

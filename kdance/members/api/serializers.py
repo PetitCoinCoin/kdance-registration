@@ -110,6 +110,15 @@ class ContactSerializer(serializers.ModelSerializer):
             "phone",
             "contact_type",
         )
+        extra_kwargs = {
+            "email": {"required": False},
+        }
+
+    def validate(self, attr: dict) -> dict:
+        validated = super().validate(attr)
+        if not validated.get("email", "") and validated.get("contact_type") == Contact.ContactEnum.RESPONSIBLE.value:
+            raise serializers.ValidationError({"email": "L'email est obligatoire pour le responsable."})
+        return validated
 
 
 class AncvSerializer(serializers.ModelSerializer):
@@ -181,10 +190,16 @@ class SportPassSerializer(serializers.ModelSerializer):
 
 
 class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerializer):
+
     documents = DocumentsSerializer()
-    payment = PaymentSerializer()
-    sport_pass = SportPassSerializer()
+    payment = PaymentSerializer(required=False, read_only=True)
+    sport_pass = SportPassSerializer(required=False)
     contacts = ContactSerializer(many=True)
+    courses = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Course.objects.all(),
+        default=list,
+    )
 
     class Meta:
         model = Member
@@ -202,12 +217,8 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             "address",
             "email",
             "phone",
+            "ffd_license",
         )
-        extra_kwargs = {
-            "courses": {"required": False},
-            "payment": {"write_only": True},
-            "sport_pass": {"required": False},
-        }
 
     def validate(self, attr: dict) -> dict:
         validated = super().validate(attr)

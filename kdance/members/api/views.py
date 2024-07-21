@@ -148,13 +148,19 @@ class MemberViewSet(
         queryset = Member.objects.all()
         season = self.request.query_params.get("season")
         course = self.request.query_params.get("course")
-        withPass = self.request.query_params.get("with_pass")
+        with_pass = self.request.query_params.get("with_pass")
+        with_license = self.request.query_params.get("with_license")
         if season:
             queryset = queryset.filter(season__id=season)
         if course:
             queryset = queryset.filter(courses__id=course)
-        if withPass:
-            queryset = queryset.filter(sport_pass__isnull=not (withPass.lower() in ['true', '1', 'y']))
+        if with_pass:
+            queryset = queryset.filter(sport_pass__isnull=not (with_pass.lower() in ['true', '1', 'y']))
+        if with_license:
+            if with_license.lower() in ['true', '1', 'y']:
+                queryset = queryset.filter(ffd_license__gt=0)
+            else:
+                queryset = queryset.filter(ffd_license=0)
         return queryset.order_by("-season__year", "last_name", "first_name")
 
     def create(self, request: Request, *a, **k) -> Response:

@@ -41,6 +41,10 @@ footer {
   min-width: 200px;
 }
 
+.min-w-fit {
+  min-width: fit-content;
+}
+
 .max-w-300 {
   max-width: 300px;
 }
