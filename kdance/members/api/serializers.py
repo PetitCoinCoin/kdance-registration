@@ -195,7 +195,7 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
     payment = PaymentSerializer(required=False, read_only=True)
     sport_pass = SportPassSerializer(required=False)
     contacts = ContactSerializer(many=True)
-    courses = serializers.PrimaryKeyRelatedField(
+    active_courses = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Course.objects.all(),
         default=list,
@@ -213,7 +213,7 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             "email",
             "phone",
             "season",
-            "courses",
+            "active_courses",
             "ffd_license",
             "documents",
             "contacts",
@@ -226,10 +226,9 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
 
     def validate(self, attr: dict) -> dict:
         validated = super().validate(attr)
-        if validated.get("courses", []):
-            for course in validated.get("courses", []):
-                if course.season.id != validated["season"].id:
-                    raise serializers.ValidationError("Un cours ne correspond pas à la saison.")
+        for course in validated.get("active_courses", []):
+            if course.season.id != validated["season"].id:
+                raise serializers.ValidationError("Un cours ne correspond pas à la saison.")
         return validated
 
     @transaction.atomic
@@ -253,5 +252,5 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
 
 
 class MemberRetrieveSerializer(MemberSerializer):
-    courses = CourseRetrieveSerializer(many=True)
+    active_courses = CourseRetrieveSerializer(many=True)
     season = SeasonSerializer()

@@ -144,7 +144,7 @@ class Payment(models.Model):
         total = 0
         members = self.user.member_set.filter(season=self.season).all()
         for member in members:
-            for course in member.courses.all():
+            for course in member.active_courses.all():
                 total += 1
                 due += course.price
         # Discount
@@ -281,7 +281,7 @@ class Contact(PersonModel):
 class Member(PersonModel):
     created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    courses = models.ManyToManyField(Course)
+    active_courses = models.ManyToManyField(Course)
     contacts = models.ManyToManyField(Contact)
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
     documents = models.OneToOneField(Documents, null=True, on_delete=models.SET_NULL)

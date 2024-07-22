@@ -274,7 +274,7 @@ function buildMembersInfo(data) {
         ...m,
         created: (new Date(m.created)).toLocaleString('fr-FR'),
         name: `${m.last_name} ${m.first_name}`,
-        courses: m.courses.map((c) => c.name),
+        courses: m.active_courses.map((c) => c.name),
         documents: {
           ...m.documents,
           authorise_photos: m.documents.authorise_photos ? 'Oui': 'Non',

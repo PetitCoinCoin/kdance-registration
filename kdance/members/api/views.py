@@ -153,7 +153,7 @@ class MemberViewSet(
         if season:
             queryset = queryset.filter(season__id=season)
         if course:
-            queryset = queryset.filter(courses__id=course)
+            queryset = queryset.filter(active_courses__id=course)
         if with_pass:
             queryset = queryset.filter(sport_pass__isnull=not (with_pass.lower() in ['true', '1', 'y']))
         if with_license:

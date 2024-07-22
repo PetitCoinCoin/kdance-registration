@@ -198,7 +198,7 @@ function getMembers(seasonId) {
           data: data.map((m) => {
             return {
               ...m,
-              courses: m.courses.map((c) => c.name),
+              courses: m.active_courses.map((c) => c.name),
               solde: m.payment.due - m.payment.paid,
               documents: m.documents ? {
                 ...m.documents,
@@ -214,7 +214,7 @@ function getMembers(seasonId) {
         $('#members-table').bootstrapTable('load', data.map((m) => {
           return {
             ...m,
-            courses: m.courses.map((c) => c.name),
+            courses: m.active_courses.map((c) => c.name),
             solde: m.payment.due - m.payment.paid,
             documents: m.documents ? {
               ...m.documents,

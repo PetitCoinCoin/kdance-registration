@@ -175,7 +175,7 @@ function getUser() {
               button.remove();
             }
             let memberInfos = cardClone.querySelector('ul');
-            member.courses.map((course) => {
+            member.active_courses.map((course) => {
               let liItem = document.createElement('li');
               liItem.className = 'list-group-item';
               const startHour = course.start_hour.split(':');
@@ -370,7 +370,7 @@ function getMember(member, isEdition) {
       const withPass = !(data.sport_pass === null || data.sport_pass?.code === null || data.sport_pass?.code === '');
       $('#pass-div').attr('hidden', !withPass);
       $('#pass-switch').prop('checked', withPass);
-      $('#member-courses').val(isEdition ? data.courses.map((c) => c.id) : undefined);
+      $('#member-courses').val(isEdition ? data.active_courses.map((c) => c.id) : undefined);
       $('#member-license').val(isEdition ? data.ffd_license : 0);
       if (isMe(data)) {
         $('#emergency-me-switch').attr('disabled', true);
@@ -423,7 +423,7 @@ function postOrPatchMember(url, method, event) {
       address: $('#member-address').val(),
       birthday: $('#member-birthday').val(),
       season: $('#member-season').val(),
-      courses: $('#member-courses').val(),
+      active_courses: $('#member-courses').val(),
       ffd_license: $('#member-license').val(),
       contacts: buildContactsData(),
       documents: {
