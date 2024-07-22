@@ -2,8 +2,6 @@ from django.contrib.auth import login, logout, authenticate
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 
-from accounts.models import ResetPassword
-
 
 def signup_view(request: HttpRequest) -> HttpResponse:
     return render(request, "registration/signup.html")
