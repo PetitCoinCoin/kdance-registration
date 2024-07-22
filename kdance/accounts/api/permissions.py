@@ -9,6 +9,6 @@ class SuperUserPermission(BasePermission):
                 return True
             if request.method == "GET" and not request.path.startswith("/api/users") and not request.path.startswith("/api/members"):
                 return True
-        if request.method == "POST" and request.path.startswith("/api/users/") or request.path.startswith("/api/members/"):
+        if request.method == "POST" and request.path.startswith("/api/users/") or request.path.startswith("/api/members/") or request.path.startswith("/api/password/"):
             return True
         return False

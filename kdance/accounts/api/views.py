@@ -1,4 +1,3 @@
-from cryptography.fernet import Fernet
 from django.contrib.auth import (
     get_user_model,
     update_session_auth_hash,
@@ -6,7 +5,6 @@ from django.contrib.auth import (
 from django.contrib.auth.models import User as UserType
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.exceptions import APIException
 from rest_framework.mixins import (
     CreateModelMixin,
     DestroyModelMixin,
@@ -16,13 +14,15 @@ from rest_framework.mixins import (
 )
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.serializers import Serializer, ValidationError
+from rest_framework.serializers import Serializer
 from rest_framework.viewsets import GenericViewSet
 
 from accounts.api.serializers import (
     UserAdminActionSerializer,
     UserChangePwdSerializer,
     UserCreateSerializer,
+    UserNewPwdSerializer,
+    UserResetPwdSerializer,
     UserSerializer,
 )
 
@@ -39,7 +39,9 @@ class UsersApiViewSet(
         queryset = User.objects.prefetch_related("profile").all()
         admin = self.request.query_params.get("admin")
         if admin:
-            queryset = queryset.filter(is_superuser=(admin.lower() in ['true', '1', 'y']))
+            queryset = queryset.filter(
+                is_superuser=(admin.lower() in ["true", "1", "y"])
+            )
         return queryset.order_by("last_name")
 
     def get_serializer_class(self) -> Serializer:
@@ -55,14 +57,13 @@ class UsersApiViewSet(
             return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        details = serializer.save(is_admin=action=="activate")
+        details = serializer.save(is_admin=action == "activate")
         if not details["processed"]:
             # only emails not found
             if not details["other"]:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
             else:
                 return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        # TODO: spécifier plus de détails dans le retour pour savoir qui a été processed ou pas
         return Response(data=details)
 
 
@@ -87,3 +88,32 @@ class UserMeApiViewSet(
         serializer.save()
         update_session_auth_hash(request, user)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class PasswordApiViewSet(GenericViewSet):
+    http_method_names = ["post"]
+
+    def get_serializer_class(self) -> Serializer:
+        if self.request.path and "reset" in self.request.path.lower():
+            return UserResetPwdSerializer
+        return UserNewPwdSerializer
+
+    @action(detail=False, methods=["post"])
+    def reset(self, request: Request) -> Response:
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = User.objects.filter(email=serializer.validated_data.get("email")).first()
+        if not user:
+            return Response(
+                data={"email": ["Cet email n'est associé à aucun utilisateur."]},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        serializer.save(user=user, path=request.build_absolute_uri("/"))
+        return Response(status=status.HTTP_202_ACCEPTED)
+
+    @action(detail=False, methods=["post"])
+    def new(self, request: Request) -> Response:
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK)

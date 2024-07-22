@@ -1,0 +1,99 @@
+$(document).ready(() => {
+  postNew();
+  postReset();
+});
+
+function confirmPassword() {
+  const pwd = $('#password');
+  const pwdConfirmation = $('#password-confirmation');
+  return pwdConfirmation.val() === pwd.val()
+}
+
+function postNew() {
+  $('#form-pwd-new').submit((event) => {
+    event.preventDefault();
+    $('.invalid-feedback').removeClass('d-inline');
+    $('#message-error-new-pwd').addClass('d-none');
+    $('#message-error-new-pwd').removeClass('d-inline');
+    if (confirmPassword()) {
+      const params = new URL(document.location.toString()).searchParams;
+      const token = params.get('token');
+      const data = {
+        email: $('#email').val().toLowerCase(),
+        password: $('#password').val(),
+        token: token,
+      }
+      $.ajax({
+        url: passwordNewUrl,
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        success: () => {
+          const delay = 10000;  // 10sec
+          $('#message-ok-new-pwd').removeClass('d-none');
+          $('#message-ok-new-pwd').delay(delay).fadeOut(1000);
+          setTimeout(function () {
+            window.location.href = '/login';
+         }, delay);
+         
+          document.getElementById('form-pwd-new').reset();
+        },
+        error: (error) => {
+          if (!error.responseJSON) {
+            $('#message-error-new-pwd').removeClass('d-none');
+            $('#message-error-new-pwd').addClass('d-inline');
+            $('#message-error-new-pwd').html('Une erreur est survenue. Veuillez ré-essayer plus tard ou contacter K\'Dance.');
+          }
+          if (error.responseJSON.token) {
+            $('#message-error-new-pwd').html(error.responseJSON.token[0]);
+            $('#message-error-new-pwd').removeClass('d-none');
+            $('#message-error-new-pwd').addClass('d-inline');
+          }
+          if (error.responseJSON.email) {
+            $('#invalid-email').html(error.responseJSON.email[0]);
+            $('#invalid-email').addClass('d-inline');
+          }
+          if (error.responseJSON.password) {
+            $('#invalid-pwd').html(error.responseJSON.password[0]);
+            $('#invalid-pwd').addClass('d-inline');
+          }
+        }
+      });
+    } else {
+      $('#invalid-pwd-confirmation').addClass('d-inline');
+      return
+    }
+  });
+}
+
+function postReset() {
+  $('#form-pwd-reset').submit((event) => {
+    event.preventDefault();
+    $('.invalid-feedback').removeClass('d-inline');
+    $('#message-error-reset-pwd').addClass('d-none');
+    $('#message-error-reset-pwd').removeClass('d-inline');
+    $.ajax({
+      url: passwordResetUrl,
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({
+        email: $('#email').val().toLowerCase(),
+      }),
+      success: () => {
+        $('#message-ok-reset-pwd').removeClass('d-none');
+        document.getElementById('form-pwd-new').reset();
+      },
+      error: (error) => {
+        if (!error.responseJSON) {
+          $('#message-error-reset-pwd').removeClass('d-none');
+          $('#message-error-reset-pwd').addClass('d-inline');
+          $('#message-error-reset-pwd').html('Une erreur est survenue. Veuillez ré-essayer plus tard ou contacter K\'Dance.');
+        }
+        if (error.responseJSON.email) {
+          $('#invalid-email').html(error.responseJSON.email[0]);
+          $('#invalid-email').addClass('d-inline');
+        }
+      }
+    });
+  });
+}

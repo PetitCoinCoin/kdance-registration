@@ -30,8 +30,12 @@ function postSignup() {
         data: JSON.stringify(data),
         dataType: 'json',
         success: () => {
+          const delay = 10000;  // 10sec
           $('#message-ok-signup').removeClass('d-none');
-          $('#message-ok-signup').delay(10000).fadeOut(1000);
+          $('#message-ok-signup').delay(delay).fadeOut(1000);
+          setTimeout(function () {
+            window.location.href = '/login';
+         }, delay);
           document.getElementById('form-signup').reset();
         },
         error: (error) => {

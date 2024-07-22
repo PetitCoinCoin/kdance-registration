@@ -17,3 +17,9 @@ class Profile(models.Model):
         validators=[RegexValidator(r"\d{10}")],
         max_length=10,
     )
+
+
+class ResetPassword(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    request_hash = models.CharField(null=False, blank=False, max_length=128)
+    created = models.DateTimeField(auto_now=True)

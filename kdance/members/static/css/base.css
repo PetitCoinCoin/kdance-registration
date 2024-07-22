@@ -49,6 +49,10 @@ footer {
   max-width: 300px;
 }
 
+.w-500 {
+  width: 500px;
+}
+
 /*** Forms ***/
 .required:after {
   content: " *";
@@ -64,6 +68,10 @@ footer {
 h1 {
   color: purple;
   border-bottom: 0.5rem solid orange;
+}
+
+a {
+  color: #0dcaf0;
 }
 
 .form-check-input:checked {

@@ -102,7 +102,7 @@ function updateUserAdmin() {
 function putUser(action, data, event) {
     $('.invalid-feedback').removeClass('d-inline');
     $.ajax({
-      url: usersAdminActionUrl + action,
+      url: usersAdminActionUrl + action + '/',
       type: 'PUT',
       contentType: 'application/json',
       headers: { 'X-CSRFToken': csrftoken },

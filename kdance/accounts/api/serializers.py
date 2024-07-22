@@ -1,12 +1,16 @@
+from datetime import timedelta
+from hashlib import sha512
+from secrets import token_urlsafe
 from typing import Any
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User as UserType
 from django.db import transaction
+from django.utils import timezone
 from rest_framework import serializers
 
-from accounts.models import Profile
+from accounts.models import Profile, ResetPassword
 from members.models import Member, Payment, Season
 from members.api.serializers import (
     MemberRetrieveSerializer,
@@ -205,6 +209,56 @@ class UserChangePwdSerializer(serializers.Serializer):
     def save(self, **k_) -> None:
         self._user.set_password(self.validated_data["new_password"])
         self._user.save()
+
+
+class UserResetPwdSerializer(serializers.Serializer):
+    email = serializers.CharField()
+
+    def save(self, user: UserType, path: str, **k_) -> None:
+        token = token_urlsafe()
+        if not ResetPassword.objects.filter(user=user).exists():
+            ResetPassword(
+                user=user,
+                request_hash=sha512(token.encode()).hexdigest(),
+            ).save()
+        else:
+            reset_pwd = ResetPassword.objects.get(user=user)
+            reset_pwd.request_hash = sha512(token.encode()).hexdigest()
+            reset_pwd.save()
+        # Send email
+        print("mail envoyé (ou pas) avec cette url dedans:", path + "pwd_new?token=" + token)
+
+
+class UserNewPwdSerializer(serializers.Serializer):
+    email = serializers.CharField()
+    password = serializers.CharField()
+    token = serializers.CharField()
+
+    @staticmethod
+    def validate_password(pwd: str) -> str:
+        validate_pwd(pwd)
+        return pwd
+
+    def validate(self, attr: dict) -> dict:
+        validated = super().validate(attr)
+        user = User.objects.filter(email=validated.get("email")).first()
+        if not user:
+            raise serializers.ValidationError({"email": "Email incorrect, cet utilisateur n'existe pas."})
+        reset_pwd = ResetPassword.objects.filter(user=user).first()
+        if not reset_pwd:
+            raise serializers.ValidationError({"email": "Email incorrect, aucune demande de réinitialisation trouvée."})
+        if reset_pwd.request_hash != sha512(validated.get("token").encode()).hexdigest():
+            raise serializers.ValidationError({"token": "Lien de réinitialisation incorrect pour cet utilisateur."})
+        if timezone.now() - reset_pwd.created > timedelta(minutes=30):
+            raise serializers.ValidationError({"token": "Lien de réinitialisation expiré. Veuillez refaire une demande de réinitialisation."})
+        return validated
+
+    @transaction.atomic
+    def save(self, **k_) -> None:
+        user = User.objects.get(email=self.validated_data["email"])
+        user.set_password(self.validated_data["password"])
+        user.save()
+        ResetPassword.objects.filter(user=user).delete()
 
 
 def validate_pwd(pwd: str) -> None:
