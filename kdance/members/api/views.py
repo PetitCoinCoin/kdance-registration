@@ -11,6 +11,8 @@ from members.api.serializers import (
     CourseCopySeasonSerializer,
     CourseRetrieveSerializer,
     CourseSerializer,
+    MemberCoursesActionsEnum,
+    MemberCoursesSerializer,
     MemberRetrieveSerializer,
     MemberSerializer,
     PaymentSerializer,
@@ -155,7 +157,7 @@ class MemberViewSet(
         if course:
             queryset = queryset.filter(active_courses__id=course)
         if with_pass:
-            queryset = queryset.filter(sport_pass__isnull=not (with_pass.lower() in ['true', '1', 'y']))
+            queryset = queryset.filter(sport_pass__isnull=with_pass.lower() not in ['true', '1', 'y'])
         if with_license:
             if with_license.lower() in ['true', '1', 'y']:
                 queryset = queryset.filter(ffd_license__gt=0)
@@ -173,3 +175,13 @@ class MemberViewSet(
     def perform_update(self, serializer: MemberSerializer):
         user = self.get_object().user
         serializer.save(user=user)
+
+    @action(detail=True, methods=["put"], serializer_class=MemberCoursesSerializer)
+    def courses(self, request: Request, action: str, *_a, **_k) -> Response:
+        if action not in [action.value for action in MemberCoursesActionsEnum]:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        member = self.get_object() 
+        serializer = MemberCoursesSerializer(data=request.data, member=member, action=action)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)

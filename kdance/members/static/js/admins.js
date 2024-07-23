@@ -16,6 +16,10 @@ function handleEmails() {
   });
 }
 
+function actionFormatter(value, row) {
+  return `<button class="btn btn-outline-warning btn-sm" userEmail="${row.email}" userName="${row.first_name} ${row.last_name}" type="button" data-bs-toggle="modal" data-bs-target="#confirm-deactivate-modal"><i class="bi-person-fill-lock"></i></button>`;
+}
+
 function getUsersAdmins() {
   $.ajax({
     url: usersUrl + '?admin=true',
@@ -24,8 +28,9 @@ function getUsersAdmins() {
       // Bootstrap table not initialised
       if (document.querySelector('#admins-table').className === '') {
         $('#admins-table').bootstrapTable({
-          search: true,
-          stickyHeader: true,
+          ...COMMON_TABLE_PARAMS,
+          showFullscreen: false,
+          showColumns: false,
           columns: [{
             field: 'last_name',
             title: 'Nom de famille',
@@ -51,9 +56,7 @@ function getUsersAdmins() {
             title: 'Retirer des admins',
             align: 'center',
             clickToSelect: false,
-            formatter: function (value, row, index) {
-              return `<button class="btn btn-outline-warning btn-sm" userEmail="${row.email}" userName="${row.first_name} ${row.last_name}" type="button" data-bs-toggle="modal" data-bs-target="#confirm-deactivate-modal"><i class="bi-person-fill-lock"></i></button>`;
-            }
+            formatter: actionFormatter,
           }],
           data: data
         });

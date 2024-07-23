@@ -160,11 +160,7 @@ function getMembersPerCourse(mainValue) {
 
 function buildMembersInfo(data) {
   $('#data-table').bootstrapTable({
-    search: true,
-    stickyHeader: true,
-    showFullscreen: true,
-    showColumns: true,
-    showExport: true,
+    ...COMMON_TABLE_PARAMS,
     exportTypes: ['csv', 'xlsx', 'pdf', 'json'],
     exportOptions: {
       fileName: function () {
@@ -256,6 +252,9 @@ function buildMembersInfo(data) {
         searchable: true,
         sortable: true,
         visible: false,
+        formatter: function(value) {
+          return value.join('<br>')
+        },
       }, {
         field: 'documents.authorise_photos',
         title: 'Autorisation photos',
@@ -274,7 +273,7 @@ function buildMembersInfo(data) {
         ...m,
         created: (new Date(m.created)).toLocaleString('fr-FR'),
         name: `${m.last_name} ${m.first_name}`,
-        courses: m.active_courses.map((c) => c.name),
+        courses: m.active_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`).concat(m.cancelled_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)),
         documents: {
           ...m.documents,
           authorise_photos: m.documents.authorise_photos ? 'Oui': 'Non',
@@ -304,10 +303,7 @@ function buildContactsData(data) {
 
 function buildSportPassInfo(data) {
   $('#data-table').bootstrapTable({
-    search: true,
-    stickyHeader: true,
-    showFullscreen: true,
-    showExport: true,
+    ...COMMON_TABLE_PARAMS,
     exportTypes: ['csv', 'xlsx', 'pdf', 'json'],
     exportOptions: {
       fileName: function () {
@@ -342,10 +338,7 @@ function buildSportPassInfo(data) {
 
 function buildLicenseInfo(data) {
   $('#data-table').bootstrapTable({
-    search: true,
-    stickyHeader: true,
-    showFullscreen: true,
-    showExport: true,
+    ...COMMON_TABLE_PARAMS,
     exportTypes: ['csv', 'xlsx', 'pdf', 'json'],
     exportOptions: {
       fileName: function () {
@@ -385,10 +378,7 @@ function getChecksPerMonth() {
     success: (data) => {
       $('#data-table').bootstrapTable('destroy');
       $('#data-table').bootstrapTable({
-        search: true,
-        stickyHeader: true,
-        showFullscreen: true,
-        showColumns: true,
+        ...COMMON_TABLE_PARAMS,
         showExport: true,
         exportTypes: ['csv', 'xlsx', 'pdf', 'json'],
         exportOptions: {

@@ -1,3 +1,6 @@
+from enum import Enum
+from typing import Any
+
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from drf_writable_nested.serializers import WritableNestedModelSerializer
@@ -200,6 +203,11 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
         queryset=Course.objects.all(),
         default=list,
     )
+    cancelled_courses = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Course.objects.all(),
+        default=list,
+    )
 
     class Meta:
         model = Member
@@ -214,11 +222,13 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             "phone",
             "season",
             "active_courses",
+            "cancelled_courses",
             "ffd_license",
             "documents",
             "contacts",
             "payment",
             "sport_pass",
+            "cancel_refund",
         )
         extra_kwargs = {
             "created": {"read_only": True}
@@ -253,4 +263,41 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
 
 class MemberRetrieveSerializer(MemberSerializer):
     active_courses = CourseRetrieveSerializer(many=True)
+    cancelled_courses = CourseRetrieveSerializer(many=True)
     season = SeasonSerializer()
+
+
+class MemberCoursesActionsEnum(Enum):
+    ADD = "add"
+    REMOVE = "remove"
+
+
+class MemberCoursesSerializer(serializers.Serializer):
+    courses = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Course.objects.all(),
+        default=list,
+    )
+    cancel_refund = serializers.FloatField(required=False)
+
+    def __init__(self, member: Member, action: str, **kwargs: Any) -> None:
+        self._member = member
+        self._action = MemberCoursesActionsEnum(action)
+        super().__init__(**kwargs)
+
+    def validate(self, attr: dict) -> dict:
+        validated = super().validate(attr)
+        if self._action == MemberCoursesActionsEnum.REMOVE and validated.get("cancel_refund") is None:
+            raise serializers.ValidationError({"cancel_refund": "Ce champ est obligatoire pour retirer un cours."})
+        return validated
+
+    def save(self) -> None:
+        if self._action == MemberCoursesActionsEnum.ADD:
+            self._member.active_courses.add(*self.validated_data.get("courses", []))
+            self._member.cancelled_courses.remove(*self.validated_data.get("courses", []))
+            self._member.save()
+        elif self._action == MemberCoursesActionsEnum.REMOVE:
+            self._member.cancelled_courses.add(*self.validated_data.get("courses", []))
+            self._member.active_courses.remove(*self.validated_data.get("courses", []))
+            self._member.cancel_refund = self.validated_data.get("cancel_refund")
+            self._member.save()

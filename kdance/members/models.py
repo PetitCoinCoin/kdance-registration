@@ -144,7 +144,7 @@ class Payment(models.Model):
         total = 0
         members = self.user.member_set.filter(season=self.season).all()
         for member in members:
-            for course in member.active_courses.all():
+            for course in member.courses:
                 total += 1
                 due += course.price
         # Discount
@@ -153,6 +153,8 @@ class Payment(models.Model):
         # Adhesion and license
         due += len(members) * 10
         due += sum([member.ffd_license for member in members])
+        # Refund after cancellation
+        due -= sum(member.cancel_refund for member in members)
         return due
 
     @property
@@ -282,7 +284,8 @@ class Member(PersonModel):
     created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     active_courses = models.ManyToManyField(Course)
-    contacts = models.ManyToManyField(Contact)
+    cancelled_courses = models.ManyToManyField(Course, related_name="members")
+    contacts = models.ManyToManyField(Contact, related_name="members_cancelled")
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
     documents = models.OneToOneField(Documents, null=True, on_delete=models.SET_NULL)
     birthday = models.DateField(blank=False)
@@ -292,6 +295,7 @@ class Member(PersonModel):
         max_length=500,
     )
     sport_pass = models.OneToOneField(SportPass, null=True, on_delete=models.SET_NULL)
+    cancel_refund = models.FloatField(null=False, default=0.0, validators=[MinValueValidator(0)])
     ffd_license = models.PositiveIntegerField(
         choices=[
             (0, "Aucune"),
@@ -309,6 +313,10 @@ class Member(PersonModel):
     @property
     def payment(self) -> Payment:
         return Payment.objects.get(user=self.user, season=self.season)
+
+    @property
+    def courses(self) -> list:
+        return list(self.active_courses.all()) + list(self.cancelled_courses.all())
 
 @receiver(post_delete, sender=Member)
 def post_delete_documents(_s, instance, *args, **kwargs):

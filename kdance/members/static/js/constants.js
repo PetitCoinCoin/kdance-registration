@@ -42,3 +42,11 @@ const LIST_MAIN_MAPPING = {
   '3': 'La liste des Pass Sport',
   '4': 'La liste des licenciés',
 }
+
+const COMMON_TABLE_PARAMS = {
+  locale: 'fr-FR',
+  search: true,
+  stickyHeader: true,
+  showFullscreen: true,
+  showColumns: true,
+}
