@@ -20,6 +20,7 @@ from members.api.serializers import (
     TeacherSerializer,
 )
 
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.mixins import (
@@ -155,7 +156,7 @@ class MemberViewSet(
         if season:
             queryset = queryset.filter(season__id=season)
         if course:
-            queryset = queryset.filter(active_courses__id=course)
+            queryset = queryset.filter(Q(active_courses__id=course) | Q(cancelled_courses__id=course))
         if with_pass:
             queryset = queryset.filter(sport_pass__isnull=with_pass.lower() not in ['true', '1', 'y'])
         if with_license:
