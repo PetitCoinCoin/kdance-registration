@@ -13,10 +13,13 @@ import os
 
 from pathlib import Path
 
+import pymysql
 from dotenv import load_dotenv
 
 
 load_dotenv()
+pymysql.version_info = (1, 4, 6, 'final', 0)
+pymysql.install_as_MySQLdb()
 
 # Build paths inside the project like this: BASE_DIR / "subdir".
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -79,12 +82,12 @@ WSGI_APPLICATION = "kdance.wsgi.application"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DATABASES = {    
    "default": {        
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_NAME"),
-        "USER": os.getenv("POSTGRES_USER"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
-        "HOST": "db",
-        "PORT": 5432,
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.getenv("DB_NAME"),
+        "USER": os.getenv("DB_USER"),
+        "PASSWORD": os.getenv("DB_PASSWORD"),
+        "HOST": os.getenv("DB_HOST"),
+        "PORT": 3306,
     }
 }
 
@@ -108,7 +111,7 @@ SUPERUSER = os.getenv("SUPERUSER")
 SUPERUSER_EMAIL = os.getenv("SUPERUSER_EMAIL")
 SUPERUSER_ADDRESS = os.getenv("SUPERUSER_ADDRESS")
 SUPERUSER_PHONE = os.getenv("SUPERUSER_PHONE")
-DEFAULT_PWD = os.getenv("DEFAULT_PWD")
+SUPERUSER_PWD = os.getenv("SUPERUSER_PWD")
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 CSRF_COOKIE_HTTPONLY = True
@@ -123,7 +126,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = "static/"
 STATICFILES_DIRS = (
-  os.path.join(BASE_DIR, os.getenv("STATICFILES_DIRS")),
+  os.path.join(BASE_DIR, os.getenv("STATICFILES_DIRS", "")),
 )
 STATIC_ROOT = os.getenv("STATIC_ROOT")
 
