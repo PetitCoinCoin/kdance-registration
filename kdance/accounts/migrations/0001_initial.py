@@ -8,7 +8,17 @@ import django.db.models.deletion
 
 def _create_superuser(apps, *_):
     User = apps.get_model("auth", "User")
-    User.objects.create_superuser(settings.SUPERUSER, settings.SUPERUSER_EMAIL, settings.DEFAULT_PWD)
+    Profile = apps.get_model("accounts", "Profile")
+    superuser = User.objects.create_superuser(
+        username=settings.SUPERUSER,
+        email=settings.SUPERUSER_EMAIL,
+        password=settings.DEFAULT_PWD,
+    )
+    Profile(
+        user=superuser,
+        address=settings.SUPERUSER_ADDRESS,
+        phone=settings.SUPERUSER_PHONE,
+    ).save()
 
 
 class Migration(migrations.Migration):
