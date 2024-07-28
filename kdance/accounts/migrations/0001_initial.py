@@ -7,7 +7,7 @@ import django.db.models.deletion
 
 
 def _create_superuser(apps, *_):
-    User = apps.get_model("accounts", "User")
+    User = apps.get_model("auth", "User")
     User.objects.create_superuser(settings.SUPERUSER, settings.SUPERUSER_EMAIL, settings.DEFAULT_PWD)
 
 
