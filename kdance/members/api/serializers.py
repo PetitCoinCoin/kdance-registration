@@ -154,8 +154,8 @@ class CheckSerializer(serializers.ModelSerializer):
 
 class PaymentSerializer(WritableNestedModelSerializer, serializers.ModelSerializer):
     season = SeasonSerializer()
-    ancv = AncvSerializer()
-    sport_coupon = SportCouponSerializer()
+    ancv = AncvSerializer(required=False)
+    sport_coupon = SportCouponSerializer(required=False)
     check_payment = CheckSerializer(many=True)
 
     class Meta:

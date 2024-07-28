@@ -231,6 +231,12 @@ function getMembers(seasonId) {
               };
             }
           }, {
+            field: 'payment.comment',
+            title: 'Commentaire',
+            searchable: true,
+            sortable: false,
+            visible: false,
+          }, {
             field: 'operate',
             title: 'Modifier',
             align: 'center',
@@ -300,13 +306,13 @@ function getMember(memberId) {
 
       $('#payment-coupon-count').val(data.payment.sport_coupon?.count || '');
       $('#payment-coupon-amount').val(data.payment.sport_coupon?.amount || '');
-      const withCoupon = !(data.payment.sport_coupon?.amount === null || data.payment.sport_coupon?.amount === 0);
+      const withCoupon = data.payment.sport_coupon !== null && !(data.payment.sport_coupon.count === null || data.payment.sport_coupon.amount === 0);
       $('#coupon-div').attr('hidden', !withCoupon);
       $('#coupon-switch').prop('checked', withCoupon);
 
       $('#payment-ancv-count').val(data.payment.ancv?.count || '');
       $('#payment-ancv-amount').val(data.payment.ancv?.amount);
-      const withAncv = !(data.payment.ancv?.amount === null || data.payment.ancv?.amount === 0);
+      const withAncv = data.payment.ancv !== null && !(data.payment.ancv.amount === null || data.payment.ancv.amount === 0);
       $('#ancv-div').attr('hidden', !withAncv);
       $('#ancv-switch').prop('checked', withAncv);
 
@@ -413,14 +419,6 @@ function patchMember(memberId, paymentId, event) {
       // TODO: move outside first request once DB is not SQLite anymore
       let paymentData = {
         cash: $('#payment-cash').val(),
-        sport_coupon: {
-          amount: $('#payment-coupon-amount').val(),
-          count: $('#payment-coupon-count').val(),
-        },
-        ancv: {
-          amount: $('#payment-ancv-amount').val(),
-          count: $('#payment-ancv-count').val(),
-        },
         other: {
           amount: $('#payment-other-amount').val(),
           comment: $('#payment-other-comment').val(),
@@ -441,6 +439,18 @@ function patchMember(memberId, paymentId, event) {
         }
       }
       paymentData.check_payment = checks;
+      if ($('#payment-ancv-amount').val() > 0) {
+        paymentData.ancv = {
+          amount: $('#payment-ancv-amount').val(),
+          count: $('#payment-ancv-count').val(),
+        };
+      }
+      if ($('#payment-coupon-amount').val() > 0) {
+        paymentData.sport_coupon = {
+          amount: $('#payment-coupon-amount').val(),
+          count: $('#payment-coupon-count').val(),
+        };
+      }
       $.ajax({
         url: paymentssUrl + paymentId + '/',
         type: 'PATCH',
