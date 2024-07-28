@@ -283,9 +283,9 @@ class Contact(PersonModel):
 class Member(PersonModel):
     created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    active_courses = models.ManyToManyField(Course)
-    cancelled_courses = models.ManyToManyField(Course, related_name="members")
-    contacts = models.ManyToManyField(Contact, related_name="members_cancelled")
+    active_courses = models.ManyToManyField(Course, related_name="members")
+    cancelled_courses = models.ManyToManyField(Course, related_name="members_cancelled")
+    contacts = models.ManyToManyField(Contact)
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
     documents = models.OneToOneField(Documents, null=True, on_delete=models.SET_NULL)
     birthday = models.DateField(blank=False)
