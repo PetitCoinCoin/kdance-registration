@@ -83,7 +83,7 @@ class UserMeApiViewSet(
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        if request.data.get("username") == instance.username:
+        if request.data.get("username").lower() == instance.username.lower():
             request.data.pop("username")
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)

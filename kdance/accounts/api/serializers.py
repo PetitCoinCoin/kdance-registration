@@ -59,10 +59,18 @@ class UserBaseSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Ce nom d'utilisateur est déjà pris.")
         return username
 
+    @staticmethod
+    def validate_first_name(name: str) -> str:
+        return name.title()
+
+    @staticmethod
+    def validate_last_name(name: str) -> str:
+        return name.title()
+
     def create(self, validated_data: dict) -> UserType:
         user: UserType = User.objects.create_user(
             username=validated_data["username"],
-            email=validated_data["email"],
+            email=validated_data["email"].lower(),
             password=validated_data["password"],
             first_name=validated_data["first_name"],
             last_name=validated_data["last_name"],
@@ -129,7 +137,7 @@ class UserCreateSerializer(UserBaseSerializer):
         if User.objects.filter(email=email).exists():
             raise serializers.ValidationError("Un utilisateur est déjà associé à cet email.")
         if re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
-            return email
+            return email.lower()
         raise serializers.ValidationError("Cette addresse email ne semble pas avoir un format valide.")
 
     @staticmethod
