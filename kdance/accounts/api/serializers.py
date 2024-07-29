@@ -1,3 +1,5 @@
+import re
+
 from datetime import timedelta
 from hashlib import sha512
 from secrets import token_urlsafe
@@ -19,11 +21,16 @@ from members.api.serializers import (
 
 User = get_user_model()
 
+PHONE_FORMAT_MSG = "Ce numéro de téléphone n'est pas valide. Format attendu: 0123456789."
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ("address", "phone")
+
+    @staticmethod
+    def validate_phone(phone: str) -> str:
+        return validate_phone(phone)
 
 
 class UserBaseSerializer(serializers.ModelSerializer):
@@ -112,16 +119,22 @@ class UserCreateSerializer(UserBaseSerializer):
             "last_name": {"required": True},
         }
 
-    @classmethod
-    def validate_password(cls, pwd: str) -> str:
+    @staticmethod
+    def validate_password(pwd: str) -> str:
         validate_pwd(pwd)
         return pwd
 
-    @classmethod
-    def validate_email(cls, email: str) -> str:
+    @staticmethod
+    def validate_email(email: str) -> str:
         if User.objects.filter(email=email).exists():
             raise serializers.ValidationError("Un utilisateur est déjà associé à cet email.")
-        return email
+        if re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
+            return email
+        raise serializers.ValidationError("Cette addresse email ne semble pas avoir un format valide.")
+
+    @staticmethod
+    def validate_phone(phone: str) -> str:
+        return validate_phone(phone)
 
     @transaction.atomic
     def save(self, **kwargs: UserType) -> None:
@@ -281,3 +294,8 @@ def validate_pwd(pwd: str) -> None:
         raise serializers.ValidationError("Votre mot de passe doit contenir au moins un chiffre.")
     if pwd.replace(" ", "").isalnum():
         raise serializers.ValidationError("Votre mot de passe doit contenir au moins un caractère spécial.")
+
+def validate_phone(phone: str) -> str:
+    if re.fullmatch(r"\d{10}", phone):
+        return phone
+    raise serializers.ValidationError("Ce numéro de téléphone n'est pas valide. Format attendu: 0123456789.")
