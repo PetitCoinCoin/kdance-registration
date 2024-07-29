@@ -168,7 +168,16 @@ class UserSerializer(UserBaseSerializer):
 class UserAdminActionSerializer(serializers.Serializer):
     emails = serializers.ListField(child=serializers.CharField())
 
-    def save(self, *, is_admin: bool, **k_) -> dict:
+    def __init__(self, *, is_admin: bool, **kwargs: Any) -> None:
+        self._is_admin = is_admin
+        super().__init__(**kwargs)
+
+    def validate_emails(self, emails: list[str]) -> list:
+        if not self._is_admin and settings.SUPERUSER_EMAIL in emails:
+            raise serializers.ValidationError(f"{settings.SUPERUSER}: cet utilisateur ne peut pas être supprimé.")
+        return emails
+
+    def save(self, **k_) -> dict:
         emails = self.validated_data.get("emails", [])
         details = {
             "processed": [],
@@ -178,7 +187,7 @@ class UserAdminActionSerializer(serializers.Serializer):
         for email in emails:
             try:
                 user = User.objects.get(email=email)
-                user.is_superuser = is_admin
+                user.is_superuser = self._is_admin
                 user.save()
             except User.DoesNotExist:
                 details["not_found"].append(email)

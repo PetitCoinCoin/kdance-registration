@@ -55,9 +55,9 @@ class UsersApiViewSet(
     def admin(self, request: Request, action: str) -> Response:
         if action not in ("activate", "deactivate"):
             return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=request.data, is_admin=action == "activate")
         serializer.is_valid(raise_exception=True)
-        details = serializer.save(is_admin=action == "activate")
+        details = serializer.save()
         if not details["processed"]:
             # only emails not found
             if not details["other"]:

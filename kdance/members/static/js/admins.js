@@ -113,7 +113,7 @@ function putUser(action, data, event) {
       data: JSON.stringify({emails: data}),
       dataType: 'json',
       success: () => {
-        event?.currentTarget !== null ? event.currentTarget.submit() : location.reload();
+        event !== null && event?.currentTarget !== null ? event.currentTarget.submit() : location.reload();
       },
       error: (error) => {
         // if (!error.responseJSON) {
