@@ -64,6 +64,10 @@ footer {
   background-color: #baffc9;
 }
 
+.toast-warning {
+  background-color: #ffdfba;
+}
+
 /*** Design ***/
 h1 {
   color: purple;

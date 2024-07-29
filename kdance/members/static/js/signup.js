@@ -40,7 +40,7 @@ function postSignup() {
         },
         error: (error) => {
           if (!error.responseJSON) {
-            $('#message-error-signup').removeAttr('hidden');
+            $('#message-error-signup').removeClass('d-none');
           }
           if (error.responseJSON.username) {
             $('#invalid-username').html(error.responseJSON.username[0]);

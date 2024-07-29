@@ -50,3 +50,5 @@ const COMMON_TABLE_PARAMS = {
   showFullscreen: true,
   showColumns: true,
 }
+
+const DEFAULT_ERROR_MESSAGE = 'Une erreur est survenue. Veuillez ré-essayer plus tard ou contacter le support technique K\'Dance.';

@@ -61,9 +61,9 @@ class UsersApiViewSet(
         if not details["processed"]:
             # only emails not found
             if not details["other"]:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+                return Response(status=status.HTTP_400_BAD_REQUEST, data=details)
             else:
-                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=details)
         return Response(data=details)
 
 
