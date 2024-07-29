@@ -80,6 +80,16 @@ class UserMeApiViewSet(
     def get_object(self) -> UserType:
         return self.queryset.get(pk=self.request.user.pk)
 
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        if request.data.get("username") == instance.username:
+            request.data.pop("username")
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
     @action(detail=False, methods=["put"])
     def password(self, request: Request) -> Response:
         user = self.get_object()
