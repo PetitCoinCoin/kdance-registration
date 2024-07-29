@@ -157,6 +157,10 @@ function getUser() {
           collapsing.classList.remove('show');
         } else {
           const memberBtnClone = memberBtnTemplate.content.cloneNode(true);
+          if (previousMembers.length == 0) {
+            let copyBtn = memberBtnClone.querySelector('#copy-member-btn');
+            copyBtn.remove();
+          }
           const btnParent = clone.querySelector('div.accordion-body').children[0];
           btnParent.appendChild(memberBtnClone);
         }

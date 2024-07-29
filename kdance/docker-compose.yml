@@ -13,7 +13,9 @@ services:
     env_file:
       - .env
     depends_on:
-      - db
+      db:
+        condition: service_healthy 
+
   db:
     image: mysql:8
     container_name: kdance_db
@@ -27,6 +29,11 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
       - 3306:3306
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u $$DB_USER --password=$$DB_PASSWORD
+      interval: 5s
+      timeout: 10s
+      retries: 10
   
 volumes:
   mysql_data:

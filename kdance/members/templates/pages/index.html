@@ -8,7 +8,8 @@
   <section>
     <!-- Toasts -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
-      <div id="pwd-success-toast" class="toast align-items-center toast-success" role="alert" aria-live="assertive" aria-atomic="true">
+      <div id="pwd-success-toast" class="toast align-items-center toast-success" role="alert" aria-live="assertive"
+        aria-atomic="true">
         <div class="d-flex">
           <div class="toast-body fw-semibold">
             Mot de passe changé avec succès.
@@ -17,7 +18,7 @@
         </div>
       </div>
     </div>
-  
+
     <!-- Modal -->
     {% csrf_token %}
     <div class="modal fade" id="edit-me-modal" tabindex="-1" aria-hidden="true">
@@ -88,6 +89,10 @@
           <form id="form-member" name="form-member">
             <div class="modal-body">
               <div class="row">
+                <div class="mb-4 fst-italic">
+                  <i class="bi-info-circle" style="color: purple;"></i>
+                  Toute inscription est définitive, et l'adhésion restera dûe, même en cas de demande d'annulation de cours.
+                </div>
                 <div class="accordion" id="modal-accordion">
                   <div class="accordion-item">
                     <h2 class="accordion-header">
@@ -313,7 +318,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h4 class="modal-title" >Changer mon mot de passe</h4>
+            <h4 class="modal-title">Changer mon mot de passe</h4>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <form id="form-pwd" name="form-pwd">
@@ -325,7 +330,7 @@
               </div>
               <div class="form-outline mb-4">
                 <label class="form-label required" for="password">Nouveau mot de passe</label>
-                <input type="password" id="password" class="form-control" required/>
+                <input type="password" id="password" class="form-control" required />
                 <div id="invalid-pwd" class="invalid-feedback"></div>
               </div>
               <div class="form-outline mb-4">
@@ -366,6 +371,14 @@
       </div>
       {% if user.is_authenticated %}
       <div class="container">
+        <div class="fst-italic mb-4">
+          Cet espace vous permet de gérer vos inscriptions d'une année sur l'autre. Pensez à bien maintenir vos
+          coordonnées à jour afin de pouvoir vous joindre facilement et partager les différentes informations avec vous
+          tout au long de l'année.<br>
+          A ce jour, le paiement en ligne n'est pas encore possible, mais vous pouvez voir facilement un statut de votre
+          compte pour la saison en cours.<br>
+          Pour toute question sur les cours, n'hésitez pas à contacter le bureau de l'association.
+        </div>
         <div class="row mb-3">
           <div class="col-2">
             <img id="desc-picture" src="" class="img-thumbnail" alt="thumbs">
@@ -395,7 +408,8 @@
             </span>
             <span class="d-inline-block" tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus"
               data-bs-content="Modifier mon mot de passe" data-bs-placement="left">
-              <button class="btn btn-outline-warning" type="button" data-bs-toggle="modal" data-bs-target="#edit-pwd-modal">
+              <button class="btn btn-outline-warning" type="button" data-bs-toggle="modal"
+                data-bs-target="#edit-pwd-modal">
                 <i class="bi-lock-fill"></i>
               </button>
             </span>

@@ -419,6 +419,14 @@ function patchMember(memberId, paymentId, event) {
       // TODO: move outside first request once DB is not SQLite anymore
       let paymentData = {
         cash: $('#payment-cash').val(),
+        sport_coupon: {
+          amount: $('#payment-coupon-amount').val() || 0,
+          count: $('#payment-coupon-count').val() || 0,
+        },
+        ancv: {
+          amount: $('#payment-ancv-amount').val() || 0,
+          count: $('#payment-ancv-count').val() || 0,
+        },
         other: {
           amount: $('#payment-other-amount').val(),
           comment: $('#payment-other-comment').val(),
@@ -439,18 +447,18 @@ function patchMember(memberId, paymentId, event) {
         }
       }
       paymentData.check_payment = checks;
-      if ($('#payment-ancv-amount').val() > 0) {
-        paymentData.ancv = {
-          amount: $('#payment-ancv-amount').val(),
-          count: $('#payment-ancv-count').val(),
-        };
-      }
-      if ($('#payment-coupon-amount').val() > 0) {
-        paymentData.sport_coupon = {
-          amount: $('#payment-coupon-amount').val(),
-          count: $('#payment-coupon-count').val(),
-        };
-      }
+      // if ($('#payment-ancv-amount').val() > 0) {
+      //   paymentData.ancv = {
+      //     amount: $('#payment-ancv-amount').val(),
+      //     count: $('#payment-ancv-count').val(),
+      //   };
+      // }
+      // if ($('#payment-coupon-amount').val() > 0) {
+      //   paymentData.sport_coupon = {
+      //     amount: $('#payment-coupon-amount').val(),
+      //     count: $('#payment-coupon-count').val(),
+      //   };
+      // }
       $.ajax({
         url: paymentssUrl + paymentId + '/',
         type: 'PATCH',

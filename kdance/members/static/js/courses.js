@@ -35,6 +35,9 @@ function getSeasons() {
           $('#copy-season').append($('<option>', { value: season.id, text: season.year }));
         }
         $('#season-select').append($('<option>', { value: season.id, text: label, selected: season.is_current }));
+        if ($('#copy-season')[0].options.length === 0) {
+          $('#copy-courses-btn').remove();
+        }
       });
     },
     error: (error) => {
@@ -167,6 +170,9 @@ function getPreviousSeason(seasonId) {
     if (option.value !== seasonId) {
       copySelect.append($('<option>', { value: option.value, text: option.innerHTML }));
     }
+  }
+  if (copySelect[0].options.length === 0) {
+    $('#copy-courses-btn').remove();
   }
   
 }
