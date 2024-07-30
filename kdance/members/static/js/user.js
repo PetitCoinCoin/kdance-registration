@@ -250,8 +250,8 @@ function patchUser() {
           $('#invalid-edit-me-username').html(error.responseJSON.username[0]);
           $('#invalid-edit-me-username').addClass('d-inline');
         }
-        if (error.responseJSON.phone) {
-          $('#invalid-edit-me-phone').html(error.responseJSON.phone[0]);
+        if (error.responseJSON.profile && error.responseJSON.profile.phone) {
+          $('#invalid-edit-me-phone').html(error.responseJSON.profile.phone[0] + ' Format attendu: 0123456789.');
           $('#invalid-edit-me-phone').addClass('d-inline');
         }
         if (error.responseJSON.email) {
@@ -494,7 +494,7 @@ function buildContactsData() {
           first_name: $(`#firstname-responsible-${i}`).val(),
           last_name: $(`#lastname-responsible-${i}`).val(),
           phone: $(`#phone-responsible-${i}`).val(),
-          email: undefined,
+          email: $(`#email-responsible-${i}`).val(),
           contact_type: 'responsible',
         });
       }
@@ -506,7 +506,7 @@ function buildContactsData() {
       first_name: $('#desc-firstname').html(),
       last_name: $('#desc-lastname').html(),
       phone: $('#desc-phone').html(),
-      email: $('#desc-email').html(),
+      email: undefined,
       contact_type: 'emergency',
     });
   }
@@ -516,7 +516,7 @@ function buildContactsData() {
         first_name: $(`#firstname-emergency-${i}`).val(),
         last_name: $(`#lastname-emergency-${i}`).val(),
         phone: $(`#phone-emergency-${i}`).val(),
-        email: $(`#email-emergency-${i}`).val(),
+        email: undefined,
         contact_type: 'emergency',
       });
     }

@@ -67,6 +67,14 @@ class UserBaseSerializer(serializers.ModelSerializer):
     def validate_last_name(name: str) -> str:
         return name.title()
 
+    @staticmethod
+    def validate_email(email: str) -> str:
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError("Un utilisateur est déjà associé à cet email.")
+        if re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
+            return email.lower()
+        raise serializers.ValidationError("Cette addresse email ne semble pas avoir un format valide.")
+
     def create(self, validated_data: dict) -> UserType:
         user: UserType = User.objects.create_user(
             username=validated_data["username"],
@@ -131,14 +139,6 @@ class UserCreateSerializer(UserBaseSerializer):
     def validate_password(pwd: str) -> str:
         validate_pwd(pwd)
         return pwd
-
-    @staticmethod
-    def validate_email(email: str) -> str:
-        if User.objects.filter(email=email).exists():
-            raise serializers.ValidationError("Un utilisateur est déjà associé à cet email.")
-        if re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
-            return email.lower()
-        raise serializers.ValidationError("Cette addresse email ne semble pas avoir un format valide.")
 
     @staticmethod
     def validate_phone(phone: str) -> str:
