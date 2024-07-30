@@ -1,4 +1,6 @@
 from django.contrib.auth import (
+    authenticate,
+    login,
     get_user_model,
     update_session_auth_hash,
 )
@@ -28,6 +30,8 @@ from accounts.api.serializers import (
 
 User = get_user_model()
 
+import logging
+_logger = logging.getLogger(__name__)
 
 class UsersApiViewSet(
     CreateModelMixin,
@@ -50,6 +54,15 @@ class UsersApiViewSet(
         if self.request.method and self.request.method.lower() == "put":
             return UserAdminActionSerializer
         return UserSerializer
+
+    def create(self, request, *args, **kwargs) -> Response:
+        response = super().create(request, *args, **kwargs)
+        username = request.data.get("username")
+        password = request.data.get("password")
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            login(request, user)
+        return response
 
     @action(detail=False, methods=["put"])
     def admin(self, request: Request, action: str) -> Response:
