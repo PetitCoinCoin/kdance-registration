@@ -34,6 +34,21 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t", "y")
 ALLOWED_HOSTS = [os.getenv("ALLOWED_HOSTS", "")]
 
+# Logging
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": os.getenv("LOGLEVEL", "INFO"),
+    },
+}
+
 # Application definition
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -92,7 +107,6 @@ DATABASES = {
 }
 
 # Password and auth
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -117,7 +131,6 @@ LOGOUT_REDIRECT_URL = "/"
 CSRF_COOKIE_HTTPONLY = True
 
 # Internationalization
-
 LANGUAGE_CODE = "fr-fr"
 TIME_ZONE = "UTC"
 USE_I18N = True
