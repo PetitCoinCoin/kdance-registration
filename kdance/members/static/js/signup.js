@@ -1,4 +1,5 @@
 $(document).ready(() => {
+  togglePasswords();
   postSignup();
 });
 
@@ -64,5 +65,18 @@ function postSignup() {
       $('#invalid-pwd-confirmation').addClass('d-inline');
       return
     }
+  });
+}
+
+function togglePasswords() {
+  ['', '-confirmation'].forEach(suffix => {
+    const togglePassword = document.querySelector(`#toggle-password${suffix}`);
+    const password = document.querySelector(`#password${suffix}`);
+    togglePassword.addEventListener('click', function () {
+      const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+      password.setAttribute('type', type);
+      this.classList.toggle('bi-eye');
+      this.classList.toggle('bi-eye-slash');
+    });
   });
 }

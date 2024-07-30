@@ -1,5 +1,6 @@
 $(document).ready(() => {
   activatePopovers();
+  togglePasswords();
   populateLicense();
   getUser();
   patchUser();
@@ -37,7 +38,21 @@ function handleSwitches() {
   const passSwitch = document.querySelector('#pass-switch');
   passSwitch.addEventListener('change', () => {
     $('#pass-div').attr('hidden', !$('#pass-switch').is(':checked'));
-  });}
+  });
+}
+
+function togglePasswords() {
+  ['', '-confirmation', '-old'].forEach(suffix => {
+    const togglePassword = document.querySelector(`#toggle-password${suffix}`);
+    const password = document.querySelector(`#password${suffix}`);
+    togglePassword.addEventListener('click', function () {
+      const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+      password.setAttribute('type', type);
+      this.classList.toggle('bi-eye');
+      this.classList.toggle('bi-eye-slash');
+    });
+  });
+}
 
 function getPreviousMembers(members) {
   let previousMembers = new Array
@@ -634,7 +649,7 @@ function updatePwd() {
         headers: { 'X-CSRFToken': csrftoken },
         mode: 'same-origin',
         data: JSON.stringify({
-          old_password: $('#old-password').val(),
+          old_password: $('#password-old').val(),
           new_password: $('#password').val(),
         }),
         dataType: 'json',

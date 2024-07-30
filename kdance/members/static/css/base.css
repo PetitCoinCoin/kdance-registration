@@ -68,6 +68,11 @@ footer {
   background-color: #ffdfba;
 }
 
+/*** Password ***/
+i.bi-eye, i.bi-eye-slash {
+  cursor: pointer;
+}
+
 /*** Design ***/
 h1 {
   color: purple;

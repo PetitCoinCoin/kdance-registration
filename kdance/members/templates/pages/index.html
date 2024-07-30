@@ -91,7 +91,8 @@
               <div class="row">
                 <div class="mb-4 fst-italic">
                   <i class="bi-info-circle" style="color: purple;"></i>
-                  Toute inscription est définitive, et l'adhésion restera dûe, même en cas de demande d'annulation de cours.
+                  Toute inscription est définitive, et l'adhésion restera dûe, même en cas de demande d'annulation de
+                  cours.
                 </div>
                 <div class="accordion" id="modal-accordion">
                   <div class="accordion-item">
@@ -323,19 +324,34 @@
           </div>
           <form id="form-pwd" name="form-pwd">
             <div class="modal-body">
-              <div class="form-outline mb-4">
-                <label class="form-label required" for="old-password">Ancien mot de passe</label>
-                <input type="password" id="old-password" class="form-control" required />
+              <div class="form-group mb-4">
+                <label class="form-label required" for="password-old">Ancien mot de passe</label>
+                <div class="input-group">
+                  <input type="password" id="password-old" class="form-control" required />
+                  <span class="input-group-text">
+                    <i class="bi bi-eye" id="toggle-password-old"></i>
+                  </span>
+                </div>
                 <div id="invalid-pwd-old" class="invalid-feedback"></div>
               </div>
-              <div class="form-outline mb-4">
+              <div class="form-group mb-4">
                 <label class="form-label required" for="password">Nouveau mot de passe</label>
-                <input type="password" id="password" class="form-control" required />
+                <div class="input-group">
+                  <input type="password" id="password" class="form-control" required />
+                  <span class="input-group-text">
+                    <i class="bi bi-eye" id="toggle-password"></i>
+                  </span>
+                </div>
                 <div id="invalid-pwd" class="invalid-feedback"></div>
               </div>
-              <div class="form-outline mb-4">
+              <div class="form-group mb-4">
                 <label class="form-label required" for="password-confirmation">Confirmation du mot de passe</label>
-                <input type="password" id="password-confirmation" class="form-control" required />
+                <div class="input-group">
+                  <input type="password" id="password-confirmation" class="form-control" required />
+                  <span class="input-group-text">
+                    <i class="bi bi-eye" id="toggle-password-confirmation"></i>
+                  </span>
+                </div>
                 <div id="invalid-pwd-confirmation" class="invalid-feedback">Le mot de passe ne correspond pas !</div>
               </div>
             </div>

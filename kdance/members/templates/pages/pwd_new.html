@@ -5,42 +5,53 @@
 {% block content %}
 
 <main>
-	<section>
-		<div class="container">
-			<div class="text-center">
-				<h1 class="display-4 mb-3">Définir un nouveau mot de passe</h1>
-			</div>
-			<div class="d-flex flex-column align-items-center">
-				<form id="form-pwd-new" class="w-500 d-flex flex-column" method="post">
-					{% csrf_token %}
-					<div class="form-outline mb-4 mt-4">
-						<label class="form-label" for="email">Email</label>
-						<input type="text" id="email" class="form-control" required/>
-						<div id="invalid-email" class="invalid-feedback"></div>
-					</div>
-					<div class="form-outline mb-4">
-						<label class="form-label" for="password">Nouveau mot de passe</label>
-						<input type="password" id="password" class="form-control" required />
-						<div id="invalid-pwd" class="invalid-feedback"></div>
-					</div>
-					<div class="form-outline mb-4">
-						<label class="form-label" for="password-confirmation">Confirmation du mot de passe</label>
-						<input type="password" id="password-confirmation" class="form-control" required />
-						<div id="invalid-pwd-confirmation" class="invalid-feedback">Le mot de passe ne correspond pas !</div>
-					</div>
-					<div id="message-error-new-pwd" class="p-3 mb-2 bg-danger-subtle text-danger-emphasis d-none"></div>
-					<button type="submit" class="btn btn-info mb-4">Définir le nouveau mot de passe</button>
-					<div id="message-ok-new-pwd" class="p-3 mb-2 bg-success-subtle text-success-emphasis d-none">
-						Mot de passe modifié avec succès, vous pouvez désormais aller <a href="{% url 'login' %}">vous connecter</a>.
-					</div>
-				</form>
-			</div>
-		</div>
-	</section>
-	<script type="text/javascript">
-	  const passwordNewUrl = "{% url 'api-password-new' %}"
-	</script>
-	<script src="{% static 'js/pwd.js' %}"></script>
+  <section>
+    <div class="container">
+      <div class="text-center">
+        <h1 class="display-4 mb-3">Définir un nouveau mot de passe</h1>
+      </div>
+      <div class="d-flex flex-column align-items-center">
+        <form id="form-pwd-new" class="w-500 d-flex flex-column" method="post">
+          {% csrf_token %}
+          <div class="form-outline mb-4 mt-4">
+            <label class="form-label required" for="email">Email</label>
+            <input type="text" id="email" class="form-control" required />
+            <div id="invalid-email" class="invalid-feedback"></div>
+          </div>
+          <div class="form-group mb-4">
+            <label class="form-label required" for="password">Mot de passe</label>
+            <div class="input-group">
+              <input type="password" id="password" class="form-control" required/>
+              <span class="input-group-text">
+                <i class="bi bi-eye" id="toggle-password" ></i>
+               </span>
+            </div>
+            <div id="invalid-pwd" class="invalid-feedback"></div>
+          </div>
+          <div class="form-group mb-4">
+            <label class="form-label required" for="password-confirmation">Confirmation du mot de passe</label>
+            <div class="input-group">
+              <input type="password" id="password-confirmation" class="form-control" required />
+              <span class="input-group-text">
+                <i class="bi bi-eye" id="toggle-password-confirmation"></i>
+              </span>
+            </div>
+            <div id="invalid-pwd-confirmation" class="invalid-feedback">Le mot de passe ne correspond pas !</div>
+          </div>
+          <div id="message-error-new-pwd" class="p-3 mb-2 bg-danger-subtle text-danger-emphasis d-none"></div>
+          <button type="submit" class="btn btn-info mb-4">Définir le nouveau mot de passe</button>
+          <div id="message-ok-new-pwd" class="p-3 mb-2 bg-success-subtle text-success-emphasis d-none">
+            Mot de passe modifié avec succès, vous pouvez désormais aller <a href="{% url 'login' %}">vous
+              connecter</a>.
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+  <script type="text/javascript">
+    const passwordNewUrl = "{% url 'api-password-new' %}"
+  </script>
+  <script src="{% static 'js/pwd.js' %}"></script>
 </main>
 
 {% endblock content %}
