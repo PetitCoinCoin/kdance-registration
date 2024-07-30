@@ -30,8 +30,6 @@ from accounts.api.serializers import (
 
 User = get_user_model()
 
-import logging
-_logger = logging.getLogger(__name__)
 
 class UsersApiViewSet(
     CreateModelMixin,
@@ -98,6 +96,8 @@ class UserMeApiViewSet(
         instance = self.get_object()
         if request.data.get("username").lower() == instance.username.lower():
             request.data.pop("username")
+        if request.data.get("email").lower() == instance.email.lower():
+            request.data.pop("email")
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
