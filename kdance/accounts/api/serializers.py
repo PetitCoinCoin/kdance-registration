@@ -1,3 +1,4 @@
+import logging
 import re
 
 from datetime import timedelta
@@ -8,6 +9,7 @@ from typing import Any
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User as UserType
+from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.utils import timezone
 from rest_framework import serializers
@@ -20,8 +22,14 @@ from members.api.serializers import (
 )
 
 User = get_user_model()
+_logger = logging.getLogger(__name__)
 
 PHONE_FORMAT_MSG = "Ce numéro de téléphone n'est pas valide. Format attendu: 0123456789."
+
+
+class EmailNotSentException(Exception):
+    pass
+
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -255,8 +263,55 @@ class UserResetPwdSerializer(serializers.Serializer):
             reset_pwd = ResetPassword.objects.get(user=user)
             reset_pwd.request_hash = sha512(token.encode()).hexdigest()
             reset_pwd.save()
-        # Send email
-        print("mail envoyé (ou pas) avec cette url dedans:", path + "pwd_new?token=" + token)
+        _logger.info("Envoi d'un email de réinitialisation de mot de passe")
+        _logger.debug(f"Envoi vers {user.email}")
+        mail = EmailMultiAlternatives(
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[user.email],
+            reply_to=[settings.DEFAULT_FROM_EMAIL],
+            subject="Réinitialisation du mot de passe K'Dance",
+            body=self.__build_text(path + "pwd_new?token=" + token),
+        )
+        mail.attach_alternative(self.__build_html(path + "pwd_new?token=" + token), "text/html")
+        sent = mail.send()
+        if not sent:
+            raise EmailNotSentException(f"Email de ré-initialisation non envoyé à {user.email}")
+
+    @classmethod
+    def __build_text(cls, url: str) -> str:
+        message = f"""
+Bonjour
+
+Vous venez de faire une demande de réinitialisation de mot de passe pour votre compte K'Dance ?
+Veuillez cliquer sur le lien suivant, ou le copier-coller dans votre navigateur: {url}
+Ce lien restera valide 30 minutes.
+
+Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email, votre mot de passe restera inchangé.
+
+Bonne journée et à bientôt
+Tech K'Dance
+"""
+        return message
+
+    @classmethod
+    def __build_html(cls, url: str) -> str:
+        message = f"""
+<p>Bonjour</p>
+<p>
+  Vous venez de faire une demande de réinitialisation de mot de passe pour votre compte K'Dance ?
+  Veuillez cliquer sur le lien suivant, qui restera valide pendant 30 minutes:
+  <a href="{url}">
+    {url}
+  </a>
+</p>
+<p>Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email, votre mot de passe restera
+  inchangé.</p>
+<p>
+  Bonne journée et à bientôt<br>
+  Tech K'Dance
+</p>
+"""
+        return message
 
 
 class UserNewPwdSerializer(serializers.Serializer):
@@ -279,7 +334,7 @@ class UserNewPwdSerializer(serializers.Serializer):
             raise serializers.ValidationError({"email": "Email incorrect, aucune demande de réinitialisation trouvée."})
         if reset_pwd.request_hash != sha512(validated.get("token").encode()).hexdigest():
             raise serializers.ValidationError({"token": "Lien de réinitialisation incorrect pour cet utilisateur."})
-        if timezone.now() - reset_pwd.created > timedelta(minutes=30):
+        if timezone.now() - reset_pwd.created > timedelta(minutes=31):
             raise serializers.ValidationError({"token": "Lien de réinitialisation expiré. Veuillez refaire une demande de réinitialisation."})
         return validated
 
