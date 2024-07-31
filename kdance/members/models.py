@@ -1,4 +1,7 @@
+import logging
+
 from enum import Enum
+
 from django.contrib.auth.models import User
 from django.core.validators import EmailValidator, MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models, transaction
@@ -6,6 +9,7 @@ from django.db.models.signals import post_delete
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
 
+_logger = logging.getLogger(__name__)
 
 class Season(models.Model):
     year = models.CharField(
@@ -29,7 +33,7 @@ class Season(models.Model):
     def save(self, *args, **kwargs) -> None:
         created = self.pk is None
         # When creating a new season, we delete the older ones
-        if not Season.objects.filter(year=self.year).exists():
+        if created and Season.objects.count() > 4:
             too_old = Season.objects.order_by("-year")[4:]
             for season in too_old:
                 season.delete()
@@ -73,8 +77,7 @@ class CourseManager(models.Manager):
                 }
                 Course(**new_course).save()
             except IntegrityError:
-                # Mettre en place un logger propre
-                print("Cours non copié")
+                _logger.info("Cours non copié")
 
 
 class Course(models.Model):
@@ -319,6 +322,6 @@ class Member(PersonModel):
         return list(self.active_courses.all()) + list(self.cancelled_courses.all())
 
 @receiver(post_delete, sender=Member)
-def post_delete_documents(_s, instance, *args, **kwargs):
+def post_delete_documents(sender, instance, *args, **kwargs):
     if instance.documents:
         instance.documents.delete()

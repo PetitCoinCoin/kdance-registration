@@ -59,15 +59,6 @@ footer {
   color: red;
 }
 
-/*** Toasts ***/
-.toast-success {
-  background-color: #baffc9;
-}
-
-.toast-warning {
-  background-color: #ffdfba;
-}
-
 /*** Password ***/
 i.bi-eye, i.bi-eye-slash {
   cursor: pointer;

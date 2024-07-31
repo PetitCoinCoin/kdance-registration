@@ -35,20 +35,17 @@ function getSeasons() {
           $('#copy-season').append($('<option>', { value: season.id, text: season.year }));
         }
         $('#season-select').append($('<option>', { value: season.id, text: label, selected: season.is_current }));
-        if ($('#copy-season')[0].options.length === 0) {
-          $('#copy-courses-btn').remove();
-        }
       });
     },
     error: (error) => {
-      // if (!error.responseJSON) {
-      //     $('#message-error-signup').removeAttr('hidden');
-      // }
+      showToast('Impossible de récupérer la liste des saisons.');
+      console.log(error);
     }
   });
 }
 
 function getSeason(season) {
+  $('.invalid-feedback').removeClass('d-inline');
   $.ajax({
     url: seasonsUrl + season,
     type: 'GET',
@@ -59,9 +56,8 @@ function getSeason(season) {
       $('#season-discount-limit').val(data.discount_limit);
     },
     error: (error) => {
-      // if (!error.responseJSON) {
-      //     $('#message-error-signup').removeAttr('hidden');
-      // }
+      showToast('Impossible de récupérer les informations de la saison.');
+      console.log(error);
     }
   });
 }
@@ -73,7 +69,9 @@ function createUpdateSeason() {
       const button = event.relatedTarget;
       let url = seasonsUrl;
       let method = 'POST';
+      $('.invalid-feedback').removeClass('d-inline');
       if (button.getAttribute('id') === 'add-season-btn') {
+        document.getElementById('form-season').reset();
         $('#season-modal-title').html('Ajouter une nouvelle saison');
         $('#season-btn').html('Ajouter');
       } else {
@@ -90,7 +88,6 @@ function createUpdateSeason() {
 
 function postOrPatchSeason(url, method) {
   $('#form-season').submit((event) => {
-    $('.invalid-feedback').removeClass('d-inline');
     event.preventDefault();
     const data = {
       year: $('#season-year').val(),
@@ -114,11 +111,12 @@ function postOrPatchSeason(url, method) {
         event.currentTarget.submit();
       },
       error: (error) => {
-        // if (!error.responseJSON) {
-        //   $('#message-error-signup').removeAttr('hidden');
-        // }
+        if (!error.responseJSON) {
+          showToast('Une erreur est survenue.');
+          console.log(error);
+        }
         if (error.responseJSON.year) {
-          $('#invalid-season-year').html(error.responseJSON.year[0]);
+          $('#invalid-season-year').html(error.responseJSON.year[0] + ' Format attendu: XXXX-YYYY');
           $('#invalid-season-year').addClass('d-inline');
         }
       }
@@ -145,10 +143,8 @@ function copyCourseFromSeason() {
         event.currentTarget.submit();
       },
       error: (error) => {
-        console.log(error)
-        // if (!error.responseJSON) {
-        //   $('#message-error-signup').removeAttr('hidden');
-        // }
+        showToast('Une erreur est survenue.');
+        console.log(error);
       }
     });
   });
@@ -157,6 +153,13 @@ function copyCourseFromSeason() {
 function onSeasonChange(seasonId) {
   getCourses(seasonId);
   getPreviousSeason(seasonId);
+  const seasonSelect = $('#season-select');
+  const seasonYear = seasonSelect[0].options[seasonSelect[0].selectedIndex].innerHTML;
+  if (!seasonYear.includes('en cours') || $('#copy-season')[0].options.length === 0) {
+    $('#copy-courses-btn').addClass('d-none');
+  } else {
+    $('#copy-courses-btn').removeClass('d-none');
+  }
 }
 
 function getPreviousSeason(seasonId) {
@@ -170,11 +173,16 @@ function getPreviousSeason(seasonId) {
     if (option.value !== seasonId) {
       copySelect.append($('<option>', { value: option.value, text: option.innerHTML }));
     }
-  }
-  if (copySelect[0].options.length === 0) {
-    $('#copy-courses-btn').remove();
-  }
-  
+  }  
+}
+
+function actionFormatter(value, row) {
+  return `<button id="edit-course-${row.id}-btn" class="btn btn-outline-info btn-sm" type="button" data-bs-cid=${row.id} data-bs-toggle="modal" data-bs-target="#course-modal">
+            <i class="bi-pencil-fill"></i>
+          </button>
+          <button id="delete-course-${row.id}-btn" class="btn btn-outline-danger btn-sm" type="button" data-bs-cid=${row.id} data-bs-toggle="modal" data-bs-target="#delete-modal">
+            <i class="bi-trash3-fill"></i>
+          </button>`;
 }
 
 function getCourses(seasonId) {
@@ -182,30 +190,66 @@ function getCourses(seasonId) {
     url: coursesUrl + `?season=${seasonId}`,
     type: 'GET',
     success: (data) => {
-      $('#courses-list').empty()
-      const listParent = document.querySelector('#courses-list');
-      const courseTemplate = document.querySelector('#course-item-template');
-      data.map((course) => {
-        const clone = courseTemplate.content.cloneNode(true);
-        let td = clone.querySelectorAll('td');
-        const startHour = course.start_hour.split(':');
-        const endHour = course.end_hour.split(':');
-        td[0].innerHTML = course.name;
-        td[1].innerHTML = course.teacher.name;
-        td[2].innerHTML = `${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]}-${endHour[0]}h${endHour[1]}`;
-        td[3].innerHTML = course.price + '€';
-        let buttons = clone.querySelectorAll('button');        
-        buttons[0].id = `edit-course-${course.id}-btn`;
-        buttons[0].dataset.bsCid = course.id;
-        buttons[1].id = `delete-course-${course.id}-btn`;
-        buttons[1].dataset.bsCid = course.id;
-        listParent.appendChild(clone);
-      });
+      // Bootstrap table not initialised
+      if (document.querySelector('#courses-table').className === '') {
+        $('#courses-table').bootstrapTable({
+          ...COMMON_TABLE_PARAMS,
+          showFullscreen: false,
+          showColumns: false,
+          columns: [{
+            field: 'name',
+            title: 'Nom',
+            searchable: true,
+            sortable: true,
+          }, {
+            field: 'teacher.name',
+            title: 'Professeur',
+            searchable: true,
+            sortable: true,
+          }, {
+            field: 'slot',
+            title: 'Créneau',
+            searchable: true,
+            sortable: true,
+          }, {
+            field: 'price',
+            title: 'Tarif',
+            searchable: false,
+            sortable: false,
+          }, {
+            field: 'operate',
+            title: 'Actions',
+            align: 'center',
+            clickToSelect: false,
+            formatter: actionFormatter,
+          }],
+          data: data.map(c => {
+            const startHour = c.start_hour.split(':');
+            const endHour = c.end_hour.split(':');
+            return {
+              ...c,
+              price: c.price + '€',
+              slot: `${WEEKDAY[c.weekday]}, ${startHour[0]}h${startHour[1]}-${endHour[0]}h${endHour[1]}`
+            }
+          })
+        });
+        $('input[type=search]').attr('placeholder', 'Rechercher');
+        // Already initialised
+      } else {
+        $('#courses-table').bootstrapTable('load', data.map(c => {
+          const startHour = c.start_hour.split(':');
+          const endHour = c.end_hour.split(':');
+          return {
+            ...c,
+            price: c.price + '€',
+            slot: `${WEEKDAY[c.weekday]}, ${startHour[0]}h${startHour[1]}-${endHour[0]}h${endHour[1]}`
+          }
+        }));
+      }
     },
     error: (error) => {
-      // if (!error.responseJSON) {
-      //     $('#message-error-signup').removeAttr('hidden');
-      // }
+      showToast('Impossible de récupérer les cours de la saison.');
+      console.log(error);
     }
   });
 }
@@ -236,9 +280,8 @@ function getTeachers() {
       });
     },
     error: (error) => {
-      // if (!error.responseJSON) {
-      //     $('#message-error-signup').removeAttr('hidden');
-      // }
+      showToast('Impossible de récupérer la liste des professeurs.');
+      console.log(error);
     }
   });
 }
@@ -281,9 +324,10 @@ function postOrPatchTeacher(teacher) {
         event.currentTarget.submit();
       },
       error: (error) => {
-        // if (!error.responseJSON) {
-        //   $('#message-error-signup').removeAttr('hidden');
-        // }
+        if (!error.responseJSON) {
+          showToast('Une erreur est survenue.');
+          console.log(error);
+        }
         if (error.responseJSON.name) {
           $('#invalid-teacher-name').html(error.responseJSON.name[0]);
           $('#invalid-teacher-name').addClass('d-inline');
@@ -303,6 +347,7 @@ function createUpdateCourse() {
         getCourse(course, null);
         $('#course-btn').html('Modifier');
       } else {
+        document.getElementById('form-course').reset();
         const seasonSelect = $('#season-select');
         const seasonYear = seasonSelect[0].options[seasonSelect[0].selectedIndex].innerHTML
         $('#course-modal-title').html(`Ajouter un cours pour la saison ${seasonYear}`);
@@ -332,9 +377,8 @@ function getCourse(course, deleteModalBody) {
       $('#course-end').val(data.end_hour.substring(0, 5));
     },
     error: (error) => {
-      // if (!error.responseJSON) {
-      //     $('#message-error-signup').removeAttr('hidden');
-      // }
+      showToast('Impossible de récupérer les informations du cours.');
+      console.log(error);
     }
   });
 }
@@ -366,9 +410,16 @@ function postOrPatchCourse(course) {
         event.currentTarget.submit();
       },
       error: (error) => {
-        // if (!error.responseJSON) {
-        //   $('#message-error-signup').removeAttr('hidden');
-        // }
+        if (!error.responseJSON) {
+          showToast('Une erreur est survenue.');
+          console.log(error);
+        }
+        if (error.responseJSON && error.responseJSON.non_field_errors) {
+          const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('course-error-toast'));
+          $('#course-error-body').text(error.responseJSON.non_field_errors.join(', '));
+          toast.show();
+          console.log(error);
+        }
       }
     });
   });
@@ -412,12 +463,17 @@ function deleteItem() {
             location.reload();
           },
           error: (error) => {
-            // if (!error.responseJSON) {
-            //   $('#message-error-signup').removeAttr('hidden');
-            // }
+            showToast('Une erreur est survenue.');
+            console.log(error);
           }
         });
       });
     });
   }
+}
+
+function showToast(text) {
+  const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('course-error-toast'));
+  $('#course-error-body').text(`${text} ${ERROR_SUFFIX}`);
+  toast.show();
 }

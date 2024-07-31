@@ -52,3 +52,4 @@ const COMMON_TABLE_PARAMS = {
 }
 
 const DEFAULT_ERROR_MESSAGE = 'Une erreur est survenue. Veuillez ré-essayer plus tard ou contacter le support technique K\'Dance.';
+const ERROR_SUFFIX = 'Veuillez ré-essayer plus tard ou contacter le support technique K\'Dance.';
