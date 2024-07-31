@@ -31,13 +31,8 @@ function postSignup() {
         data: JSON.stringify(data),
         dataType: 'json',
         success: () => {
-          const delay = 5000;  // 5sec
-          $('#message-ok-signup').removeClass('d-none');
-          $('#message-ok-signup').delay(delay).fadeOut(1000);
-          setTimeout(function () {
-            window.location.href = '/';
-         }, delay);
           document.getElementById('form-signup').reset();
+          window.location.href = '/';
         },
         error: (error) => {
           if (!error.responseJSON) {

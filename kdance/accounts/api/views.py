@@ -30,7 +30,8 @@ from accounts.api.serializers import (
 
 User = get_user_model()
 
-
+import logging
+_logger = logging.getLogger(__name__)
 class UsersApiViewSet(
     CreateModelMixin,
     DestroyModelMixin,
@@ -139,4 +140,12 @@ class PasswordApiViewSet(GenericViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        user = User.objects.get(email=request.data.get("email"))
+        update_session_auth_hash(request, user)
+        _logger.info(user)
+        user = authenticate(username=user.username, password=request.data.get("password"))
+        if user is not None:
+            login(request, user)
+        # user.refresh_from_db()
+        # _logger.info(user.is_authenticated)
         return Response(status=status.HTTP_200_OK)

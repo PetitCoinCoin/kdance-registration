@@ -30,14 +30,8 @@ function postNew() {
         contentType: 'application/json',
         data: JSON.stringify(data),
         success: () => {
-          const delay = 10000;  // 10sec
-          $('#message-ok-new-pwd').removeClass('d-none');
-          $('#message-ok-new-pwd').delay(delay).fadeOut(1000);
-          setTimeout(function () {
-            window.location.href = '/login';
-         }, delay);
-         
           document.getElementById('form-pwd-new').reset();
+          window.location.href = '/';
         },
         error: (error) => {
           if (!error.responseJSON) {
@@ -82,7 +76,7 @@ function postReset() {
       }),
       success: () => {
         $('#message-ok-reset-pwd').removeClass('d-none');
-        document.getElementById('form-pwd-new').reset();
+        document.getElementById('form-pwd-reset').reset();
       },
       error: (error) => {
         if (!error.responseJSON) {
