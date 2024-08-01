@@ -51,5 +51,6 @@ const COMMON_TABLE_PARAMS = {
   showColumns: true,
 }
 
-const DEFAULT_ERROR_MESSAGE = 'Une erreur est survenue. Veuillez ré-essayer plus tard ou contacter le support technique K\'Dance.';
+const DEFAULT_ERROR = 'Une erreur est survenue.';
 const ERROR_SUFFIX = 'Veuillez ré-essayer plus tard ou contacter le support technique K\'Dance.';
+const DEFAULT_ERROR_MESSAGE = `${DEFAULT_ERROR} ${ERROR_SUFFIX}`;

@@ -112,7 +112,7 @@ function postOrPatchSeason(url, method) {
       },
       error: (error) => {
         if (!error.responseJSON) {
-          showToast('Une erreur est survenue.');
+          showToast(DEFAULT_ERROR);
           console.log(error);
         }
         if (error.responseJSON.year) {
@@ -143,7 +143,7 @@ function copyCourseFromSeason() {
         event.currentTarget.submit();
       },
       error: (error) => {
-        showToast('Une erreur est survenue.');
+        showToast(DEFAULT_ERROR);
         console.log(error);
       }
     });
@@ -325,10 +325,10 @@ function postOrPatchTeacher(teacher) {
       },
       error: (error) => {
         if (!error.responseJSON) {
-          showToast('Une erreur est survenue.');
+          showToast(DEFAULT_ERROR);
           console.log(error);
         }
-        if (error.responseJSON.name) {
+        if (error.responseJSON && error.responseJSON.name) {
           $('#invalid-teacher-name').html(error.responseJSON.name[0]);
           $('#invalid-teacher-name').addClass('d-inline');
         }
@@ -411,7 +411,7 @@ function postOrPatchCourse(course) {
       },
       error: (error) => {
         if (!error.responseJSON) {
-          showToast('Une erreur est survenue.');
+          showToast(DEFAULT_ERROR);
           console.log(error);
         }
         if (error.responseJSON && error.responseJSON.non_field_errors) {
@@ -463,7 +463,7 @@ function deleteItem() {
             location.reload();
           },
           error: (error) => {
-            showToast('Une erreur est survenue.');
+            showToast(DEFAULT_ERROR);
             console.log(error);
           }
         });

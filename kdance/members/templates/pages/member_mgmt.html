@@ -6,6 +6,17 @@
 
 <main>
   <section>
+    <!-- Toasts -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      <div id="member-error-toast" class="toast align-items-center bg-alert" role="alert" aria-live="assertive"
+        aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body fw-semibold" id="member-error-body"></div>
+          <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal -->
     {% csrf_token %}
     <div class="modal fade" id="member-modal" tabindex="-1" aria-hidden="true">
@@ -63,7 +74,7 @@
                       </div>
                       <div class="form-outline mb-4" id="cash-div" hidden>
                         <label class="form-label fst-italic" for="payment-cash">Montant reçu en espèces (€)</label>
-                        <input type="number" id="payment-cash" class="form-control" min="0"/>
+                        <input type="number" id="payment-cash" step="0.01" class="form-control" min="0"/>
                       </div>
                       <div class="form-check form-switch mb-2">
                         <input class="form-check-input" type="checkbox" role="switch" id="check-switch">
@@ -78,11 +89,13 @@
                       <div class="row" id="ancv-div" hidden>
                         <div class="col form-outline mb-4">
                           <label class="form-label fst-italic" for="payment-ancv-amount">Somme reçue (€)</label>
-                          <input type="number" id="payment-ancv-amount" class="form-control" min="0"/>
+                          <input type="number" step="0.01" id="payment-ancv-amount" class="form-control" />
+                          <div id="invalid-ancv-amount" class="invalid-feedback"></div>
                         </div>
                         <div class="col form-outline mb-4">
                           <label class="form-label fst-italic" for="payment-ancv-count">Nombre de chèques vacances</label>
-                          <input type="number" id="payment-ancv-count" class="form-control" min="0"/>
+                          <input type="number" id="payment-ancv-count" class="form-control" />
+                          <div id="invalid-ancv-count" class="invalid-feedback"></div>
                         </div>
                       </div>
                       <div class="form-check form-switch mb-2">
@@ -97,7 +110,7 @@
                           </div>
                           <div class="col form-outline mb-4">
                             <label class="form-label fst-italic" for="payment-pass-amount">Montant (€)</label>
-                            <input type="number" id="payment-pass-amount" class="form-control" min="0" value="50"/>
+                            <input type="number" id="payment-pass-amount" class="form-control" value="50" disabled/>
                           </div>
                         </div>
                       </div>
@@ -108,11 +121,13 @@
                       <div class="row" id="coupon-div" hidden>
                         <div class="col form-outline mb-4">
                           <label class="form-label fst-italic" for="payment-coupon-amount">Somme reçue (€)</label>
-                          <input type="number" id="payment-coupon-amount" class="form-control" min="0"/>
+                          <input type="number" id="payment-coupon-amount" class="form-control" />
+                          <div id="invalid-coupon-amount" class="invalid-feedback"></div>
                         </div>
                         <div class="col form-outline mb-4">
                           <label class="form-label fst-italic" for="payment-coupon-count">Nombre de coupons sport</label>
-                          <input type="number" id="payment-coupon-count" class="form-control" min="0"/>
+                          <input type="number" step="0.01" id="payment-coupon-count" class="form-control" />
+                          <div id="invalid-coupon-count" class="invalid-feedback"></div>
                         </div>
                       </div>
                       <div class="form-check form-switch mb-2">
@@ -122,11 +137,13 @@
                       <div class="row" id="other-div" hidden>
                         <div class="col form-outline mb-4">
                           <label class="form-label fst-italic" for="payment-other-amount">Somme reçue (€)</label>
-                          <input type="number" id="payment-other-amount" class="form-control" min="0"/>
+                          <input type="number" step="0.01" id="payment-other-amount" class="form-control" />
+                          <div id="invalid-other-amount" class="invalid-feedback"></div>
                         </div>
                         <div class="col form-outline mb-4">
                           <label class="form-label fst-italic" for="payment-other-comment">Commentaire (type de paiement)</label>
                           <input type="text" id="payment-other-comment" class="form-control" />
+                          <div id="invalid-other-comment" class="invalid-feedback"></div>
                         </div>
                       </div>
                       <div class="form-check form-switch mb-2">
@@ -134,8 +151,8 @@
                         <label class="form-check-label" for="refund-switch">Remboursement</label>
                       </div>
                       <div class="form-outline mb-4" id="refund-div" hidden>
-                        <label class="form-label fst-italic" for="payment-refund">Remboursement effectué (€)</label>
-                        <input type="number" id="payment-refund" class="form-control" min="0"/>
+                        <label class="form-label fst-italic" for="payment-refund">Remboursement effectué (€) - Si plusieurs remboursements, additionner les valeurs</label>
+                        <input type="number" step="0.01" id="payment-refund" class="form-control" />
                       </div>
                       <div class="form-outline mb-4">
                         <label class="form-label" for="comment">Commentaire</label>
@@ -197,6 +214,7 @@
             <div class="form-outline mb-4" >
               <label class="form-label " for="cancel-refund">Montant total à rembourser (toutes annulations confondues, en €)</label>
               <input type="number" id="cancel-refund" class="form-control" min="0" value="0"/>
+              <div id="invalid-cancel-refund" class="invalid-feedback"></div>
             </div>
           </div>
           <div class="modal-footer">
@@ -260,25 +278,30 @@
         <div class="row">
           <div class="col form-outline mb-2">
             <label class="form-label fst-italic" for="payment-check-number-">N° de chèque</label>
-            <input type="number" id="payment-check-number-" class="form-control"/>
+            <input type="number" step="0.01" id="payment-check-number-" class="form-control"/>
+            <div class="invalid-feedback"></div>
           </div>
           <div class="col form-outline mb-2">
             <label class="form-label fst-italic" for="payment-check-amount-">Montant (€)</label>
-            <input type="number" id="payment-check-amount-" class="form-control" min="0"/>
+            <input type="number" step="0.01" id="payment-check-amount-" class="form-control" min="0"/>
+            <div class="invalid-feedback"></div>
           </div>
           <div class="col form-outline mb-2">
             <label class="form-label fst-italic" for="payment-check-month-">Encaissement</label>
             <select id="payment-check-month-" class="form-select max-w-300"></select>
+            <div class="invalid-feedback"></div>
           </div>
         </div>
         <div class="row align-items-end border-bottom">
           <div class="col form-outline mb-4">
             <label class="form-label fst-italic" for="payment-check-name-">Emetteur</label>
             <input type="text" id="payment-check-name-" class="form-control"/>
+            <div class="invalid-feedback"></div>
           </div>
           <div class="col form-outline mb-4">
             <label class="form-label fst-italic" for="payment-check-bank-">Banque</label>
             <input type="text" id="payment-check-bank-" class="form-control" />
+            <div class="invalid-feedback"></div>
           </div>
         </div>
       </div>
