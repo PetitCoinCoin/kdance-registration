@@ -8,7 +8,8 @@
   <section>
     <!-- Toasts -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
-      <div id="pwd-success-toast" class="toast align-items-center toast-success" role="alert" aria-live="assertive" aria-atomic="true">
+      <div id="pwd-success-toast" class="toast align-items-center bg-info" role="alert" aria-live="assertive"
+        aria-atomic="true">
         <div class="d-flex">
           <div class="toast-body fw-semibold">
             Mot de passe changé avec succès.
@@ -17,7 +18,7 @@
         </div>
       </div>
     </div>
-  
+
     <!-- Modal -->
     {% csrf_token %}
     <div class="modal fade" id="edit-me-modal" tabindex="-1" aria-hidden="true">
@@ -52,7 +53,7 @@
                 <div class="col-6">
                   <div class="form-outline mb-4">
                     <label class="form-label required" for="edit-me-phone">Téléphone</label>
-                    <input type="text" id="edit-me-phone" class="form-control" required />
+                    <input type="text" id="edit-me-phone" class="form-control" maxlength="10" required />
                     <div id="invalid-edit-me-phone" class="invalid-feedback"></div>
                   </div>
                 </div>
@@ -88,6 +89,11 @@
           <form id="form-member" name="form-member">
             <div class="modal-body">
               <div class="row">
+                <div class="mb-4 fst-italic">
+                  <i class="bi-info-circle" style="color: purple;"></i>
+                  Toute inscription est définitive, et l'adhésion restera dûe, même en cas de demande d'annulation de
+                  cours.
+                </div>
                 <div class="accordion" id="modal-accordion">
                   <div class="accordion-item">
                     <h2 class="accordion-header">
@@ -138,7 +144,7 @@
                             <div class="row">
                               <div class="form-outline mb-1">
                                 <label class="form-label required" for="member-phone">Téléphone</label>
-                                <input type="text" id="member-phone" class="form-control" required />
+                                <input type="text" id="member-phone" class="form-control" maxlength="10" required />
                                 <div id="invalid-member-phone" class="invalid-feedback"></div>
                               </div>
                             </div>
@@ -165,12 +171,12 @@
                         <div id="pass-div" hidden>
                           <div class="row align-items-end">
                             <div class="col form-outline mb-2">
-                              <label class="form-label" for="member-pass-code">Code</label>
+                              <label class="form-label required" for="member-pass-code">Code</label>
                               <input type="text" id="member-pass-code" class="form-control" maxlength="11" />
                             </div>
                             <div class="col form-outline mb-2">
                               <label class="form-label" for="member-pass-amount">Montant (€)</label>
-                              <input type="number" id="member-pass-amount" class="form-control" min="0" value="50" />
+                              <input type="number" id="member-pass-amount" class="form-control" min="0" value="50" disabled/>
                             </div>
                           </div>
                         </div>
@@ -313,24 +319,39 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h4 class="modal-title" >Changer mon mot de passe</h4>
+            <h4 class="modal-title">Changer mon mot de passe</h4>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <form id="form-pwd" name="form-pwd">
             <div class="modal-body">
-              <div class="form-outline mb-4">
-                <label class="form-label required" for="old-password">Ancien mot de passe</label>
-                <input type="password" id="old-password" class="form-control" required />
+              <div class="form-group mb-4">
+                <label class="form-label required" for="password-old">Ancien mot de passe</label>
+                <div class="input-group">
+                  <input type="password" id="password-old" class="form-control" required />
+                  <span class="input-group-text">
+                    <i class="bi bi-eye" id="toggle-password-old"></i>
+                  </span>
+                </div>
                 <div id="invalid-pwd-old" class="invalid-feedback"></div>
               </div>
-              <div class="form-outline mb-4">
+              <div class="form-group mb-4">
                 <label class="form-label required" for="password">Nouveau mot de passe</label>
-                <input type="password" id="password" class="form-control" required/>
+                <div class="input-group">
+                  <input type="password" id="password" class="form-control" required />
+                  <span class="input-group-text">
+                    <i class="bi bi-eye" id="toggle-password"></i>
+                  </span>
+                </div>
                 <div id="invalid-pwd" class="invalid-feedback"></div>
               </div>
-              <div class="form-outline mb-4">
+              <div class="form-group mb-4">
                 <label class="form-label required" for="password-confirmation">Confirmation du mot de passe</label>
-                <input type="password" id="password-confirmation" class="form-control" required />
+                <div class="input-group">
+                  <input type="password" id="password-confirmation" class="form-control" required />
+                  <span class="input-group-text">
+                    <i class="bi bi-eye" id="toggle-password-confirmation"></i>
+                  </span>
+                </div>
                 <div id="invalid-pwd-confirmation" class="invalid-feedback">Le mot de passe ne correspond pas !</div>
               </div>
             </div>
@@ -366,6 +387,16 @@
       </div>
       {% if user.is_authenticated %}
       <div class="container">
+        <div class="fst-italic mb-4">
+          <p>Cet espace vous permet de gérer vos inscriptions d'une année sur l'autre. Pensez à bien maintenir vos
+          coordonnées à jour afin de pouvoir vous joindre facilement et partager les différentes informations avec vous
+          tout au long de l'année.<br>
+          A ce jour, le paiement en ligne n'est pas encore possible, mais vous pouvez voir facilement un statut de votre
+          compte pour la saison en cours, et faire passer votre règlement à K'Dance au forum des associations ou lors des
+          permanences.</p>
+          Pour commencer l'inscription, cliquez sur <i class="bi-plus-square" style="color: purple;"></i> <span
+            style="color:#0dcaf0;">Ajouter un nouvel adhérent</span> dans la saison en cours.
+        </div>
         <div class="row mb-3">
           <div class="col-2">
             <img id="desc-picture" src="" class="img-thumbnail" alt="thumbs">
@@ -395,7 +426,8 @@
             </span>
             <span class="d-inline-block" tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus"
               data-bs-content="Modifier mon mot de passe" data-bs-placement="left">
-              <button class="btn btn-outline-warning" type="button" data-bs-toggle="modal" data-bs-target="#edit-pwd-modal">
+              <button class="btn btn-outline-warning" type="button" data-bs-toggle="modal"
+                data-bs-target="#edit-pwd-modal">
                 <i class="bi-lock-fill"></i>
               </button>
             </span>
@@ -499,7 +531,7 @@
               <div class="col-3">
                 <div class="form-outline mb-4">
                   <label class="form-label" for="phone-">Téléphone</label>
-                  <input type="text" id="phone-" class="form-control" />
+                  <input type="text" id="phone-" maxlength="10" class="form-control" />
                   <div id="invalid-phone-" class="invalid-feedback"></div>
                 </div>
               </div>

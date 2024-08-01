@@ -1,4 +1,5 @@
 $(document).ready(() => {
+  togglePasswords();
   postSignup();
 });
 
@@ -30,17 +31,12 @@ function postSignup() {
         data: JSON.stringify(data),
         dataType: 'json',
         success: () => {
-          const delay = 10000;  // 10sec
-          $('#message-ok-signup').removeClass('d-none');
-          $('#message-ok-signup').delay(delay).fadeOut(1000);
-          setTimeout(function () {
-            window.location.href = '/login';
-         }, delay);
           document.getElementById('form-signup').reset();
+          window.location.href = '/';
         },
         error: (error) => {
           if (!error.responseJSON) {
-            $('#message-error-signup').removeAttr('hidden');
+            $('#message-error-signup').removeClass('d-none');
           }
           if (error.responseJSON.username) {
             $('#invalid-username').html(error.responseJSON.username[0]);
@@ -64,5 +60,18 @@ function postSignup() {
       $('#invalid-pwd-confirmation').addClass('d-inline');
       return
     }
+  });
+}
+
+function togglePasswords() {
+  ['', '-confirmation'].forEach(suffix => {
+    const togglePassword = document.querySelector(`#toggle-password${suffix}`);
+    const password = document.querySelector(`#password${suffix}`);
+    togglePassword.addEventListener('click', function () {
+      const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+      password.setAttribute('type', type);
+      this.classList.toggle('bi-eye');
+      this.classList.toggle('bi-eye-slash');
+    });
   });
 }

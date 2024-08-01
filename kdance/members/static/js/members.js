@@ -44,9 +44,8 @@ function handleCourseUpdate() {
         });
       },
       error: (error) => {
-        // if (!error.responseJSON) {
-        //     $('#message-error-signup').removeAttr('hidden');
-        // }
+        showToast('Impossible de récupérer les cours de la saison.');
+        console.log(error);
       }
     });
   });
@@ -155,9 +154,8 @@ function getSeasons() {
       });
     },
     error: (error) => {
-      // if (!error.responseJSON) {
-      //     $('#message-error-signup').removeAttr('hidden');
-      // }
+      showToast('Impossible de récupérer la liste des saisons.');
+      console.log(error);
     }
   });
 }
@@ -231,6 +229,12 @@ function getMembers(seasonId) {
               };
             }
           }, {
+            field: 'payment.comment',
+            title: 'Commentaire',
+            searchable: true,
+            sortable: false,
+            visible: false,
+          }, {
             field: 'operate',
             title: 'Modifier',
             align: 'center',
@@ -268,14 +272,14 @@ function getMembers(seasonId) {
       }
     },
     error: (error) => {
-      // if (!error.responseJSON) {
-      //     $('#message-error-signup').removeAttr('hidden');
-      // }
+      showToast('Impossible de récupérer les adhérents de la saison.');
+      console.log(error);
     }
   });
 }
 
 function getMember(memberId) {
+  $('.invalid-feedback').removeClass('d-inline');
   $.ajax({
     url: membersUrl + memberId + '/',
     type: 'GET',
@@ -300,13 +304,13 @@ function getMember(memberId) {
 
       $('#payment-coupon-count').val(data.payment.sport_coupon?.count || '');
       $('#payment-coupon-amount').val(data.payment.sport_coupon?.amount || '');
-      const withCoupon = !(data.payment.sport_coupon?.amount === null || data.payment.sport_coupon?.amount === 0);
+      const withCoupon = data.payment.sport_coupon !== null && !(data.payment.sport_coupon.count === null || data.payment.sport_coupon.amount === 0);
       $('#coupon-div').attr('hidden', !withCoupon);
       $('#coupon-switch').prop('checked', withCoupon);
 
       $('#payment-ancv-count').val(data.payment.ancv?.count || '');
       $('#payment-ancv-amount').val(data.payment.ancv?.amount);
-      const withAncv = !(data.payment.ancv?.amount === null || data.payment.ancv?.amount === 0);
+      const withAncv = data.payment.ancv !== null && !(data.payment.ancv.amount === null || data.payment.ancv.amount === 0);
       $('#ancv-div').attr('hidden', !withAncv);
       $('#ancv-switch').prop('checked', withAncv);
 
@@ -357,9 +361,8 @@ function getMember(memberId) {
       }
     },
     error: (error) => {
-      // if (!error.responseJSON) {
-      //     $('#message-error-signup').removeAttr('hidden');
-      // }
+      showToast('Impossible de récupérer les informations de cet adhérent.');
+      console.log(error);
     }
   });
 }
@@ -410,27 +413,26 @@ function patchMember(memberId, paymentId, event) {
     dataType: 'json',
     success: () => {
       // PATCH payment
-      // TODO: move outside first request once DB is not SQLite anymore
       let paymentData = {
-        cash: $('#payment-cash').val(),
-        sport_coupon: {
-          amount: $('#payment-coupon-amount').val(),
-          count: $('#payment-coupon-count').val(),
-        },
+        cash: $('#payment-cash').val() || 0,
         ancv: {
-          amount: $('#payment-ancv-amount').val(),
-          count: $('#payment-ancv-count').val(),
+          amount: $('#payment-ancv-amount').val() || 0,
+          count: $('#payment-ancv-count').val() || 0,
         },
-        other: {
-          amount: $('#payment-other-amount').val(),
-          comment: $('#payment-other-comment').val(),
+        other_payment: {
+          amount: $('#payment-other-amount').val() || 0,
+          comment: $('#payment-other-comment').val() || "A préciser",
+        },
+        sport_coupon: {
+          amount: $('#payment-coupon-amount').val() || 0,
+          count: $('#payment-coupon-count').val() || 0,
         },
         comment: $('#comment').val(),
-        refund: $('#payment-refund').val(),
+        refund: $('#payment-refund').val() || 0,
       };
       var checks = [];
       for (let i = 0; i < CHECK_NUMBER; i++) {
-        if ($(`#payment-check-amount-${i}`).val() !== '') {
+        if ($(`#payment-check-amount-${i}`).val() !== '' || $(`#payment-check-number-${i}`).val() !== '') {
           checks.push({
             name: $(`#payment-check-name-${i}`).val(),
             bank: $(`#payment-check-bank-${i}`).val(),
@@ -453,19 +455,90 @@ function patchMember(memberId, paymentId, event) {
           event.currentTarget.submit();
         },
         error: (error) => {
-          // if (!error.responseJSON) {
-          //   $('#message-error-signup').removeAttr('hidden');
-          // }
+          if (!error.responseJSON) {
+            showToast('Une erreur est survenue lors de la mise à jour du paiement.');
+            console.log(error);
+          } else {
+            const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('member-error-toast'));
+            $('#member-error-body').text('Il y a un souci au niveau des paiements. Veuillez vérifier les informations.');
+            toast.show();
+          }
+          if (error.responseJSON && error.responseJSON.ancv) {
+            if(error.responseJSON.ancv.amount) {
+              $('#invalid-ancv-amount').html(error.responseJSON.ancv.amount[0]);
+              $('#invalid-ancv-amount').addClass('d-inline');
+            }
+            if(error.responseJSON.ancv.count) {
+              $('#invalid-ancv-count').html(error.responseJSON.ancv.count[0]);
+              $('#invalid-ancv-count').addClass('d-inline');
+            }
+          }
+          if (error.responseJSON && error.responseJSON.other_payment) {
+            if(error.responseJSON.other_payment.amount) {
+              $('#invalid-other-amount').html(error.responseJSON.other_payment.amount[0]);
+              $('#invalid-other-amount').addClass('d-inline');
+            }
+            if(error.responseJSON.other_payment.comment) {
+              $('#invalid-other-comment').html(error.responseJSON.other_payment.comment[0]);
+              $('#invalid-other-comment').addClass('d-inline');
+            }
+          }
+          if (error.responseJSON && error.responseJSON.sport_coupon) {
+            if(error.responseJSON.sport_coupon.amount) {
+              $('#invalid-coupon-amount').html(error.responseJSON.sport_coupon.amount[0]);
+              $('#invalid-coupon-amount').addClass('d-inline');
+            }
+            if(error.responseJSON.sport_coupon.count) {
+              $('#invalid-coupon-count').html(error.responseJSON.sport_coupon.count[0]);
+              $('#invalid-coupon-count').addClass('d-inline');
+            }
+          }
+          if (error.responseJSON && error.responseJSON.check_payment) {
+            for (let i = 0; i < CHECK_NUMBER; i++) {
+              if (error.responseJSON.check_payment[i].name) {
+                $(`#payment-check-name-${i} + div`).html(error.responseJSON.check_payment[i].name[0]);
+                $(`#payment-check-name-${i} + div`).addClass('d-inline');
+              }
+              if (error.responseJSON.check_payment[i].bank) {
+                console.log("plop")
+                $(`#payment-check-bank-${i} + div`).html(error.responseJSON.check_payment[i].bank[0]);
+                $(`#payment-check-bank-${i} + div`).addClass('d-inline');
+              }
+              if (error.responseJSON.check_payment[i].number) {
+                $(`#payment-check-number-${i} + div`).html(error.responseJSON.check_payment[i].number[0]);
+                $(`#payment-check-number-${i} + div`).addClass('d-inline');
+              }
+              if (error.responseJSON.check_payment[i].amount) {
+                $(`#payment-check-amount-${i} + div`).html(error.responseJSON.check_payment[i].amount[0]);
+                $(`#payment-check-amount-${i} + div`).addClass('d-inline');
+              }
+              if (error.responseJSON.check_payment[i].month) {
+                $(`#payment-check-month-${i} + div`).html('Veuiller sélectionner un mois');
+                $(`#payment-check-month-${i} + div`).addClass('d-inline');
+              }
+            }
+          }
         }
       });
     },
     error: (error) => {
-      // if (!error.responseJSON) {
-      //   $('#message-error-signup').removeAttr('hidden');
-      // }
+      let errorMessage = '';
+      if (!error.responseJSON) {
+        errorMessage += `${DEFAULT_ERROR} Impossible de mettre à jour les informations. `;
+      }
+      if (error.responseJSON && error.responseJSON.documents?.medical_document) {
+        errorMessage += `Document médical: ${error.responseJSON.documents?.medical_document[0]} `;
+      }
+      if (error.responseJSON && error.responseJSON.documents?.authorise_photos) {
+        errorMessage += `Autorisation photos: ${error.responseJSON.documents?.authorise_photos[0]} `;
+      }
+      if (error.responseJSON && error.responseJSON.documents?.authorise_emergency) {
+        errorMessage += `Autorisation d'urgence: ${error.responseJSON.documents?.authorise_emergency[0]} `;
+      }
+      showToast(errorMessage);
+      console.log(error);
     }
   });
-  // });
 }
 
 function patchMemberCoursesActions(memberId, action) {
@@ -487,9 +560,20 @@ function patchMemberCoursesActions(memberId, action) {
       getMember(memberId);
     },
     error: (error) => {
-      // if (!error.responseJSON) {
-      //   $('#message-error-signup').removeAttr('hidden');
-      // }
+      if (!error.responseJSON) {
+        showToast(DEFAULT_ERROR);
+        console.log(error);
+      }
+      if (error.responseJSON && error.responseJSON.cancel_refund) {
+        $('#invalid-cancel-refund').html(error.responseJSON.cancel_refund[0]);
+        $('#invalid-cancel-refund').addClass('d-inline');
+      }
     }
   });
+}
+
+function showToast(text) {
+  const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('member-error-toast'));
+  $('#member-error-body').text(`${text} ${ERROR_SUFFIX}`);
+  toast.show();
 }

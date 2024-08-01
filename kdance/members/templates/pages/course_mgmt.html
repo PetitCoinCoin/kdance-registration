@@ -6,6 +6,17 @@
 
 <main>
   <section>
+    <!-- Toasts -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      <div id="course-error-toast" class="toast align-items-center bg-alert" role="alert" aria-live="assertive"
+        aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body fw-semibold" id="course-error-body"></div>
+          <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal -->
     {% csrf_token %}
     <div class="modal fade" id="season-modal" tabindex="-1" aria-hidden="true">
@@ -18,7 +29,7 @@
           <form id="form-season" name="form-season">
             <div class="modal-body">
               <div class="form-outline mb-4">
-                <label class="form-label required" for="season-year">Saison (format 20XX-20XY)</label>
+                <label class="form-label required" for="season-year">Saison (format XXXX-YYYY)</label>
                 <input type="text" id="season-year" class="form-control" maxlength="9" required />
                 <div id="invalid-season-year" class="invalid-feedback"></div>
               </div>
@@ -30,11 +41,11 @@
               </div>
               <div class="form-outline mb-4">
                 <label class="form-label" for="season-discount-percent">Réduction appliquée (en %)</label>
-                <input type="number" id="season-discount-percent" class="form-control" min="0" max="100" />
+                <input type="number" id="season-discount-percent" class="form-control" min="0" max="100" value="10"/>
               </div>
               <div class="form-outline mb-4">
                 <label class="form-label" for="season-discount-limit">Réduction à partir de .. cours</label>
-                <input type="number" id="season-discount-limit" class="form-control" min="0" />
+                <input type="number" id="season-discount-limit" class="form-control" min="0" value="2" />
               </div>
             </div>
             <div class="modal-footer">
@@ -226,27 +237,15 @@
               </h2>
               <div id="courses-courses" class="accordion-collapse collapse show template-data">
                 <div class="accordion-body">
-                  <div class="table-responsive">
-                    <table class="table">
-                      <thead>
-                        <tr>
-                          <th scope="col">Nom</th>
-                          <th scope="col">Prof</th>
-                          <th scope="col">Créneau</th>
-                          <th scope="col" class="text-center">Tarif</th>
-                          <th scope="col" class="text-center">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody id="courses-list">
-                      </tbody>
-                    </table>
+                  <div class="mb-4">
+                    <table id="courses-table"></table>
                   </div>
                   <button class="btn btn-outline-info" type="button" data-bs-toggle="modal"
                     data-bs-target="#course-modal">
                     <i class="bi-plus-square" style="color: purple;"></i>
                     Ajouter un nouveau cours
                   </button>
-                  <button class="btn btn-outline-info" type="button" data-bs-toggle="modal"
+                  <button id="copy-courses-btn" class="btn btn-outline-info" type="button" data-bs-toggle="modal"
                     data-bs-target="#copy-modal">
                     <i class="bi-plus-square" style="color: purple;"></i>
                     Copier tous les cours d'une autre saison
@@ -276,22 +275,6 @@
           </li>
         </template>
 
-        <template id="course-item-template">
-          <tr>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td class="text-center"></td>
-            <td class="text-center">
-              <button class="btn btn-outline-info btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#course-modal">
-                <i class="bi-pencil-fill"></i>
-              </button>
-              <button class="btn btn-outline-danger btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#delete-modal">
-                <i class="bi-trash3-fill"></i>
-              </button>
-            </td>
-          </tr>
-        </template>
       </div>
       {% else %}
       <div class="text-center">

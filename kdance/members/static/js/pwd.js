@@ -1,6 +1,7 @@
 $(document).ready(() => {
   postNew();
   postReset();
+  togglePasswords();
 });
 
 function confirmPassword() {
@@ -29,14 +30,8 @@ function postNew() {
         contentType: 'application/json',
         data: JSON.stringify(data),
         success: () => {
-          const delay = 10000;  // 10sec
-          $('#message-ok-new-pwd').removeClass('d-none');
-          $('#message-ok-new-pwd').delay(delay).fadeOut(1000);
-          setTimeout(function () {
-            window.location.href = '/login';
-         }, delay);
-         
           document.getElementById('form-pwd-new').reset();
+          window.location.href = '/';
         },
         error: (error) => {
           if (!error.responseJSON) {
@@ -81,7 +76,7 @@ function postReset() {
       }),
       success: () => {
         $('#message-ok-reset-pwd').removeClass('d-none');
-        document.getElementById('form-pwd-new').reset();
+        document.getElementById('form-pwd-reset').reset();
       },
       error: (error) => {
         if (!error.responseJSON) {
@@ -94,6 +89,19 @@ function postReset() {
           $('#invalid-email').addClass('d-inline');
         }
       }
+    });
+  });
+}
+
+function togglePasswords() {
+  ['', '-confirmation'].forEach(suffix => {
+    const togglePassword = document.querySelector(`#toggle-password${suffix}`);
+    const password = document.querySelector(`#password${suffix}`);
+    togglePassword.addEventListener('click', function () {
+      const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+      password.setAttribute('type', type);
+      this.classList.toggle('bi-eye');
+      this.classList.toggle('bi-eye-slash');
     });
   });
 }

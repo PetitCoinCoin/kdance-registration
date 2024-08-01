@@ -1,4 +1,6 @@
 from django.contrib.auth import (
+    authenticate,
+    login,
     get_user_model,
     update_session_auth_hash,
 )
@@ -28,7 +30,8 @@ from accounts.api.serializers import (
 
 User = get_user_model()
 
-
+import logging
+_logger = logging.getLogger(__name__)
 class UsersApiViewSet(
     CreateModelMixin,
     DestroyModelMixin,
@@ -51,19 +54,28 @@ class UsersApiViewSet(
             return UserAdminActionSerializer
         return UserSerializer
 
+    def create(self, request, *args, **kwargs) -> Response:
+        response = super().create(request, *args, **kwargs)
+        username = request.data.get("username")
+        password = request.data.get("password")
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            login(request, user)
+        return response
+
     @action(detail=False, methods=["put"])
     def admin(self, request: Request, action: str) -> Response:
         if action not in ("activate", "deactivate"):
             return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=request.data, is_admin=action == "activate")
         serializer.is_valid(raise_exception=True)
-        details = serializer.save(is_admin=action == "activate")
+        details = serializer.save()
         if not details["processed"]:
             # only emails not found
             if not details["other"]:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+                return Response(status=status.HTTP_400_BAD_REQUEST, data=details)
             else:
-                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=details)
         return Response(data=details)
 
 
@@ -79,6 +91,18 @@ class UserMeApiViewSet(
 
     def get_object(self) -> UserType:
         return self.queryset.get(pk=self.request.user.pk)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        if request.data.get("username").lower() == instance.username.lower():
+            request.data.pop("username")
+        if request.data.get("email").lower() == instance.email.lower():
+            request.data.pop("email")
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
 
     @action(detail=False, methods=["put"])
     def password(self, request: Request) -> Response:
@@ -116,4 +140,12 @@ class PasswordApiViewSet(GenericViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        user = User.objects.get(email=request.data.get("email"))
+        update_session_auth_hash(request, user)
+        _logger.info(user)
+        user = authenticate(username=user.username, password=request.data.get("password"))
+        if user is not None:
+            login(request, user)
+        # user.refresh_from_db()
+        # _logger.info(user.is_authenticated)
         return Response(status=status.HTTP_200_OK)

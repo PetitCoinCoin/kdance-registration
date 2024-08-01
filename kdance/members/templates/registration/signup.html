@@ -36,7 +36,7 @@
           <div class="col-6">
             <div class="form-outline mb-4">
               <label class="form-label required" for="phone">Téléphone</label>
-              <input type="text" id="phone" class="form-control" required />
+              <input type="text" id="phone" class="form-control" maxlength="10" required />
               <div id="invalid-phone" class="invalid-feedback"></div>
             </div>
           </div>
@@ -54,16 +54,26 @@
         </div>
         <div class="row">
           <div class="col-6">
-            <div class="form-outline mb-4">
+            <div class="form-group mb-4">
               <label class="form-label required" for="password">Mot de passe</label>
-              <input type="password" id="password" class="form-control" required />
+              <div class="input-group">
+                <input type="password" id="password" class="form-control" required/>
+                <span class="input-group-text">
+                  <i class="bi bi-eye" id="toggle-password" ></i>
+                 </span>
+              </div>
               <div id="invalid-pwd" class="invalid-feedback"></div>
             </div>
           </div>
           <div class="col-6">
-            <div class="form-outline mb-4">
+            <div class="form-group mb-4">
               <label class="form-label required" for="password-confirmation">Confirmation du mot de passe</label>
-              <input type="password" id="password-confirmation" class="form-control" required />
+              <div class="input-group">
+                <input type="password" id="password-confirmation" class="form-control" required/>
+                <span class="input-group-text">
+                  <i class="bi bi-eye" id="toggle-password-confirmation"></i>
+                 </span>
+              </div>
               <div id="invalid-pwd-confirmation" class="invalid-feedback">Le mot de passe ne correspond pas !</div>
             </div>
           </div>
@@ -72,9 +82,6 @@
           Une erreur est survenue. Veuillez ré-essayer plus tard ou contacter K'Dance.
         </div>
         <button type="submit" class="btn btn-info mb-4" id="btn-signup">Créer un compte</button>
-        <div id="message-ok-signup" class="p-3 mb-2 bg-success-subtle text-success-emphasis d-none">
-          Compte créé avec succès, vous pouvez désormais aller <a href="{% url 'login' %}">vous connecter</a>.
-        </div>
       </form>
     </div>
   </section>

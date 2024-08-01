@@ -12,7 +12,7 @@ def _create_superuser(apps, *_):
     superuser = User.objects.create_superuser(
         username=settings.SUPERUSER,
         email=settings.SUPERUSER_EMAIL,
-        password=settings.DEFAULT_PWD,
+        password=settings.SUPERUSER_PWD,
     )
     Profile(
         user=superuser,

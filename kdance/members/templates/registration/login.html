@@ -1,5 +1,7 @@
 {% extends 'layouts/base.html' %}
 
+{% load static %}
+
 {% block content %}
 
 <main>
@@ -13,12 +15,17 @@
           {% csrf_token %}
           <div class="form-outline mb-4">
             <label class="form-label" for="username">Nom d'utilisateur</label>
-            <input type="text" name="username" class="form-control" />
+            <input type="text" name="username" class="form-control" required />
           </div>
-  
-          <div class="form-outline mb-4">
+
+          <div class="form-group mb-4">
             <label class="form-label" for="password">Mot de passe</label>
-            <input type="password" name="password" class="form-control" />
+            <div class="input-group">
+              <input type="password" name="password" id="password" class="form-control" required />
+              <span class="input-group-text">
+                <i class="bi bi-eye" id="toggle-password" ></i>
+               </span>
+            </div>
           </div>
   
           {% if error %}
@@ -33,6 +40,7 @@
       </div>      
     </div>
   </section>
+  <script src="{% static 'js/login.js' %}"></script>
 </main>
 
 {% endblock content %}

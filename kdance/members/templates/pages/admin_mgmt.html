@@ -6,6 +6,17 @@
 
 <main>
   <section>
+    <!-- Toasts -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      <div id="admin-warning-toast" class="toast align-items-center bg-warning" role="alert" aria-live="assertive"
+        aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body fw-semibold" id="admin-warning-body"></div>
+          <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal -->
     {% csrf_token %}
     <div class="modal fade" id="admin-modal" tabindex="-1" aria-hidden="true">
@@ -16,16 +27,19 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <form id="form-admin" name="form-admin">
-            <div class="modal-body" id="emails-div">
-              <label class="form-label">Emails:</label>
-              <div class="d-flex">
-                <input type="text" class="col form-control mb-2"/>
-                <div class="col-1 mb-2 ms-2">
-                  <button class="btn btn-outline-info add-email-btn" type="button">
-                    <i class="bi-plus-square"></i>
-                  </button>
+            <div class="modal-body">
+              <div id="emails-div">
+                <label class="form-label">Emails:</label>
+                <div class="d-flex">
+                  <input type="text" class="col form-control mb-2"/>
+                  <div class="col-1 mb-2 ms-2">
+                    <button class="btn btn-outline-info add-email-btn" type="button">
+                      <i class="bi-plus-square"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
+              <div id="message-error-modal" class="p-3 mt-2 bg-danger-subtle text-danger-emphasis"></div>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
@@ -70,6 +84,7 @@
           Ajouter des admins
         </button>
         <table id="admins-table"></table>
+        <div id="message-error-admin" class="p-3 mt-2 bg-danger-subtle text-danger-emphasis d-none"></div>
       </div>
       {% else %}
       <div class="text-center">

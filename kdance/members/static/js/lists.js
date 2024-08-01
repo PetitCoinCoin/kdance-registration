@@ -23,9 +23,8 @@ function getSeasons() {
       });
     },
     error: (error) => {
-      // if (!error.responseJSON) {
-      //     $('#message-error-signup').removeAttr('hidden');
-      // }
+      showToast('Impossible de récupérer la liste des saisons.');
+      console.log(error);
     }
   });
 }
@@ -75,9 +74,8 @@ function getCourses(seasonId) {
       }
     },
     error: (error) => {
-      // if (!error.responseJSON) {
-      //     $('#message-error-signup').removeAttr('hidden');
-      // }
+      showToast('Impossible de récupérer les cours de la saison.');
+      console.log(error);
     }
   });
 }
@@ -151,9 +149,8 @@ function getMembersPerCourse(mainValue) {
       $('#total-count').text(data.length);
     },
     error: (error) => {
-      // if (!error.responseJSON) {
-      //     $('#message-error-signup').removeAttr('hidden');
-      // }
+      showToast('Impossible de récupérer les informations.');
+      console.log(error);
     }
   });
 }
@@ -421,9 +418,14 @@ function getChecksPerMonth() {
       $('#total-amount').text(`${totalAmount}€`);
     },
     error: (error) => {
-      // if (!error.responseJSON) {
-      //     $('#message-error-signup').removeAttr('hidden');
-      // }
+      showToast('Impossible de récupérer les chèques demandés.');
+      console.log(error);
     }
   });
+}
+
+function showToast(text) {
+  const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('list-error-toast'));
+  $('#list-error-body').text(`${text} ${ERROR_SUFFIX}`);
+  toast.show();
 }

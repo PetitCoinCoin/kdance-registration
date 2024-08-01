@@ -1,5 +1,6 @@
 $(document).ready(() => {
   activatePopovers();
+  togglePasswords();
   populateLicense();
   getUser();
   patchUser();
@@ -37,7 +38,21 @@ function handleSwitches() {
   const passSwitch = document.querySelector('#pass-switch');
   passSwitch.addEventListener('change', () => {
     $('#pass-div').attr('hidden', !$('#pass-switch').is(':checked'));
-  });}
+  });
+}
+
+function togglePasswords() {
+  ['', '-confirmation', '-old'].forEach(suffix => {
+    const togglePassword = document.querySelector(`#toggle-password${suffix}`);
+    const password = document.querySelector(`#password${suffix}`);
+    togglePassword.addEventListener('click', function () {
+      const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+      password.setAttribute('type', type);
+      this.classList.toggle('bi-eye');
+      this.classList.toggle('bi-eye-slash');
+    });
+  });
+}
 
 function getPreviousMembers(members) {
   let previousMembers = new Array
@@ -157,6 +172,10 @@ function getUser() {
           collapsing.classList.remove('show');
         } else {
           const memberBtnClone = memberBtnTemplate.content.cloneNode(true);
+          if (previousMembers.length == 0) {
+            let copyBtn = memberBtnClone.querySelector('#copy-member-btn');
+            copyBtn.remove();
+          }
           const btnParent = clone.querySelector('div.accordion-body').children[0];
           btnParent.appendChild(memberBtnClone);
         }
@@ -231,8 +250,8 @@ function patchUser() {
           $('#invalid-edit-me-username').html(error.responseJSON.username[0]);
           $('#invalid-edit-me-username').addClass('d-inline');
         }
-        if (error.responseJSON.phone) {
-          $('#invalid-edit-me-phone').html(error.responseJSON.phone[0]);
+        if (error.responseJSON.profile && error.responseJSON.profile.phone) {
+          $('#invalid-edit-me-phone').html(error.responseJSON.profile.phone[0] + ' Format attendu: 0123456789.');
           $('#invalid-edit-me-phone').addClass('d-inline');
         }
         if (error.responseJSON.email) {
@@ -475,7 +494,7 @@ function buildContactsData() {
           first_name: $(`#firstname-responsible-${i}`).val(),
           last_name: $(`#lastname-responsible-${i}`).val(),
           phone: $(`#phone-responsible-${i}`).val(),
-          email: undefined,
+          email: $(`#email-responsible-${i}`).val(),
           contact_type: 'responsible',
         });
       }
@@ -487,7 +506,7 @@ function buildContactsData() {
       first_name: $('#desc-firstname').html(),
       last_name: $('#desc-lastname').html(),
       phone: $('#desc-phone').html(),
-      email: $('#desc-email').html(),
+      email: undefined,
       contact_type: 'emergency',
     });
   }
@@ -497,7 +516,7 @@ function buildContactsData() {
         first_name: $(`#firstname-emergency-${i}`).val(),
         last_name: $(`#lastname-emergency-${i}`).val(),
         phone: $(`#phone-emergency-${i}`).val(),
-        email: $(`#email-emergency-${i}`).val(),
+        email: undefined,
         contact_type: 'emergency',
       });
     }
@@ -630,7 +649,7 @@ function updatePwd() {
         headers: { 'X-CSRFToken': csrftoken },
         mode: 'same-origin',
         data: JSON.stringify({
-          old_password: $('#old-password').val(),
+          old_password: $('#password-old').val(),
           new_password: $('#password').val(),
         }),
         dataType: 'json',

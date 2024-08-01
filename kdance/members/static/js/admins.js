@@ -1,8 +1,26 @@
 $(document).ready(() => {
+  displayToast();
   handleEmails();
   getUsersAdmins();
   updateUserAdmin();
 });
+
+function displayToast() {
+  var urlParams = new URLSearchParams(window.location.search);
+  let unprocessed = [];
+  if (urlParams.get('not_found') !== null) {
+    unprocessed.push(`Les adresses suivantes n'ont pas été trouvées dans la base: ${urlParams.get('not_found')}`);
+  }
+  if (urlParams.get('other') !== null) {
+    unprocessed.push(`Une erreur est survenue avec ces adresses: ${urlParams.get('other')}. Ré-essayez plus tard ou contactez le support.`);
+  }
+  if (unprocessed.length > 0) {
+    const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('admin-warning-toast'));
+    $('#admin-warning-body').text(unprocessed.join('\n'))
+    toast.show();
+  }
+
+}
 
 function handleEmails() {
   const emailParent = document.querySelector('#emails-div');
@@ -21,6 +39,7 @@ function actionFormatter(value, row) {
 }
 
 function getUsersAdmins() {
+  $('#message-error-admin').addClass('d-none');
   $.ajax({
     url: usersUrl + '?admin=true',
     type: 'GET',
@@ -67,9 +86,10 @@ function getUsersAdmins() {
       }
     },
     error: (error) => {
-      // if (!error.responseJSON) {
-      //     $('#message-error-signup').removeAttr('hidden');
-      // }
+      if (!error.responseJSON) {
+        $('#message-error-modal').text(DEFAULT_ERROR_MESSAGE);
+        $('#message-error-admin').removeClass('d-none');
+      }
     }
   });
 }
@@ -78,11 +98,14 @@ function updateUserAdmin() {
   const adminModal = document.getElementById('admin-modal');
   const deleteModal = document.getElementById('confirm-deactivate-modal');
   if (adminModal) {
+    adminModal.addEventListener('show.bs.modal', event => {
+      $('#message-error-modal').addClass('d-none');
+    });
     $('#admin-modal').on('submit', '#form-admin', function(event) {
       event.preventDefault();
       const action = 'activate';
       const data = Object.values($('#admin-modal input')).map(i => i.value).filter(e => e !== undefined && e !== "");
-      putUser(action, data, event);
+      putUser(action, data);
     })
   }
   if (deleteModal) {
@@ -96,13 +119,14 @@ function updateUserAdmin() {
       $(document).on('click', '#delete-admin-btn', function(){
         const action = 'deactivate';
         const data = [email];
-        putUser(action, data, null);
+        putUser(action, data);
       });
     });
   }
 }
 
-function putUser(action, data, event) {
+function putUser(action, data) {
+    $('#message-error-admin').addClass('d-none');
     $('.invalid-feedback').removeClass('d-inline');
     $.ajax({
       url: usersAdminActionUrl + action + '/',
@@ -112,13 +136,26 @@ function putUser(action, data, event) {
       mode: 'same-origin',
       data: JSON.stringify({emails: data}),
       dataType: 'json',
-      success: () => {
-        event?.currentTarget !== null ? event.currentTarget.submit() : location.reload();
+      success: (resp) => {
+        let unprocessed = {};
+        if (resp.not_found.length > 0) {
+          unprocessed.not_found = resp.not_found;
+        }
+        if (resp.other.length > 0) {
+          unprocessed.other = resp.other;
+        }
+        window.location.href = window.location.pathname + '?' + new URLSearchParams(unprocessed).toString();
       },
       error: (error) => {
-        // if (!error.responseJSON) {
-        //   $('#message-error-signup').removeAttr('hidden');
-        // }
+        $('#message-error-modal').removeClass('d-none');
+        if (!error.responseJSON) {
+          $('#message-error-modal').text(DEFAULT_ERROR_MESSAGE);
+        }
+        if (error.responseJSON && error.responseJSON.not_found) {
+          $('#message-error-modal').text(`Les adresses suivantes n'ont pas été trouvées dans la base: ${error.responseJSON.not_found.join(', ')}`);
+        } else if (error.responseJSON && error.responseJSON.other) {
+          $('#message-error-modal').text(`Une erreur est survenue avec ces adresses: ${error.responseJSON.not_found.join(', ')}. Ré-essayez plus tard ou contactez le support.`);
+        }
       }
     });
   // });

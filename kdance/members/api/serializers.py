@@ -1,3 +1,5 @@
+import logging
+
 from enum import Enum
 from typing import Any
 
@@ -13,6 +15,7 @@ from members.models import (
     Course,
     Documents,
     Member,
+    OtherPayment,
     Payment,
     Season,
     SportCoupon,
@@ -21,6 +24,7 @@ from members.models import (
 )
 
 User = get_user_model()
+_logger = logging.getLogger(__name__)
 
 class SeasonSerializer(serializers.ModelSerializer):
     class Meta:
@@ -33,6 +37,12 @@ class SeasonSerializer(serializers.ModelSerializer):
             "discount_limit",
         )
 
+    @staticmethod
+    def validate_year(year: str) -> str:
+        last_season = Season.objects.order_by('year').last()
+        if last_season and year < last_season.year:
+            raise serializers.ValidationError('On ne peut pas créer de saison dans le passé !')
+        return year
 
 class TeacherSerializer(serializers.ModelSerializer):
     class Meta:
@@ -130,12 +140,35 @@ class AncvSerializer(serializers.ModelSerializer):
         model = Ancv
         fields = ("amount", "count")
 
+    def validate(self, attr: dict) -> dict:
+        validated = super().validate(attr)
+        if validated.get("amount", 0) > 0 and validated.get("count", 0) == 0:
+            raise serializers.ValidationError({"count": "Une valeur non nulle est obligatoire."})
+        if validated.get("count", 0) > 0 and validated.get("amount", 0) == 0:
+            raise serializers.ValidationError({"amount": "Une valeur non nulle est obligatoire."})
+        return validated
+
 
 class SportCouponSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SportCoupon
         fields = ("amount", "count")
+
+    def validate(self, attr: dict) -> dict:
+        validated = super().validate(attr)
+        if validated.get("amount", 0) > 0 and validated.get("count", 0) == 0:
+            raise serializers.ValidationError({"count": "Une valeur non nulle est obligatoire."})
+        if validated.get("count", 0) > 0 and validated.get("amount", 0) == 0:
+            raise serializers.ValidationError({"amount": "Une valeur non nulle est obligatoire."})
+        return validated
+
+
+class OtherPaymentSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = OtherPayment
+        fields = ("amount", "comment")
 
 
 class CheckSerializer(serializers.ModelSerializer):
@@ -154,8 +187,9 @@ class CheckSerializer(serializers.ModelSerializer):
 
 class PaymentSerializer(WritableNestedModelSerializer, serializers.ModelSerializer):
     season = SeasonSerializer()
-    ancv = AncvSerializer()
-    sport_coupon = SportCouponSerializer()
+    ancv = AncvSerializer(required=False)
+    sport_coupon = SportCouponSerializer(required=False)
+    other_payment = OtherPaymentSerializer(required=False)
     check_payment = CheckSerializer(many=True)
 
     class Meta:
@@ -173,6 +207,12 @@ class PaymentSerializer(WritableNestedModelSerializer, serializers.ModelSerializ
             "comment",
             "refund",
         )
+
+    def validate(self, attr: dict) -> dict:
+        _logger.info("ici")
+        if not attr.get("other_payment", {}).get("comment", "") and not attr.get("other_payment", {}).get("amount", 0):
+            attr.pop("other_payment")
+        return super().validate(attr)
 
     @transaction.atomic
     def save(self, **kwargs: Payment):

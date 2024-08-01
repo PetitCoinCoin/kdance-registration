@@ -22,10 +22,6 @@ def login_view(request: HttpRequest) -> HttpResponse:
     else:
         return render(request, "registration/login.html", context={"error": None})
 
-def logout_view(request: HttpRequest) -> HttpResponse:
-    logout(request)
-    return redirect("index")
-
 def password_reset_view(request) -> HttpResponse:
     return render(request, "pages/pwd_reset.html")
 

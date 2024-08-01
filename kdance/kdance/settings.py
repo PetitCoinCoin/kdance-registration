@@ -13,10 +13,13 @@ import os
 
 from pathlib import Path
 
+import pymysql
 from dotenv import load_dotenv
 
 
 load_dotenv()
+pymysql.version_info = (1, 4, 6, 'final', 0)
+pymysql.install_as_MySQLdb()
 
 # Build paths inside the project like this: BASE_DIR / "subdir".
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,7 +32,22 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t", "y")
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [os.getenv("ALLOWED_HOSTS", "")]
+
+# Logging
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": os.getenv("LOGLEVEL", "INFO"),
+    },
+}
 
 # Application definition
 INSTALLED_APPS = [
@@ -46,6 +64,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -78,17 +97,26 @@ WSGI_APPLICATION = "kdance.wsgi.application"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DATABASES = {    
    "default": {        
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_NAME"),
-        "USER": os.getenv("POSTGRES_USER"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
-        "HOST": "db",
-        "PORT": 5432,
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.getenv("DB_NAME"),
+        "USER": os.getenv("DB_USER"),
+        "PASSWORD": os.getenv("DB_PASSWORD"),
+        "HOST": os.getenv("DB_HOST"),
+        "PORT": 3306,
     }
 }
 
-# Password and auth
+# Email
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+EMAIL_PORT = 465
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
+DEFAULT_FROM_EMAIL = f"Tech K'Dance <{os.getenv('EMAIL_HOST_USER')}>"
 
+# Password and auth
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -107,13 +135,12 @@ SUPERUSER = os.getenv("SUPERUSER")
 SUPERUSER_EMAIL = os.getenv("SUPERUSER_EMAIL")
 SUPERUSER_ADDRESS = os.getenv("SUPERUSER_ADDRESS")
 SUPERUSER_PHONE = os.getenv("SUPERUSER_PHONE")
-DEFAULT_PWD = os.getenv("DEFAULT_PWD")
+SUPERUSER_PWD = os.getenv("SUPERUSER_PWD")
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 CSRF_COOKIE_HTTPONLY = True
 
 # Internationalization
-
 LANGUAGE_CODE = "fr-fr"
 TIME_ZONE = "UTC"
 USE_I18N = True
@@ -122,8 +149,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = "static/"
 STATICFILES_DIRS = (
-  os.path.join(BASE_DIR, "members/static/"),
+  os.path.join(BASE_DIR, os.getenv("STATICFILES_DIRS", "")),
 )
+STATIC_ROOT = os.getenv("STATIC_ROOT")
 
 # Other
 REST_FRAMEWORK = {
