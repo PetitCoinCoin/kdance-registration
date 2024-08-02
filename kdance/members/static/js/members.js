@@ -27,7 +27,7 @@ function handleCourseUpdate() {
     });
   });
   $('#delete-btn').on('click', () => {
-    patchMemberCoursesActions($('#member-courses-section').data('memberId'), "remove");
+    patchMemberCoursesActions($('#delete-btn').data('memberId'), "remove");
   });
   // Course addition
   $('#add-course-btn').on('click', () => {
@@ -37,10 +37,10 @@ function handleCourseUpdate() {
       type: 'GET',
       success: (data) => {
         const activeCourses = Object.values($('#courses-select option:enabled')).slice(0, -2).map(o => parseInt(o.value));
-        data.filter(c => activeCourses.indexOf(c.id.toString()) < 0).map(course => {
+        data.map(course => {
           const startHour = course.start_hour.split(':');
           const label = `${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
-          $('#add-courses-select').append($('<option>', { value: course.id, text: label }));
+          $('#add-courses-select').append($('<option>', { value: course.id, text: label, disabled: activeCourses.indexOf(course.id) >= 0 }));
         });
       },
       error: (error) => {
@@ -50,7 +50,7 @@ function handleCourseUpdate() {
     });
   });
   $('#add-btn').on('click', () => {
-    patchMemberCoursesActions($('#member-courses-section').data('memberId'), "add");
+    patchMemberCoursesActions($('#add-btn').data('memberId'), "add");
   });
 }
 
@@ -372,11 +372,16 @@ function updateMember() {
   if (memberModal) {
     $('#member-modal').on('show.bs.modal', function (event) {
       const button = event.relatedTarget;
-      const memberId = button.getAttribute('memberId');
+      let memberId = button.getAttribute('memberId');
       const paymentId = button.getAttribute('paymentId');
+      if (memberId === null) {
+        memberId = $('#add-btn').data('memberId');
+      }
       getMember(memberId);
       $('#form-member').data('memberId', memberId);
       $('#form-member').data('paymentId', paymentId);
+      $('#add-btn').data('memberId', memberId);
+      $('#cancel-btn').data('memberId', memberId);
     });
     $('#member-modal').on('submit', '#form-member', function (event) {
       event.preventDefault();
@@ -500,7 +505,6 @@ function patchMember(memberId, paymentId, event) {
                 $(`#payment-check-name-${i} + div`).addClass('d-inline');
               }
               if (error.responseJSON.check_payment[i].bank) {
-                console.log("plop")
                 $(`#payment-check-bank-${i} + div`).html(error.responseJSON.check_payment[i].bank[0]);
                 $(`#payment-check-bank-${i} + div`).addClass('d-inline');
               }
@@ -556,9 +560,7 @@ function patchMemberCoursesActions(memberId, action) {
     mode: 'same-origin',
     data: JSON.stringify(data),
     dataType: 'json',
-    success: () => {
-      getMember(memberId);
-    },
+    success: () => {},
     error: (error) => {
       if (!error.responseJSON) {
         showToast(DEFAULT_ERROR);
