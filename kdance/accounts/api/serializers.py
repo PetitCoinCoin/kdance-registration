@@ -1,6 +1,7 @@
 import logging
 import re
 
+from contextlib import suppress
 from datetime import timedelta
 from hashlib import sha512
 from secrets import token_urlsafe
@@ -158,6 +159,56 @@ class UserCreateSerializer(UserBaseSerializer):
         if Season.objects.filter(is_current=True).exists():
             payment = Payment(user=user, season=Season.objects.get(is_current=True))
             payment.save()
+
+    @classmethod
+    def send_email(cls, username: str) -> None:
+        with suppress(User.DoesNotExist):
+            user: UserType = User.objects.get(username=username)
+            _logger.info("Envoi d'un email de création de compte")
+            _logger.debug(f"Envoi vers {user.email}")
+            mail = EmailMultiAlternatives(
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[user.email],
+                reply_to=[settings.DEFAULT_FROM_EMAIL],
+                subject="Création d'un compte K'Dance",
+                body=cls.__build_text(username),
+            )
+            mail.attach_alternative(cls.__build_html(username), "text/html")
+            sent = mail.send()
+            if not sent:
+                _logger.warning("Echec de l'envoi du mail de créataion de compte pour %s", username)
+
+    @classmethod
+    def __build_text(cls, username: str) -> str:
+        message = f"""
+Bonjour
+
+Vous venez de créer votre compte K'Dance! Utilisez votre nom d'utilisateur ({username}) pour vous connecter.
+Vous pouvez désormais ajouter et gérer les adhérents de votre famille pour chaque nouvelle saison.
+N'oubliez pas d'utiliser également cet espace pour mettre à jour vos coordonnées en cas de changement.
+
+Bonne journée et à bientôt
+Tech K'Dance
+"""
+        return message
+
+    @classmethod
+    def __build_html(cls, username: str) -> str:
+        message = f"""
+<p>Bonjour</p>
+<p>
+  Vous venez de créer votre compte K'Dance! Utilisez votre nom d'utilisateur ({username}) pour vous connecter.
+  Vous pouvez désormais ajouter et gérer les adhérents de votre famille pour chaque nouvelle saison.
+</p>
+<p>
+  N'oubliez pas d'utiliser également cet espace pour mettre à jour vos coordonnées en cas de changement.
+</p>
+<p>
+  Bonne journée et à bientôt<br>
+  Tech K'Dance
+</p>
+"""
+        return message
 
 
 class UserSerializer(UserBaseSerializer):
