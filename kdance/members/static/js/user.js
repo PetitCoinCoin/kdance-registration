@@ -161,6 +161,7 @@ function getUser() {
         let dd = clone.querySelectorAll('dd.payment');
         dd[0].textContent = `${item.due}€`;
         dd[1].textContent = `${item.paid}€`;
+        dd[2].textContent = `${item.refund}€`;
         // Collapsible
         let collapseBtn = clone.querySelector('button');
         collapseBtn.dataset.bsTarget = `#accordion-${i}`;

@@ -140,6 +140,7 @@ class Payment(models.Model):
     other_payment = models.OneToOneField(OtherPayment, null=True, on_delete=models.SET_NULL)
     comment = models.CharField(null=False, blank=True, max_length=700, default='')
     refund = models.FloatField(null=False, default=0.0, validators=[MinValueValidator(0)])
+    special_discount = models.FloatField(null=False, default=0.0, validators=[MinValueValidator(0)])
 
     @property
     def due(self) -> float:
@@ -151,6 +152,7 @@ class Payment(models.Model):
                 total += 1
                 due += course.price
         # Discount
+        due -= self.special_discount
         if total >= self.season.discount_limit:
             due *= round(((100 - self.season.discount_percent) / 100), 2)
         # Adhesion and license
@@ -162,7 +164,7 @@ class Payment(models.Model):
 
     @property
     def paid(self) -> float:
-        paid = self.cash - self.refund
+        paid = self.cash
         if hasattr(self, "sport_coupon"):
             paid += self.sport_coupon.amount
         if hasattr(self, "ancv"):

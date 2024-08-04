@@ -83,6 +83,10 @@ function displayPayments() {
   refundSwitch.addEventListener('change', () => {
     $('#refund-div').attr('hidden', !$('#refund-switch').is(':checked'));
   });
+  const specialSwitch = document.querySelector('#special-discount-switch');
+  specialSwitch.addEventListener('change', () => {
+    $('#special-discount-div').attr('hidden', !$('#special-discount-switch').is(':checked'));
+  });
 }
 
 function initCheckPayment() {
@@ -245,7 +249,7 @@ function getMembers(seasonId) {
             return {
               ...m,
               courses: m.active_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`).concat(m.cancelled_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)),
-              solde: m.payment.due - m.payment.paid,
+              solde: m.payment.due - m.payment.paid + m.payment.refund,
               documents: m.documents ? {
                 ...m.documents,
                 authorise_photos: m.documents.authorise_photos ? 'Oui' : 'Non',
@@ -326,6 +330,11 @@ function getMember(memberId) {
       const withRefund = !(data.payment.refund === null || data.payment.refund === 0);
       $('#refund-div').attr('hidden', !withRefund);
       $('#refund-switch').prop('checked', withRefund);
+
+      $('#payment-special-discount').val(data.payment.special_discount);
+      const withSpecial = !(data.payment.special_discount === null || data.payment.special_discount === 0);
+      $('#special-discount-div').attr('hidden', !withSpecial);
+      $('#special-discount-switch').prop('checked', withSpecial);
 
       for (let i = 0; i < CHECK_NUMBER; i++) {
         $(`#payment-check-name-${i}`).val(i < data.payment.check_payment.length ? data.payment.check_payment[i].name : '');
@@ -434,6 +443,7 @@ function patchMember(memberId, paymentId, event) {
         },
         comment: $('#comment').val(),
         refund: $('#payment-refund').val() || 0,
+        special_discount: $('#payment-special-discount').val() || 0,
       };
       var checks = [];
       for (let i = 0; i < CHECK_NUMBER; i++) {

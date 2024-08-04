@@ -206,6 +206,7 @@ class PaymentSerializer(WritableNestedModelSerializer, serializers.ModelSerializ
             "other_payment",
             "comment",
             "refund",
+            "special_discount",
         )
 
     def validate(self, attr: dict) -> dict:
