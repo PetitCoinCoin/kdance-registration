@@ -174,7 +174,7 @@ class Payment(models.Model):
         for check in self.check_payment.all():
             paid += check.amount
         for member in Member.objects.filter(user=self.user, season=self.season).all():
-            if member.sport_pass_id:
+            if member.sport_pass:
                 paid += member.sport_pass.amount
         return paid
 
@@ -269,7 +269,7 @@ class ContactManager(models.Manager):
     def clean_orphan(self) -> None:
         """If contact is linked to no one, we delete it."""
         for contact in self.all():
-            if not contact.member_set.all():
+            if not contact.member_set.all():  # type:ignore[attr-defined]
                 contact.delete()
 
 

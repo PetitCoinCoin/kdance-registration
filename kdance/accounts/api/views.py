@@ -1,10 +1,9 @@
 from django.contrib.auth import (
     authenticate,
     login,
-    get_user_model,
     update_session_auth_hash,
 )
-from django.contrib.auth.models import User as UserType
+from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.mixins import (
@@ -16,19 +15,17 @@ from rest_framework.mixins import (
 )
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.serializers import Serializer
 from rest_framework.viewsets import GenericViewSet
 
 from accounts.api.serializers import (
     UserAdminActionSerializer,
+    UserBaseSerializer,
     UserChangePwdSerializer,
     UserCreateSerializer,
     UserNewPwdSerializer,
     UserResetPwdSerializer,
     UserSerializer,
 )
-
-User = get_user_model()
 
 
 class UsersApiViewSet(
@@ -46,7 +43,7 @@ class UsersApiViewSet(
             )
         return queryset.order_by("last_name")
 
-    def get_serializer_class(self) -> Serializer:
+    def get_serializer_class(self) -> type[UserBaseSerializer|UserAdminActionSerializer]:
         if self.request.method and self.request.method.lower() == "post":
             return UserCreateSerializer
         if self.request.method and self.request.method.lower() == "put":
@@ -89,7 +86,7 @@ class UserMeApiViewSet(
     serializer_class = UserSerializer
     http_method_names = ["get", "patch", "put", "delete"]
 
-    def get_object(self) -> UserType:
+    def get_object(self) -> User:
         return self.queryset.get(pk=self.request.user.pk)
 
     def update(self, request, *args, **kwargs):
@@ -117,7 +114,7 @@ class UserMeApiViewSet(
 class PasswordApiViewSet(GenericViewSet):
     http_method_names = ["post"]
 
-    def get_serializer_class(self) -> Serializer:
+    def get_serializer_class(self) -> type[UserResetPwdSerializer|UserNewPwdSerializer]:
         if self.request.path and "reset" in self.request.path.lower():
             return UserResetPwdSerializer
         return UserNewPwdSerializer
@@ -142,7 +139,7 @@ class PasswordApiViewSet(GenericViewSet):
         serializer.save()
         user = User.objects.get(email=request.data.get("email"))
         update_session_auth_hash(request, user)
-        user = authenticate(username=user.username, password=request.data.get("password"))
-        if user is not None:
+        auth_user = authenticate(username=user.username, password=request.data.get("password"))
+        if auth_user is not None:
             login(request, user)
         return Response(status=status.HTTP_200_OK)

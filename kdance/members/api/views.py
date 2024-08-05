@@ -32,6 +32,7 @@ from rest_framework.mixins import (
 )
 from rest_framework.response import Response
 from rest_framework.request import Request
+from rest_framework import serializers
 from rest_framework.viewsets import GenericViewSet
 
 
@@ -173,7 +174,7 @@ class MemberViewSet(
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    def perform_update(self, serializer: MemberSerializer):
+    def perform_update(self, serializer: serializers.BaseSerializer):
         user = self.get_object().user
         serializer.save(user=user)
 

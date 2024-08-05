@@ -3,7 +3,7 @@ import logging
 from enum import Enum
 from typing import Any
 
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 from django.db import transaction
 from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework import serializers
@@ -23,7 +23,6 @@ from members.models import (
     Teacher,
 )
 
-User = get_user_model()
 _logger = logging.getLogger(__name__)
 
 class SeasonSerializer(serializers.ModelSerializer):
@@ -303,8 +302,8 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
 
 
 class MemberRetrieveSerializer(MemberSerializer):
-    active_courses = CourseRetrieveSerializer(many=True)
-    cancelled_courses = CourseRetrieveSerializer(many=True)
+    active_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
+    cancelled_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
     season = SeasonSerializer()
 
 
@@ -332,7 +331,7 @@ class MemberCoursesSerializer(serializers.Serializer):
             raise serializers.ValidationError({"cancel_refund": "Ce champ est obligatoire pour retirer un cours."})
         return validated
 
-    def save(self) -> None:
+    def save(self, **kwargs: Any) -> None:
         if self._action == MemberCoursesActionsEnum.ADD:
             self._member.active_courses.add(*self.validated_data.get("courses", []))
             self._member.cancelled_courses.remove(*self.validated_data.get("courses", []))

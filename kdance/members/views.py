@@ -1,13 +1,14 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 
 
 @login_required(login_url="login/")
 def index(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
         return render(request, "pages/index.html", context={"user": request.user})
+    return redirect("login")
 
 @login_required(login_url="login/")
 def super_index(request: HttpRequest) -> HttpResponse:
