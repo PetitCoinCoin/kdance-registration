@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import (
     authenticate,
     login,
@@ -54,11 +55,19 @@ class UsersApiViewSet(
         response = super().create(request, *args, **kwargs)
         username = request.data.get("username")
         password = request.data.get("password")
-        user = authenticate(username=username, password=password)
-        if user is not None:
-            login(request, user)
+        if not request.user.is_authenticated:
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
         UserCreateSerializer.send_email(username)
         return response
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.username == settings.SUPERUSER:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=["put"])
     def admin(self, request: Request, action: str) -> Response:
@@ -89,12 +98,19 @@ class UserMeApiViewSet(
     def get_object(self) -> User:
         return self.queryset.get(pk=self.request.user.pk)
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.username == settings.SUPERUSER:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        if request.data.get("username").lower() == instance.username.lower():
+        if request.data.get("username", "").lower() == instance.username.lower():
             request.data.pop("username")
-        if request.data.get("email").lower() == instance.email.lower():
+        if request.data.get("email", "").lower() == instance.email.lower():
             request.data.pop("email")
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
@@ -123,13 +139,7 @@ class PasswordApiViewSet(GenericViewSet):
     def reset(self, request: Request) -> Response:
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = User.objects.filter(email=serializer.validated_data.get("email")).first()
-        if not user:
-            return Response(
-                data={"email": ["Cet email n'est associé à aucun utilisateur."]},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        serializer.save(user=user, path=request.build_absolute_uri("/"))
+        serializer.save(path=request.build_absolute_uri("/"))
         return Response(status=status.HTTP_202_ACCEPTED)
 
     @action(detail=False, methods=["post"])
@@ -137,7 +147,7 @@ class PasswordApiViewSet(GenericViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        user = User.objects.get(email=request.data.get("email"))
+        user = User.objects.get(email=serializer.validated_data.get("email"))
         update_session_auth_hash(request, user)
         auth_user = authenticate(username=user.username, password=request.data.get("password"))
         if auth_user is not None:

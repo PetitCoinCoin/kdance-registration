@@ -6,110 +6,122 @@ from hashlib import sha512
 from secrets import token_urlsafe
 from unittest.mock import patch
 
+from django.core import mail
 from django.urls import reverse
+from parameterized import parameterized
+
 from accounts.models import ResetPassword
-
-from tests.conftest import TESTUSER_EMAIL, TESTSUPERUSER_EMAIL
+from accounts.api.views import PasswordApiViewSet
+from tests.authentication import AuthTestCase
+from tests.data_tests import TESTUSER_EMAIL, SUPERTESTUSER_EMAIL
 
 
 @pytest.mark.django_db
-class TestPasswordResetView:
+class TestPasswordResetView(AuthTestCase):
     view_url = reverse('api-password-reset')
+    view_function = PasswordApiViewSet
 
-    @pytest.mark.parametrize(
-        ("email", "status_code", "expected_count"),
-        [
-            ("plip@plop.fr", 404, 0),
-            (TESTUSER_EMAIL, 202, 1),
-            (TESTSUPERUSER_EMAIL, 202, 1),
-        ],
-    )
-    def test_reset_password(
-        self,
-        email, status_code, expected_count,
-        test_user, test_superuser, mailoutbox, api_client):
+    @parameterized.expand([
+        ("get", 405, 405),
+        ("post", 400, 400),
+        ("put", 405, 405),
+        ("patch", 405, 405),
+        ("delete", 405, 405),
+    ])
+    def test_permissions(self, method, user_status, superuser_status):
+        assert self.users_have_permission(
+            method=method,
+            user_status=user_status,
+            superuser_status=superuser_status,
+        )
+
+    @parameterized.expand([TESTUSER_EMAIL, SUPERTESTUSER_EMAIL, "TesT@KDance.COM"])
+    def test_reset_password(self, email):
         assert ResetPassword.objects.count() == 0
-        response = api_client.post(self.view_url, data={"email": email})
-        assert response.status_code == status_code
-        assert ResetPassword.objects.count() == expected_count
-        assert len(mailoutbox) == expected_count
-        if expected_count:
-            mail = mailoutbox[0]
-            assert mail.subject == "Réinitialisation du mot de passe K'Dance"
-            assert list(mail.to) == [email]
+        response = self.client.post(self.view_url, data={"email": email})
+        assert response.status_code == 202, response.json()
+        assert ResetPassword.objects.count() == 1
+        assert len(mail.outbox) == 1
+        email_sent = mail.outbox[0]
+        assert email_sent.subject == "Réinitialisation du mot de passe K'Dance"
+        assert list(email_sent.to) == [email.lower()]
 
-    def test_reset_password_no_payload(self, mailoutbox, api_client):
+    @parameterized.expand([
+        (None, "Ce champ est obligatoire."),
+        ("", "Ce champ ne peut être vide."),
+        ("plop@plip.com", "Email incorrect, cet utilisateur n'existe pas."),
+    ])
+    def test_reset_password_error(self, email, message):
+        data = {}
+        if email is not None:
+            data["email"] = email
         assert ResetPassword.objects.count() == 0
-        response = api_client.post(self.view_url, data={})
-        assert response.status_code == 400
-        assert "email" in response.json().keys()
+        response = self.client.post(self.view_url, data=data)
+        assert response.status_code == 400, response.json()
+        assert message in response.json()["email"]
         assert ResetPassword.objects.count() == 0
-        assert len(mailoutbox) == 0
-
-    def test_reset_password_get(self, api_client):
-        response = api_client.get(self.view_url)
-        assert response.status_code == 405
-
-    def test_reset_password_put(self, api_client):
-        response = api_client.put(self.view_url, data={})
-        assert response.status_code == 405
-
-    def test_reset_password_patch(self, api_client):
-        response = api_client.patch(self.view_url, data={})
-        assert response.status_code == 405
-
-    def test_reset_password_delete(self, api_client):
-        response = api_client.delete(self.view_url)
-        assert response.status_code == 405
+        assert len(mail.outbox) == 0
 
 
 @pytest.mark.django_db
-class TestPasswordNewView:
+class TestPasswordNewView(AuthTestCase):
     view_url = reverse('api-password-new')
+    view_function = PasswordApiViewSet
     _token: str
 
     @pytest.fixture(autouse=True)
-    def set_pwd_reset(self, test_user):
+    def set_pwd_reset(self):
         token = token_urlsafe()
-        ResetPassword(
-            user=test_user,
-            request_hash=sha512(token.encode()).hexdigest(),
-        ).save()
+        reset_pwd, _ = ResetPassword.objects.get_or_create(
+            user=self.testuser,
+        )
+        reset_pwd.request_hash = sha512(token.encode()).hexdigest()
+        reset_pwd.save()
         self._token = token
         assert ResetPassword.objects.count() == 1
 
-    def test_new_password(self, test_user, api_client):
+    @parameterized.expand([
+        ("get", 405, 405),
+        ("post", 400, 400),
+        ("put", 405, 405),
+        ("patch", 405, 405),
+        ("delete", 405, 405),
+    ])
+    def test_permissions(self, method, user_status, superuser_status):
+        assert self.users_have_permission(
+            method=method,
+            user_status=user_status,
+            superuser_status=superuser_status,
+        )
+
+    @parameterized.expand([TESTUSER_EMAIL, "TesT@KDance.COM"])
+    def test_new_password(self, email):
         new_pwd = "SuperMotDePasse0"
-        response = api_client.post(
+        response = self.client.post(
             self.view_url,
             data={
-                "email": test_user.email,
+                "email": email,
                 "password": new_pwd,
                 "token": self._token,
 
             },
         )
-        assert response.status_code == 200
+        assert response.status_code == 200, response.json()
         assert ResetPassword.objects.count() == 0
-        test_user.refresh_from_db()
-        assert test_user.check_password(new_pwd)
-        assert test_user.is_authenticated is True
+        self.testuser.refresh_from_db()
+        assert self.testuser.check_password(new_pwd)
 
-    @pytest.mark.parametrize(
-        ("email", "password", "token", "error_key", "message"),
-        [
-            ("plip@plop.fr", "SuperMotDePasse0", True, "email", "Email incorrect, cet utilisateur n'existe pas."),
-            (TESTSUPERUSER_EMAIL, "SuperMotDePasse0", True, "email", "Email incorrect, aucune demande de réinitialisation trouvée."),
-            (TESTUSER_EMAIL, "SuperMotDePasse0", False, "token", "Lien de réinitialisation incorrect pour cet utilisateur."),
-            (TESTUSER_EMAIL, "nul", True, "password", "Votre mot de passe doit contenir au moins 12 caractères."),
-        ],
-    )
+    @parameterized.expand([
+        ("plip@plop.fr", "SuperMotDePasse0", True, "email", "Email incorrect, cet utilisateur n'existe pas."),
+        (SUPERTESTUSER_EMAIL, "SuperMotDePasse0", True, "email", "Email incorrect, aucune demande de réinitialisation trouvée."),
+        (TESTUSER_EMAIL, "SuperMotDePasse0", False, "token", "Lien de réinitialisation incorrect pour cet utilisateur."),
+        (TESTUSER_EMAIL, "nul", True, "password", "Votre mot de passe doit contenir au moins 12 caractères."),
+    ])
     def test_new_password_payload_error(
         self,
         email, password, token, error_key, message,
-        test_superuser, api_client,
     ):
-        response = api_client.post(
+        response = self.client.post(
             self.view_url,
             data={
                 "email": email,
@@ -118,15 +130,15 @@ class TestPasswordNewView:
 
             },
         )
-        assert response.status_code == 400
+        assert response.status_code == 400, response.json()
         assert error_key in response.json().keys()
         assert message in response.json()[error_key]
         assert ResetPassword.objects.count() == 1
 
     @patch("accounts.api.serializers.timezone.now")
-    def test_new_password_token_expired(self, now, api_client):
+    def test_new_password_token_expired(self, now):
         now.return_value = datetime.now(timezone.utc) + timedelta(minutes=35)
-        response = api_client.post(
+        response = self.client.post(
             self.view_url,
             data={
                 "email": TESTUSER_EMAIL,
@@ -135,23 +147,7 @@ class TestPasswordNewView:
 
             },
         )
-        assert response.status_code == 400
+        assert response.status_code == 400, response.json()
         assert "token" in response.json().keys()
         assert "Lien de réinitialisation expiré. Veuillez refaire une demande de réinitialisation." in response.json()["token"]
         assert ResetPassword.objects.count() == 1
-
-    def test_new_password_get(self, api_client):
-        response = api_client.get(self.view_url)
-        assert response.status_code == 405
-
-    def test_new_password_put(self, api_client):
-        response = api_client.put(self.view_url, data={})
-        assert response.status_code == 405
-
-    def test_new_password_patch(self, api_client):
-        response = api_client.patch(self.view_url, data={})
-        assert response.status_code == 405
-
-    def test_new_password_delete(self, api_client):
-        response = api_client.delete(self.view_url)
-        assert response.status_code == 405

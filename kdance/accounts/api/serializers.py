@@ -13,7 +13,6 @@ from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.utils import timezone
 from rest_framework import serializers
-from typing_extensions import override
 
 from accounts.models import Profile, ResetPassword
 from members.models import Member, Payment, Season
@@ -77,7 +76,7 @@ class UserBaseSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def validate_email(email: str) -> str:
-        if User.objects.filter(email=email).exists():
+        if User.objects.filter(email=email.lower()).exists():
             raise serializers.ValidationError("Un utilisateur est déjà associé à cet email.")
         if re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
             return email.lower()
@@ -253,9 +252,10 @@ class UserAdminActionSerializer(serializers.Serializer):
         super().__init__(**kwargs)
 
     def validate_emails(self, emails: list[str]) -> list:
-        if not self._is_admin and settings.SUPERUSER_EMAIL in emails:
+        normalized = [email.lower() for email in emails]
+        if settings.SUPERUSER_EMAIL in normalized and not self._is_admin:
             raise serializers.ValidationError(f"{settings.SUPERUSER}: cet utilisateur ne peut pas être supprimé.")
-        return emails
+        return normalized
 
     def save(self, **k_) -> dict:
         emails = self.validated_data.get("emails", [])
@@ -303,9 +303,15 @@ class UserChangePwdSerializer(serializers.Serializer):
 class UserResetPwdSerializer(serializers.Serializer):
     email = serializers.CharField()
 
-    @override
+    @staticmethod
+    def validate_email(email: str) -> str:
+        user = User.objects.filter(email=email.lower()).first()
+        if not user:
+            raise serializers.ValidationError("Email incorrect, cet utilisateur n'existe pas.")
+        return email.lower()
+
     def save(self, **kwargs: Any) -> None:
-        user = kwargs.pop("user")
+        user = User.objects.filter(email=self.validated_data["email"]).first()
         path = kwargs.pop("path")
         if not user or path is None:
             raise
@@ -379,6 +385,10 @@ class UserNewPwdSerializer(serializers.Serializer):
     def validate_password(pwd: str) -> str:
         validate_pwd(pwd)
         return pwd
+
+    @staticmethod
+    def validate_email(email: str) -> str:
+        return email.lower()
 
     def validate(self, attr: dict) -> dict:
         validated = super().validate(attr)
