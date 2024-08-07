@@ -10,6 +10,7 @@ from members.api.views import (
     TeacherViewSet,
 )
 from members.views import (
+    about,
     admin_mgmt,
     course_mgmt,
     index,
@@ -29,6 +30,7 @@ router.register(r"teachers", TeacherViewSet, basename="api-teachers")
 
 urlpatterns = [
     path("", index, name="index"),
+    path("about", about, name="about"),
     path("super", super_index, name="super_index"),
     path("super/admin_mgmt/", admin_mgmt, name="admin_mgmt"),
     path("super/course_mgmt/", course_mgmt, name="course_mgmt"),

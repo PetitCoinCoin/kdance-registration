@@ -12,6 +12,8 @@
         {% else %}
           <button class="btn btn-outline-info me-2" type="button" onclick="location.href = '/';">Mon compte</button>
         {% endif %}
+      {% else %}
+        <button class="btn btn-outline-info me-2" type="button" onclick="location.href = '/about';">A propos</button>
       {% endif %}
       {% if user.is_authenticated %}
         <form action="{% url 'logout' %}" method="post">

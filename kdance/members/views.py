@@ -39,3 +39,6 @@ def list_dl(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated and request.user.is_superuser:
         return render(request, "pages/list_dl.html", context={"user": request.user})
     raise PermissionDenied
+
+def about(request: HttpRequest) -> HttpResponse:
+    return render(request, "pages/about.html", context={"user": request.user})

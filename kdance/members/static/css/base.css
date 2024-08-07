@@ -66,7 +66,7 @@ i.bi-eye, i.bi-eye-slash {
 
 /*** Design ***/
 h1 {
-  color: purple;
+  color: #852243;
   border-bottom: 0.5rem solid orange;
 }
 
@@ -93,4 +93,9 @@ a {
 
 .bg-info {
   background-color: #baffc9 !important;
+}
+
+#about-div {
+  text-align: justify;
+  max-width: 1000px;
 }

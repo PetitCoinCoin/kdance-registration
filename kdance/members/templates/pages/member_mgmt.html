@@ -68,8 +68,9 @@
                 <label class="form-check-label" for="special-discount-switch">Remise exceptionnelle</label>
               </div>
               <div class="form-outline mb-4" id="special-discount-div" hidden>
-                <label class="form-label fst-italic" for="payment-special-discount">Montant de la remise exceptionnelle accordée (€)</label>
-                <input type="number" id="payment-special-discount" step="0.01" class="form-control" min="0"/>
+                <label class="form-label fst-italic" for="payment-special-discount">Montant de la remise exceptionnelle
+                  accordée (€)</label>
+                <input type="number" id="payment-special-discount" step="0.01" class="form-control" min="0" />
               </div>
               <div class="form-check form-switch mb-2">
                 <input class="form-check-input" type="checkbox" role="switch" id="cash-switch">
@@ -77,7 +78,7 @@
               </div>
               <div class="form-outline mb-4" id="cash-div" hidden>
                 <label class="form-label fst-italic" for="payment-cash">Montant reçu en espèces (€)</label>
-                <input type="number" id="payment-cash" step="0.01" class="form-control" min="0"/>
+                <input type="number" id="payment-cash" step="0.01" class="form-control" min="0" />
               </div>
               <div class="form-check form-switch mb-2">
                 <input class="form-check-input" type="checkbox" role="switch" id="check-switch">
@@ -109,11 +110,11 @@
                 <div class="row align-items-end">
                   <div class="col form-outline mb-4">
                     <label class="form-label fst-italic" for="payment-pass-code">Code</label>
-                    <input type="text" id="payment-pass-code" class="form-control" maxlength="11"/>
+                    <input type="text" id="payment-pass-code" class="form-control" maxlength="11" />
                   </div>
                   <div class="col form-outline mb-4">
                     <label class="form-label fst-italic" for="payment-pass-amount">Montant (€)</label>
-                    <input type="number" id="payment-pass-amount" class="form-control" value="50" disabled/>
+                    <input type="number" id="payment-pass-amount" class="form-control" value="50" disabled />
                   </div>
                 </div>
               </div>
@@ -144,7 +145,8 @@
                   <div id="invalid-other-amount" class="invalid-feedback"></div>
                 </div>
                 <div class="col form-outline mb-4">
-                  <label class="form-label fst-italic" for="payment-other-comment">Commentaire (type de paiement)</label>
+                  <label class="form-label fst-italic" for="payment-other-comment">Commentaire (type de
+                    paiement)</label>
                   <input type="text" id="payment-other-comment" class="form-control" />
                   <div id="invalid-other-comment" class="invalid-feedback"></div>
                 </div>
@@ -154,7 +156,8 @@
                 <label class="form-check-label" for="refund-switch">Remboursement</label>
               </div>
               <div class="form-outline mb-4" id="refund-div" hidden>
-                <label class="form-label fst-italic" for="payment-refund">Remboursement effectué (€) - Si plusieurs remboursements, additionner les valeurs</label>
+                <label class="form-label fst-italic" for="payment-refund">Remboursement effectué (€) - Si plusieurs
+                  remboursements, additionner les valeurs</label>
                 <input type="number" step="0.01" id="payment-refund" class="form-control" />
               </div>
               <div class="form-outline mb-4">
@@ -182,11 +185,13 @@
             <div class="d-flex mb-2">
               <select id="courses-select" class="form-select me-2" multiple></select>
               <div class="d-flex flex-column justify-content-between">
-                <button id="add-course-btn" class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#add-modal">
-                  <i class="bi-plus-square" style="color: purple;"></i>
+                <button id="add-course-btn" class="btn btn-outline-info" type="button" data-bs-toggle="modal"
+                  data-bs-target="#add-modal">
+                  <i class="bi-plus-square" style="color: #852243;"></i>
                   Ajouter un cours
                 </button>
-                <button id="cancel-course-btn" class="btn btn-outline-danger" type="button" data-bs-toggle="modal" data-bs-target="#delete-modal">
+                <button id="cancel-course-btn" class="btn btn-outline-danger" type="button" data-bs-toggle="modal"
+                  data-bs-target="#delete-modal">
                   <i class="bi-trash3-fill" style="color: #ffb3ba;"></i>
                   Annuler les cours sélectionnés
                 </button>
@@ -208,20 +213,24 @@
         <div class="modal-content">
           <div class="modal-header">
             <h4 class="modal-title">Annuler le(s) cours d'un adhérent</h4>
-            <button type="button" class="btn-close" data-bs-toggle="modal" data-bs-target="#member-modal" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-toggle="modal" data-bs-target="#member-modal"
+              aria-label="Close"></button>
           </div>
           <div class="modal-body">
             Êtes-vous sûr de vouloir annuler le(s) cours suivant(s) pour <span id="member-name"></span> ?
             <ul id="course-list"></ul>
-            <div class="form-outline mb-4" >
-              <label class="form-label " for="cancel-refund">Montant total à rembourser (toutes annulations confondues, en €)</label>
-              <input type="number" id="cancel-refund" class="form-control" min="0" value="0"/>
+            <div class="form-outline mb-4">
+              <label class="form-label " for="cancel-refund">Montant total à rembourser (toutes annulations confondues,
+                en €)</label>
+              <input type="number" id="cancel-refund" class="form-control" min="0" value="0" />
               <div id="invalid-cancel-refund" class="invalid-feedback"></div>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#member-modal">Annuler</button>
-            <button id="delete-btn" type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#member-modal">Confirmer</button>
+            <button type="button" class="btn btn-secondary" data-bs-toggle="modal"
+              data-bs-target="#member-modal">Annuler</button>
+            <button id="delete-btn" type="button" class="btn btn-danger" data-bs-toggle="modal"
+              data-bs-target="#member-modal">Confirmer</button>
           </div>
         </div>
       </div>
@@ -232,15 +241,18 @@
         <div class="modal-content">
           <div class="modal-header">
             <h4 class="modal-title">Ajouter des cours à un adhérent</h4>
-            <button type="button" class="btn-close" data-bs-toggle="modal" data-bs-target="#member-modal" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-toggle="modal" data-bs-target="#member-modal"
+              aria-label="Close"></button>
           </div>
           <div class="modal-body">
             Choisissez le(s) cours à ajouter à <span id="member-name"></span> :
             <select id="add-courses-select" class="form-select" multiple></select>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#member-modal">Annuler</button>
-            <button id="add-btn" type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#member-modal">Ajouter</button>
+            <button type="button" class="btn btn-secondary" data-bs-toggle="modal"
+              data-bs-target="#member-modal">Annuler</button>
+            <button id="add-btn" type="button" class="btn btn-danger" data-bs-toggle="modal"
+              data-bs-target="#member-modal">Ajouter</button>
           </div>
         </div>
       </div>
@@ -259,6 +271,14 @@
         </ol>
       </nav>
       <div class="container mt-3">
+        <p class="fst-italic mb-4">
+          Pour modifier le document médical d'un adhérent, cliquez sur 
+          <i class="bi-heart-pulse-fill" style="color: #0dcaf0; font-size: small;"></i>.<br>
+          Pour mettre à jour le paiement, cliquez sur <i class="bi-currency-dollar" style="color: #0dcaf0;"></i>.<br>
+          Pour ajouter / retirer des cours à un adhérent (et bientôt une licence), cliquez sur 
+          <i class="bi-pencil-fill" style="color: #0dcaf0; font-size: small"></i>.<br>
+          Il est nécessaire d'annuler un cours avant de procéder à son éventuel remboursement (même partiel).
+        </p>
         <div class="mb-3">
           <select id="season-select" class="form-select max-w-300">
           </select>
@@ -275,17 +295,17 @@
     </div>
 
     <!-- Template -->
-     <template id="check-template">
+    <template id="check-template">
       <div>
         <div class="row">
           <div class="col form-outline mb-2">
             <label class="form-label fst-italic" for="payment-check-number-">N° de chèque</label>
-            <input type="number" step="0.01" id="payment-check-number-" class="form-control"/>
+            <input type="number" step="0.01" id="payment-check-number-" class="form-control" />
             <div class="invalid-feedback"></div>
           </div>
           <div class="col form-outline mb-2">
             <label class="form-label fst-italic" for="payment-check-amount-">Montant (€)</label>
-            <input type="number" step="0.01" id="payment-check-amount-" class="form-control" min="0"/>
+            <input type="number" step="0.01" id="payment-check-amount-" class="form-control" min="0" />
             <div class="invalid-feedback"></div>
           </div>
           <div class="col form-outline mb-2">
@@ -297,7 +317,7 @@
         <div class="row align-items-end border-bottom">
           <div class="col form-outline mb-4">
             <label class="form-label fst-italic" for="payment-check-name-">Emetteur</label>
-            <input type="text" id="payment-check-name-" class="form-control"/>
+            <input type="text" id="payment-check-name-" class="form-control" />
             <div class="invalid-feedback"></div>
           </div>
           <div class="col form-outline mb-4">
@@ -307,23 +327,23 @@
           </div>
         </div>
       </div>
-     </template>
+    </template>
 
-     <template id="add-check-template">
+    <template id="add-check-template">
       <div class="col-1 mb-4">
-        <button class="btn btn-outline-info" type="button" >
+        <button class="btn btn-outline-info" type="button">
           <i class="bi-plus-square"></i>
         </button>
       </div>
-     </template>
+    </template>
 
-     <template id="remove-check-template">
+    <template id="remove-check-template">
       <div class="col-1 mb-4">
-        <button class="btn btn-outline-danger" type="button" >
+        <button class="btn btn-outline-danger" type="button">
           <i class="bi-trash3-fill"></i>
         </button>
       </div>
-     </template>
+    </template>
   </section>
   <script type="text/javascript">
     const coursesUrl = "{% url 'api-courses-list' %}";
