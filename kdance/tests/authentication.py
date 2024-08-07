@@ -63,6 +63,7 @@ class AuthTestCase(TestCase):
                 _logger.debug("testuser response: %s", response)
                 if response.status_code != user_status:
                     return False
+                _logger.debug(response.resolver_match.func)
                 if response.resolver_match.func.__name__ != view.__name__:
                     return False
             # Super user
