@@ -19,177 +19,30 @@
 
     <!-- Modal -->
     {% csrf_token %}
-    <div class="modal fade" id="member-modal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
+    <div class="modal fade" id="member-doc-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h4 class="modal-title" id="member-modal-title"></h4>
+            <h4 class="modal-title" id="member-doc-modal-title"></h4>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <form id="form-member" name="form-member">
+          <form id="form-member-doc" name="form-member-doc">
             <div class="modal-body">
-              <div class="accordion" id="modal-accordion">
-                <div class="accordion-item">
-                  <h2 class="accordion-header">
-                    <button class="accordion-button" type="button" data-bs-toggle="collapse" aria-expanded="true"
-                      data-bs-target="#member-documents-section" aria-controls="member-documents-section">
-                      <span>Autorisations et documents</span>
-                    </button>
-                  </h2>
-                  <div id="member-documents-section" class="accordion-collapse collapse show template-data"
-                      data-bs-parent="#modal-accordion">
-                    <div class="accordion-body">
-                      <div class="form-check mb-1">
-                        <input class="form-check-input" type="checkbox" value="" id="authorise-photos" disabled>
-                        <label class="form-check-label" for="authorise-photos">Autorisation d'utilisation des photos</label>
-                      </div>
-                      <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" value="" id="authorise-emergency" disabled>
-                        <label class="form-check-label" for="authorise-emergency">Autorisation parentale (mineurs)</label>
-                      </div>
-                      <div class="form-outline mb-4 d-flex align-items-baseline">
-                        <label class="form-label fst-italic min-w-200" for="doc-select">Document médical</label>
-                        <select id="doc-select" class="form-select">
-                          <option value="Manquant">Manquant</option>
-                          <option value="Attestation">Attestation</option>
-                          <option value="Certificat">Certificat</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="accordion-item">
-                  <h2 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" aria-expanded="false"
-                      data-bs-target="#member-payment-section" aria-controls="member-payment-section">
-                      <span>Paiement</span>
-                    </button>
-                  </h2>
-                  <div id="member-payment-section" class="accordion-collapse collapse collapsed template-data"
-                      data-bs-parent="#modal-accordion">
-                    <div class="accordion-body">
-                      <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" role="switch" id="cash-switch">
-                        <label class="form-check-label" for="cash-switch">Espèces</label>
-                      </div>
-                      <div class="form-outline mb-4" id="cash-div" hidden>
-                        <label class="form-label fst-italic" for="payment-cash">Montant reçu en espèces (€)</label>
-                        <input type="number" id="payment-cash" step="0.01" class="form-control" min="0"/>
-                      </div>
-                      <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" role="switch" id="check-switch">
-                        <label class="form-check-label" for="check-switch">Chèques</label>
-                      </div>
-                      <div id="check-div" class="form-outline mb-4" hidden>
-                      </div>
-                      <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" role="switch" id="ancv-switch">
-                        <label class="form-check-label" for="ancv-switch">ANCV</label>
-                      </div>
-                      <div class="row" id="ancv-div" hidden>
-                        <div class="col form-outline mb-4">
-                          <label class="form-label fst-italic" for="payment-ancv-amount">Somme reçue (€)</label>
-                          <input type="number" step="0.01" id="payment-ancv-amount" class="form-control" />
-                          <div id="invalid-ancv-amount" class="invalid-feedback"></div>
-                        </div>
-                        <div class="col form-outline mb-4">
-                          <label class="form-label fst-italic" for="payment-ancv-count">Nombre de chèques vacances</label>
-                          <input type="number" id="payment-ancv-count" class="form-control" />
-                          <div id="invalid-ancv-count" class="invalid-feedback"></div>
-                        </div>
-                      </div>
-                      <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" role="switch" id="pass-switch">
-                        <label class="form-check-label" for="pass-switch">Pass Sport</label>
-                      </div>
-                      <div id="pass-div" hidden>
-                        <div class="row align-items-end">
-                          <div class="col form-outline mb-4">
-                            <label class="form-label fst-italic" for="payment-pass-code">Code</label>
-                            <input type="text" id="payment-pass-code" class="form-control" maxlength="11"/>
-                          </div>
-                          <div class="col form-outline mb-4">
-                            <label class="form-label fst-italic" for="payment-pass-amount">Montant (€)</label>
-                            <input type="number" id="payment-pass-amount" class="form-control" value="50" disabled/>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" role="switch" id="coupon-switch">
-                        <label class="form-check-label" for="coupon-switch">Coupon sport mairie</label>
-                      </div>
-                      <div class="row" id="coupon-div" hidden>
-                        <div class="col form-outline mb-4">
-                          <label class="form-label fst-italic" for="payment-coupon-amount">Somme reçue (€)</label>
-                          <input type="number" id="payment-coupon-amount" class="form-control" />
-                          <div id="invalid-coupon-amount" class="invalid-feedback"></div>
-                        </div>
-                        <div class="col form-outline mb-4">
-                          <label class="form-label fst-italic" for="payment-coupon-count">Nombre de coupons sport</label>
-                          <input type="number" step="0.01" id="payment-coupon-count" class="form-control" />
-                          <div id="invalid-coupon-count" class="invalid-feedback"></div>
-                        </div>
-                      </div>
-                      <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" role="switch" id="other-switch">
-                        <label class="form-check-label" for="other-switch">Autre</label>
-                      </div>
-                      <div class="row" id="other-div" hidden>
-                        <div class="col form-outline mb-4">
-                          <label class="form-label fst-italic" for="payment-other-amount">Somme reçue (€)</label>
-                          <input type="number" step="0.01" id="payment-other-amount" class="form-control" />
-                          <div id="invalid-other-amount" class="invalid-feedback"></div>
-                        </div>
-                        <div class="col form-outline mb-4">
-                          <label class="form-label fst-italic" for="payment-other-comment">Commentaire (type de paiement)</label>
-                          <input type="text" id="payment-other-comment" class="form-control" />
-                          <div id="invalid-other-comment" class="invalid-feedback"></div>
-                        </div>
-                      </div>
-                      <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" role="switch" id="refund-switch">
-                        <label class="form-check-label" for="refund-switch">Remboursement</label>
-                      </div>
-                      <div class="form-outline mb-4" id="refund-div" hidden>
-                        <label class="form-label fst-italic" for="payment-refund">Remboursement effectué (€) - Si plusieurs remboursements, additionner les valeurs</label>
-                        <input type="number" step="0.01" id="payment-refund" class="form-control" />
-                      </div>
-                      <div class="form-outline mb-4">
-                        <label class="form-label" for="comment">Commentaire</label>
-                        <textarea class="form-control" id="comment" rows="3"></textarea>
-                      </div>                     
-                    </div>
-                  </div>
-                </div>
-                <div class="accordion-item">
-                  <h2 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" aria-expanded="false"
-                      data-bs-target="#member-courses-section" aria-controls="member-courses-section">
-                      <span>Cours</span>
-                    </button>
-                  </h2>
-                  <div id="member-courses-section" class="accordion-collapse collapse collapsed template-data"
-                      data-bs-parent="#modal-accordion">
-                    <div class="accordion-body">
-                      <div class="d-flex mb-2">
-                        <select id="courses-select" class="form-select me-2" multiple></select>
-                        <div class="d-flex flex-column justify-content-between">
-                          <button id="add-course-btn" class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#add-modal">
-                            <i class="bi-plus-square" style="color: purple;"></i>
-                            Ajouter un cours
-                          </button>
-                          <button id="cancel-course-btn" class="btn btn-outline-danger" type="button" data-bs-toggle="modal" data-bs-target="#delete-modal">
-                            <i class="bi-trash3-fill" style="color: #ffb3ba;"></i>
-                            Annuler les cours sélectionnés
-                          </button>
-                        </div>
-                      </div>
-                      <div id="cancelled-courses-div">
-                        Montant remboursé: <span></span>€
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div class="form-check mb-1">
+                <input class="form-check-input" type="checkbox" value="" id="authorise-photos" disabled>
+                <label class="form-check-label" for="authorise-photos">Autorisation d'utilisation des photos</label>
+              </div>
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" value="" id="authorise-emergency" disabled>
+                <label class="form-check-label" for="authorise-emergency">Autorisation parentale (mineurs)</label>
+              </div>
+              <div class="form-outline mb-4 d-flex align-items-baseline">
+                <label class="form-label min-w-200" for="doc-select">Document médical</label>
+                <select id="doc-select" class="form-select">
+                  <option value="Manquant">Manquant</option>
+                  <option value="Attestation">Attestation</option>
+                  <option value="Certificat">Certificat</option>
+                </select>
               </div>
             </div>
             <div class="modal-footer">
@@ -201,25 +54,183 @@
       </div>
     </div>
 
+    <div class="modal fade" id="member-payment-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="member-payment-modal-title"></h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form id="form-member-payment" name="form-member-payment">
+            <div class="modal-body">
+              <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" role="switch" id="special-discount-switch">
+                <label class="form-check-label" for="special-discount-switch">Remise exceptionnelle</label>
+              </div>
+              <div class="form-outline mb-4" id="special-discount-div" hidden>
+                <label class="form-label fst-italic" for="payment-special-discount">Montant de la remise exceptionnelle
+                  accordée (€)</label>
+                <input type="number" id="payment-special-discount" step="0.01" class="form-control" min="0" />
+              </div>
+              <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" role="switch" id="cash-switch">
+                <label class="form-check-label" for="cash-switch">Espèces</label>
+              </div>
+              <div class="form-outline mb-4" id="cash-div" hidden>
+                <label class="form-label fst-italic" for="payment-cash">Montant reçu en espèces (€)</label>
+                <input type="number" id="payment-cash" step="0.01" class="form-control" min="0" />
+              </div>
+              <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" role="switch" id="check-switch">
+                <label class="form-check-label" for="check-switch">Chèques</label>
+              </div>
+              <div id="check-div" class="form-outline mb-4" hidden>
+              </div>
+              <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" role="switch" id="ancv-switch">
+                <label class="form-check-label" for="ancv-switch">ANCV</label>
+              </div>
+              <div class="row" id="ancv-div" hidden>
+                <div class="col form-outline mb-4">
+                  <label class="form-label fst-italic" for="payment-ancv-amount">Somme reçue (€)</label>
+                  <input type="number" step="0.01" id="payment-ancv-amount" class="form-control" />
+                  <div id="invalid-ancv-amount" class="invalid-feedback"></div>
+                </div>
+                <div class="col form-outline mb-4">
+                  <label class="form-label fst-italic" for="payment-ancv-count">Nombre de chèques vacances</label>
+                  <input type="number" id="payment-ancv-count" class="form-control" />
+                  <div id="invalid-ancv-count" class="invalid-feedback"></div>
+                </div>
+              </div>
+              <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" role="switch" id="pass-switch">
+                <label class="form-check-label" for="pass-switch">Pass Sport</label>
+              </div>
+              <div id="pass-div" hidden>
+                <div class="row align-items-end">
+                  <div class="col form-outline mb-4">
+                    <label class="form-label fst-italic" for="payment-pass-code">Code</label>
+                    <input type="text" id="payment-pass-code" class="form-control" maxlength="11" />
+                  </div>
+                  <div class="col form-outline mb-4">
+                    <label class="form-label fst-italic" for="payment-pass-amount">Montant (€)</label>
+                    <input type="number" id="payment-pass-amount" class="form-control" value="50" disabled />
+                  </div>
+                </div>
+              </div>
+              <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" role="switch" id="coupon-switch">
+                <label class="form-check-label" for="coupon-switch">Coupon sport mairie</label>
+              </div>
+              <div class="row" id="coupon-div" hidden>
+                <div class="col form-outline mb-4">
+                  <label class="form-label fst-italic" for="payment-coupon-amount">Somme reçue (€)</label>
+                  <input type="number" id="payment-coupon-amount" class="form-control" />
+                  <div id="invalid-coupon-amount" class="invalid-feedback"></div>
+                </div>
+                <div class="col form-outline mb-4">
+                  <label class="form-label fst-italic" for="payment-coupon-count">Nombre de coupons sport</label>
+                  <input type="number" step="0.01" id="payment-coupon-count" class="form-control" />
+                  <div id="invalid-coupon-count" class="invalid-feedback"></div>
+                </div>
+              </div>
+              <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" role="switch" id="other-switch">
+                <label class="form-check-label" for="other-switch">Autre</label>
+              </div>
+              <div class="row" id="other-div" hidden>
+                <div class="col form-outline mb-4">
+                  <label class="form-label fst-italic" for="payment-other-amount">Somme reçue (€)</label>
+                  <input type="number" step="0.01" id="payment-other-amount" class="form-control" />
+                  <div id="invalid-other-amount" class="invalid-feedback"></div>
+                </div>
+                <div class="col form-outline mb-4">
+                  <label class="form-label fst-italic" for="payment-other-comment">Commentaire (type de
+                    paiement)</label>
+                  <input type="text" id="payment-other-comment" class="form-control" />
+                  <div id="invalid-other-comment" class="invalid-feedback"></div>
+                </div>
+              </div>
+              <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" role="switch" id="refund-switch">
+                <label class="form-check-label" for="refund-switch">Remboursement</label>
+              </div>
+              <div class="form-outline mb-4" id="refund-div" hidden>
+                <label class="form-label fst-italic" for="payment-refund">Remboursement effectué (€) - Si plusieurs
+                  remboursements, additionner les valeurs</label>
+                <input type="number" step="0.01" id="payment-refund" class="form-control" />
+              </div>
+              <div class="form-outline mb-4">
+                <label class="form-label" for="comment">Commentaire</label>
+                <textarea class="form-control" id="comment" rows="3"></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+              <button type="submit" class="btn btn-info">Enregistrer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="member-courses-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="member-courses-modal-title"></h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="d-flex mb-2">
+              <select id="courses-select" class="form-select me-2" multiple></select>
+              <div class="d-flex flex-column justify-content-between">
+                <button id="add-course-btn" class="btn btn-outline-info" type="button" data-bs-toggle="modal"
+                  data-bs-target="#add-modal">
+                  <i class="bi-plus-square" style="color: #852243;"></i>
+                  Ajouter un cours
+                </button>
+                <button id="cancel-course-btn" class="btn btn-outline-danger" type="button" data-bs-toggle="modal"
+                  data-bs-target="#delete-modal">
+                  <i class="bi-trash3-fill" style="color: #ffb3ba;"></i>
+                  Annuler les cours sélectionnés
+                </button>
+              </div>
+            </div>
+            <div id="cancelled-courses-div">
+              Montant remboursé: <span></span>€
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="modal fade" id="delete-modal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
             <h4 class="modal-title">Annuler le(s) cours d'un adhérent</h4>
-            <button type="button" class="btn-close" data-bs-toggle="modal" data-bs-target="#member-modal" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-toggle="modal" data-bs-target="#member-modal"
+              aria-label="Close"></button>
           </div>
           <div class="modal-body">
             Êtes-vous sûr de vouloir annuler le(s) cours suivant(s) pour <span id="member-name"></span> ?
             <ul id="course-list"></ul>
-            <div class="form-outline mb-4" >
-              <label class="form-label " for="cancel-refund">Montant total à rembourser (toutes annulations confondues, en €)</label>
-              <input type="number" id="cancel-refund" class="form-control" min="0" value="0"/>
+            <div class="form-outline mb-4">
+              <label class="form-label " for="cancel-refund">Montant total à rembourser (toutes annulations confondues,
+                en €)</label>
+              <input type="number" id="cancel-refund" class="form-control" min="0" value="0" />
               <div id="invalid-cancel-refund" class="invalid-feedback"></div>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#member-modal">Annuler</button>
-            <button id="delete-btn" type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#member-modal">Confirmer</button>
+            <button type="button" class="btn btn-secondary" data-bs-toggle="modal"
+              data-bs-target="#member-modal">Annuler</button>
+            <button id="delete-btn" type="button" class="btn btn-danger" data-bs-toggle="modal"
+              data-bs-target="#member-modal">Confirmer</button>
           </div>
         </div>
       </div>
@@ -230,15 +241,18 @@
         <div class="modal-content">
           <div class="modal-header">
             <h4 class="modal-title">Ajouter des cours à un adhérent</h4>
-            <button type="button" class="btn-close" data-bs-toggle="modal" data-bs-target="#member-modal" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-toggle="modal" data-bs-target="#member-modal"
+              aria-label="Close"></button>
           </div>
           <div class="modal-body">
             Choisissez le(s) cours à ajouter à <span id="member-name"></span> :
             <select id="add-courses-select" class="form-select" multiple></select>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#member-modal">Annuler</button>
-            <button id="add-btn" type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#member-modal">Ajouter</button>
+            <button type="button" class="btn btn-secondary" data-bs-toggle="modal"
+              data-bs-target="#member-modal">Annuler</button>
+            <button id="add-btn" type="button" class="btn btn-danger" data-bs-toggle="modal"
+              data-bs-target="#member-modal">Ajouter</button>
           </div>
         </div>
       </div>
@@ -257,6 +271,14 @@
         </ol>
       </nav>
       <div class="container mt-3">
+        <p class="fst-italic mb-4">
+          Pour modifier le document médical d'un adhérent, cliquez sur 
+          <i class="bi-heart-pulse-fill" style="color: #0dcaf0; font-size: small;"></i>.<br>
+          Pour mettre à jour le paiement, cliquez sur <i class="bi-currency-dollar" style="color: #0dcaf0;"></i>.<br>
+          Pour ajouter / retirer des cours à un adhérent (et bientôt une licence), cliquez sur 
+          <i class="bi-pencil-fill" style="color: #0dcaf0; font-size: small"></i>.<br>
+          Il est nécessaire d'annuler un cours avant de procéder à son éventuel remboursement (même partiel).
+        </p>
         <div class="mb-3">
           <select id="season-select" class="form-select max-w-300">
           </select>
@@ -273,17 +295,17 @@
     </div>
 
     <!-- Template -->
-     <template id="check-template">
+    <template id="check-template">
       <div>
         <div class="row">
           <div class="col form-outline mb-2">
             <label class="form-label fst-italic" for="payment-check-number-">N° de chèque</label>
-            <input type="number" step="0.01" id="payment-check-number-" class="form-control"/>
+            <input type="number" step="0.01" id="payment-check-number-" class="form-control" />
             <div class="invalid-feedback"></div>
           </div>
           <div class="col form-outline mb-2">
             <label class="form-label fst-italic" for="payment-check-amount-">Montant (€)</label>
-            <input type="number" step="0.01" id="payment-check-amount-" class="form-control" min="0"/>
+            <input type="number" step="0.01" id="payment-check-amount-" class="form-control" min="0" />
             <div class="invalid-feedback"></div>
           </div>
           <div class="col form-outline mb-2">
@@ -295,7 +317,7 @@
         <div class="row align-items-end border-bottom">
           <div class="col form-outline mb-4">
             <label class="form-label fst-italic" for="payment-check-name-">Emetteur</label>
-            <input type="text" id="payment-check-name-" class="form-control"/>
+            <input type="text" id="payment-check-name-" class="form-control" />
             <div class="invalid-feedback"></div>
           </div>
           <div class="col form-outline mb-4">
@@ -305,23 +327,23 @@
           </div>
         </div>
       </div>
-     </template>
+    </template>
 
-     <template id="add-check-template">
+    <template id="add-check-template">
       <div class="col-1 mb-4">
-        <button class="btn btn-outline-info" type="button" >
+        <button class="btn btn-outline-info" type="button">
           <i class="bi-plus-square"></i>
         </button>
       </div>
-     </template>
+    </template>
 
-     <template id="remove-check-template">
+    <template id="remove-check-template">
       <div class="col-1 mb-4">
-        <button class="btn btn-outline-danger" type="button" >
+        <button class="btn btn-outline-danger" type="button">
           <i class="bi-trash3-fill"></i>
         </button>
       </div>
-     </template>
+    </template>
   </section>
   <script type="text/javascript">
     const coursesUrl = "{% url 'api-courses-list' %}";

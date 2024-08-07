@@ -1,6 +1,12 @@
 # settings
 .env
 
+# tests
+htmlcov
+db.sqlite3
+.coverage
+.pytest_cache
+
 # workspace
 venv
 .python-version

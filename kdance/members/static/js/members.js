@@ -27,7 +27,7 @@ function handleCourseUpdate() {
     });
   });
   $('#delete-btn').on('click', () => {
-    patchMemberCoursesActions($('#member-courses-section').data('memberId'), "remove");
+    patchMemberCoursesActions($('#delete-btn').data('memberId'), "remove");
   });
   // Course addition
   $('#add-course-btn').on('click', () => {
@@ -37,10 +37,10 @@ function handleCourseUpdate() {
       type: 'GET',
       success: (data) => {
         const activeCourses = Object.values($('#courses-select option:enabled')).slice(0, -2).map(o => parseInt(o.value));
-        data.filter(c => activeCourses.indexOf(c.id.toString()) < 0).map(course => {
+        data.map(course => {
           const startHour = course.start_hour.split(':');
           const label = `${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
-          $('#add-courses-select').append($('<option>', { value: course.id, text: label }));
+          $('#add-courses-select').append($('<option>', { value: course.id, text: label, disabled: activeCourses.indexOf(course.id) >= 0 }));
         });
       },
       error: (error) => {
@@ -50,7 +50,7 @@ function handleCourseUpdate() {
     });
   });
   $('#add-btn').on('click', () => {
-    patchMemberCoursesActions($('#member-courses-section').data('memberId'), "add");
+    patchMemberCoursesActions($('#add-btn').data('memberId'), "add");
   });
 }
 
@@ -82,6 +82,10 @@ function displayPayments() {
   const refundSwitch = document.querySelector('#refund-switch');
   refundSwitch.addEventListener('change', () => {
     $('#refund-div').attr('hidden', !$('#refund-switch').is(':checked'));
+  });
+  const specialSwitch = document.querySelector('#special-discount-switch');
+  specialSwitch.addEventListener('change', () => {
+    $('#special-discount-div').attr('hidden', !$('#special-discount-switch').is(':checked'));
   });
 }
 
@@ -169,7 +173,17 @@ function courseFormatter(value) {
 }
 
 function actionFormatter(value, row) {
-  return `<button class="btn btn-outline-info btn-sm" memberId="${row.id}" paymentId="${row.payment.id}" type="button" data-bs-toggle="modal" data-bs-target="#member-modal"><i class="bi-pencil-fill"></i></button>`;
+  return `
+    <button class="btn btn-outline-info btn-sm" memberId="${row.id}" type="button" data-bs-toggle="modal" data-bs-target="#member-doc-modal">
+      <i class="bi-heart-pulse-fill"></i>
+    </button>
+    <button class="btn btn-outline-info btn-sm" memberId="${row.id}" paymentId="${row.payment.id}" type="button" data-bs-toggle="modal" data-bs-target="#member-payment-modal">
+      <i class="bi-currency-dollar"></i>
+    </button>
+    <button class="btn btn-outline-info btn-sm" memberId="${row.id}" type="button" data-bs-toggle="modal" data-bs-target="#member-courses-modal">
+      <i class="bi-pencil-fill"></i>
+    </button>
+  `;
 }
 
 function getMembers(seasonId) {
@@ -236,7 +250,7 @@ function getMembers(seasonId) {
             visible: false,
           }, {
             field: 'operate',
-            title: 'Modifier',
+            title: 'Mettre à jour',
             align: 'center',
             clickToSelect: false,
             formatter: actionFormatter,
@@ -245,7 +259,7 @@ function getMembers(seasonId) {
             return {
               ...m,
               courses: m.active_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`).concat(m.cancelled_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)),
-              solde: m.payment.due - m.payment.paid,
+              solde: m.payment.due - m.payment.paid + m.payment.refund,
               documents: m.documents ? {
                 ...m.documents,
                 authorise_photos: m.documents.authorise_photos ? 'Oui' : 'Non',
@@ -284,7 +298,9 @@ function getMember(memberId) {
     url: membersUrl + memberId + '/',
     type: 'GET',
     success: (data) => {
-      $('#member-modal-title').html(`Mettre à jour les données de ${data.first_name} ${data.last_name}`);
+      $('#member-doc-modal-title').html(`Mettre à jour les documents de ${data.first_name} ${data.last_name}`);
+      $('#member-payment-modal-title').html(`Mettre à jour les paiements de ${data.first_name} ${data.last_name}`);
+      $('#member-courses-modal-title').html(`Mettre à jour les cours de ${data.first_name} ${data.last_name}`);
       $('#member-name').text(`${data.first_name} ${data.last_name}`);  // Deletion modale
       $('#doc-select').val(data.documents?.medical_document || "Manquant");
       $('#authorise-photos').prop('checked', data.documents?.authorise_photos || false);
@@ -327,6 +343,11 @@ function getMember(memberId) {
       $('#refund-div').attr('hidden', !withRefund);
       $('#refund-switch').prop('checked', withRefund);
 
+      $('#payment-special-discount').val(data.payment.special_discount);
+      const withSpecial = !(data.payment.special_discount === null || data.payment.special_discount === 0);
+      $('#special-discount-div').attr('hidden', !withSpecial);
+      $('#special-discount-switch').prop('checked', withSpecial);
+
       for (let i = 0; i < CHECK_NUMBER; i++) {
         $(`#payment-check-name-${i}`).val(i < data.payment.check_payment.length ? data.payment.check_payment[i].name : '');
         $(`#payment-check-bank-${i}`).val(i < data.payment.check_payment.length ? data.payment.check_payment[i].bank : '');
@@ -368,28 +389,51 @@ function getMember(memberId) {
 }
 
 function updateMember() {
-  const memberModal = document.getElementById('member-modal');
-  if (memberModal) {
-    $('#member-modal').on('show.bs.modal', function (event) {
+  const memberDocModal = document.getElementById('member-doc-modal');
+  const memberPaymentModal = document.getElementById('member-payment-modal');
+  const memberCoursesModal = document.getElementById('member-courses-modal');
+  if (memberDocModal) {
+    $('#member-doc-modal').on('show.bs.modal', function (event) {
       const button = event.relatedTarget;
-      const memberId = button.getAttribute('memberId');
+      let memberId = button.getAttribute('memberId');
+      getMember(memberId);
+      $('#form-member-doc').data('memberId', memberId);
+    });
+    $('#member-doc-modal').on('submit', '#form-member-doc', function (event) {
+      event.preventDefault();
+      const memberId = $(this).data('memberId');
+      patchMember(memberId, event);
+    })
+  }
+  if (memberPaymentModal) {
+    $('#member-payment-modal').on('show.bs.modal', function (event) {
+      const button = event.relatedTarget;
+      let memberId = button.getAttribute('memberId');
       const paymentId = button.getAttribute('paymentId');
       getMember(memberId);
-      $('#form-member').data('memberId', memberId);
-      $('#form-member').data('paymentId', paymentId);
+      $('#form-member-payment').data('memberId', memberId);
+      $('#form-member-payment').data('paymentId', paymentId);
     });
-    $('#member-modal').on('submit', '#form-member', function (event) {
+    $('#member-payment-modal').on('submit', '#form-member-payment', function (event) {
       event.preventDefault();
       const memberId = $(this).data('memberId');
       const paymentId = $(this).data('paymentId');
-      patchMember(memberId, paymentId, event);
+      patchPayment(memberId, paymentId, event);
     })
+  }
+  if (memberCoursesModal) {
+    $('#member-courses-modal').on('show.bs.modal', function (event) {
+      const button = event.relatedTarget;
+      let memberId = button.getAttribute('memberId');
+      getMember(memberId);
+      $('#add-btn').data('memberId', memberId);
+      $('#cancel-btn').data('memberId', memberId);
+    });
   }
 }
 
-function patchMember(memberId, paymentId, event) {
+function patchMember(memberId, event) {
   $('.invalid-feedback').removeClass('d-inline');
-  // PATCH member first
   const memberData = {
     documents: {
       medical_document: $('#doc-select').val(),
@@ -412,114 +456,7 @@ function patchMember(memberId, paymentId, event) {
     data: JSON.stringify(memberData),
     dataType: 'json',
     success: () => {
-      // PATCH payment
-      let paymentData = {
-        cash: $('#payment-cash').val() || 0,
-        ancv: {
-          amount: $('#payment-ancv-amount').val() || 0,
-          count: $('#payment-ancv-count').val() || 0,
-        },
-        other_payment: {
-          amount: $('#payment-other-amount').val() || 0,
-          comment: $('#payment-other-comment').val() || "A préciser",
-        },
-        sport_coupon: {
-          amount: $('#payment-coupon-amount').val() || 0,
-          count: $('#payment-coupon-count').val() || 0,
-        },
-        comment: $('#comment').val(),
-        refund: $('#payment-refund').val() || 0,
-      };
-      var checks = [];
-      for (let i = 0; i < CHECK_NUMBER; i++) {
-        if ($(`#payment-check-amount-${i}`).val() !== '' || $(`#payment-check-number-${i}`).val() !== '') {
-          checks.push({
-            name: $(`#payment-check-name-${i}`).val(),
-            bank: $(`#payment-check-bank-${i}`).val(),
-            number: $(`#payment-check-number-${i}`).val(),
-            amount: $(`#payment-check-amount-${i}`).val(),
-            month: $(`#payment-check-month-${i}`).val(),
-          });
-        }
-      }
-      paymentData.check_payment = checks;
-      $.ajax({
-        url: paymentssUrl + paymentId + '/',
-        type: 'PATCH',
-        contentType: 'application/json',
-        headers: { 'X-CSRFToken': csrftoken },
-        mode: 'same-origin',
-        data: JSON.stringify(paymentData),
-        dataType: 'json',
-        success: () => {
-          event.currentTarget.submit();
-        },
-        error: (error) => {
-          if (!error.responseJSON) {
-            showToast('Une erreur est survenue lors de la mise à jour du paiement.');
-            console.log(error);
-          } else {
-            const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('member-error-toast'));
-            $('#member-error-body').text('Il y a un souci au niveau des paiements. Veuillez vérifier les informations.');
-            toast.show();
-          }
-          if (error.responseJSON && error.responseJSON.ancv) {
-            if(error.responseJSON.ancv.amount) {
-              $('#invalid-ancv-amount').html(error.responseJSON.ancv.amount[0]);
-              $('#invalid-ancv-amount').addClass('d-inline');
-            }
-            if(error.responseJSON.ancv.count) {
-              $('#invalid-ancv-count').html(error.responseJSON.ancv.count[0]);
-              $('#invalid-ancv-count').addClass('d-inline');
-            }
-          }
-          if (error.responseJSON && error.responseJSON.other_payment) {
-            if(error.responseJSON.other_payment.amount) {
-              $('#invalid-other-amount').html(error.responseJSON.other_payment.amount[0]);
-              $('#invalid-other-amount').addClass('d-inline');
-            }
-            if(error.responseJSON.other_payment.comment) {
-              $('#invalid-other-comment').html(error.responseJSON.other_payment.comment[0]);
-              $('#invalid-other-comment').addClass('d-inline');
-            }
-          }
-          if (error.responseJSON && error.responseJSON.sport_coupon) {
-            if(error.responseJSON.sport_coupon.amount) {
-              $('#invalid-coupon-amount').html(error.responseJSON.sport_coupon.amount[0]);
-              $('#invalid-coupon-amount').addClass('d-inline');
-            }
-            if(error.responseJSON.sport_coupon.count) {
-              $('#invalid-coupon-count').html(error.responseJSON.sport_coupon.count[0]);
-              $('#invalid-coupon-count').addClass('d-inline');
-            }
-          }
-          if (error.responseJSON && error.responseJSON.check_payment) {
-            for (let i = 0; i < CHECK_NUMBER; i++) {
-              if (error.responseJSON.check_payment[i].name) {
-                $(`#payment-check-name-${i} + div`).html(error.responseJSON.check_payment[i].name[0]);
-                $(`#payment-check-name-${i} + div`).addClass('d-inline');
-              }
-              if (error.responseJSON.check_payment[i].bank) {
-                console.log("plop")
-                $(`#payment-check-bank-${i} + div`).html(error.responseJSON.check_payment[i].bank[0]);
-                $(`#payment-check-bank-${i} + div`).addClass('d-inline');
-              }
-              if (error.responseJSON.check_payment[i].number) {
-                $(`#payment-check-number-${i} + div`).html(error.responseJSON.check_payment[i].number[0]);
-                $(`#payment-check-number-${i} + div`).addClass('d-inline');
-              }
-              if (error.responseJSON.check_payment[i].amount) {
-                $(`#payment-check-amount-${i} + div`).html(error.responseJSON.check_payment[i].amount[0]);
-                $(`#payment-check-amount-${i} + div`).addClass('d-inline');
-              }
-              if (error.responseJSON.check_payment[i].month) {
-                $(`#payment-check-month-${i} + div`).html('Veuiller sélectionner un mois');
-                $(`#payment-check-month-${i} + div`).addClass('d-inline');
-              }
-            }
-          }
-        }
-      });
+      event.currentTarget.submit();
     },
     error: (error) => {
       let errorMessage = '';
@@ -541,6 +478,158 @@ function patchMember(memberId, paymentId, event) {
   });
 }
 
+function patchPayment(memberId, paymentId, event) {
+  let paymentData = {
+    cash: $('#payment-cash').val() || 0,
+    ancv: {
+      amount: $('#payment-ancv-amount').val() || 0,
+      count: $('#payment-ancv-count').val() || 0,
+    },
+    other_payment: {
+      amount: $('#payment-other-amount').val() || 0,
+      comment: $('#payment-other-comment').val() || "A préciser",
+    },
+    sport_coupon: {
+      amount: $('#payment-coupon-amount').val() || 0,
+      count: $('#payment-coupon-count').val() || 0,
+    },
+    comment: $('#comment').val(),
+    refund: $('#payment-refund').val() || 0,
+    special_discount: $('#payment-special-discount').val() || 0,
+  };
+  var checks = [];
+  for (let i = 0; i < CHECK_NUMBER; i++) {
+    if ($(`#payment-check-amount-${i}`).val() !== '' || $(`#payment-check-number-${i}`).val() !== '') {
+      checks.push({
+        name: $(`#payment-check-name-${i}`).val(),
+        bank: $(`#payment-check-bank-${i}`).val(),
+        number: $(`#payment-check-number-${i}`).val(),
+        amount: $(`#payment-check-amount-${i}`).val(),
+        month: $(`#payment-check-month-${i}`).val(),
+      });
+    }
+  }
+  paymentData.check_payment = checks;
+  $.ajax({
+    url: paymentssUrl + paymentId + '/',
+    type: 'PATCH',
+    contentType: 'application/json',
+    headers: { 'X-CSRFToken': csrftoken },
+    mode: 'same-origin',
+    data: JSON.stringify(paymentData),
+    dataType: 'json',
+    success: () => {
+      if ($('#payment-pass-code').val() !== '') {
+        memberData = {
+          sport_pass: {
+            code: $('#payment-pass-code').val(),
+            amount: $('#payment-pass-amount').val(),
+          },
+        };
+        $.ajax({
+          url: membersUrl + memberId + '/',
+          type: 'PATCH',
+          contentType: 'application/json',
+          headers: { 'X-CSRFToken': csrftoken },
+          mode: 'same-origin',
+          data: JSON.stringify(memberData),
+          dataType: 'json',
+          success: () => {
+            event.currentTarget.submit();
+          },
+          error: (error) => {
+            if (!error.responseJSON) {
+              showToast('Une erreur est survenue lors de la mise à jour du paiement.');
+              console.log(error);
+            } else {
+              const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('member-error-toast'));
+              $('#member-error-body').text('Il y a un souci au niveau du Pass Sport. Veuillez vérifier les informations.');
+              toast.show();
+            }
+            if (error.responseJSON && error.responseJSON.sport_pass) {
+              if(error.responseJSON.sport_pass.amount) {
+                $('#invalid-sport-pass-amount').html(error.responseJSON.sport_pass.amount[0]);
+                $('#invalid-sport-pass-amount').addClass('d-inline');
+              }
+              if(error.responseJSON.sport_pass.count) {
+                $('#invalid-sport-pass-count').html(error.responseJSON.sport_pass.count[0]);
+                $('#invalid-sport-pass-count').addClass('d-inline');
+              }
+            }
+          }
+        });
+      } else {
+        event.currentTarget.submit();
+      }
+    },
+    error: (error) => {
+      if (!error.responseJSON) {
+        showToast('Une erreur est survenue lors de la mise à jour du paiement.');
+        console.log(error);
+      } else {
+        const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('member-error-toast'));
+        $('#member-error-body').text('Il y a un souci au niveau des paiements. Veuillez vérifier les informations.');
+        toast.show();
+      }
+      if (error.responseJSON && error.responseJSON.ancv) {
+        if(error.responseJSON.ancv.amount) {
+          $('#invalid-ancv-amount').html(error.responseJSON.ancv.amount[0]);
+          $('#invalid-ancv-amount').addClass('d-inline');
+        }
+        if(error.responseJSON.ancv.count) {
+          $('#invalid-ancv-count').html(error.responseJSON.ancv.count[0]);
+          $('#invalid-ancv-count').addClass('d-inline');
+        }
+      }
+      if (error.responseJSON && error.responseJSON.other_payment) {
+        if(error.responseJSON.other_payment.amount) {
+          $('#invalid-other-amount').html(error.responseJSON.other_payment.amount[0]);
+          $('#invalid-other-amount').addClass('d-inline');
+        }
+        if(error.responseJSON.other_payment.comment) {
+          $('#invalid-other-comment').html(error.responseJSON.other_payment.comment[0]);
+          $('#invalid-other-comment').addClass('d-inline');
+        }
+      }
+      if (error.responseJSON && error.responseJSON.sport_coupon) {
+        if(error.responseJSON.sport_coupon.amount) {
+          $('#invalid-coupon-amount').html(error.responseJSON.sport_coupon.amount[0]);
+          $('#invalid-coupon-amount').addClass('d-inline');
+        }
+        if(error.responseJSON.sport_coupon.count) {
+          $('#invalid-coupon-count').html(error.responseJSON.sport_coupon.count[0]);
+          $('#invalid-coupon-count').addClass('d-inline');
+        }
+      }
+      if (error.responseJSON && error.responseJSON.check_payment) {
+        for (let i = 0; i < CHECK_NUMBER; i++) {
+          if (error.responseJSON.check_payment[i].name) {
+            $(`#payment-check-name-${i} + div`).html(error.responseJSON.check_payment[i].name[0]);
+            $(`#payment-check-name-${i} + div`).addClass('d-inline');
+          }
+          if (error.responseJSON.check_payment[i].bank) {
+            $(`#payment-check-bank-${i} + div`).html(error.responseJSON.check_payment[i].bank[0]);
+            $(`#payment-check-bank-${i} + div`).addClass('d-inline');
+          }
+          if (error.responseJSON.check_payment[i].number) {
+            $(`#payment-check-number-${i} + div`).html(error.responseJSON.check_payment[i].number[0]);
+            $(`#payment-check-number-${i} + div`).addClass('d-inline');
+          }
+          if (error.responseJSON.check_payment[i].amount) {
+            $(`#payment-check-amount-${i} + div`).html(error.responseJSON.check_payment[i].amount[0]);
+            $(`#payment-check-amount-${i} + div`).addClass('d-inline');
+          }
+          if (error.responseJSON.check_payment[i].month) {
+            $(`#payment-check-month-${i} + div`).html('Veuiller sélectionner un mois');
+            $(`#payment-check-month-${i} + div`).addClass('d-inline');
+          }
+        }
+      }
+    }
+  });
+
+}
+
 function patchMemberCoursesActions(memberId, action) {
   let data = {
     courses: action === "add" ? $('#add-courses-select').val() : $('#courses-select').val(),
@@ -550,15 +639,13 @@ function patchMemberCoursesActions(memberId, action) {
   }
   $.ajax({
     url: membersUrl + memberId + '/courses/' + action + '/',
-    type: 'PATCH',
+    type: 'PUT',
     contentType: 'application/json',
     headers: { 'X-CSRFToken': csrftoken },
     mode: 'same-origin',
     data: JSON.stringify(data),
     dataType: 'json',
-    success: () => {
-      getMember(memberId);
-    },
+    success: () => {},
     error: (error) => {
       if (!error.responseJSON) {
         showToast(DEFAULT_ERROR);

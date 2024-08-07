@@ -3,8 +3,9 @@ import logging
 from enum import Enum
 from typing import Any
 
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 from django.db import transaction
+from django.db.utils import IntegrityError
 from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework import serializers
 
@@ -23,7 +24,6 @@ from members.models import (
     Teacher,
 )
 
-User = get_user_model()
 _logger = logging.getLogger(__name__)
 
 class SeasonSerializer(serializers.ModelSerializer):
@@ -206,6 +206,7 @@ class PaymentSerializer(WritableNestedModelSerializer, serializers.ModelSerializ
             "other_payment",
             "comment",
             "refund",
+            "special_discount",
         )
 
     def validate(self, attr: dict) -> dict:
@@ -287,7 +288,13 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
         self.validated_data["user"] = User.objects.get(username=username)
         contacts = self.validated_data.pop("contacts", None)
         documents = self.validated_data.pop("documents", None) if self.partial else None
-        member = super().save()
+        try:
+            member = super().save()
+        except IntegrityError:
+            raise serializers.ValidationError({
+                "first_name": "Cet adhérent existe déjà pour la saison.",
+                "last_name": "Cet adhérent existe déjà pour la saison.",
+            })
         if contacts is not None:
             member.contacts.clear()
             for contact in contacts:
@@ -302,8 +309,8 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
 
 
 class MemberRetrieveSerializer(MemberSerializer):
-    active_courses = CourseRetrieveSerializer(many=True)
-    cancelled_courses = CourseRetrieveSerializer(many=True)
+    active_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
+    cancelled_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
     season = SeasonSerializer()
 
 
@@ -329,9 +336,11 @@ class MemberCoursesSerializer(serializers.Serializer):
         validated = super().validate(attr)
         if self._action == MemberCoursesActionsEnum.REMOVE and validated.get("cancel_refund") is None:
             raise serializers.ValidationError({"cancel_refund": "Ce champ est obligatoire pour retirer un cours."})
+        if self._action == MemberCoursesActionsEnum.ADD and validated.get("cancel_refund") is not None:
+            raise serializers.ValidationError({"cancel_refund": "Ce champ ne doit pas être modifié pour ajouter un cours."})
         return validated
 
-    def save(self) -> None:
+    def save(self, **kwargs: Any) -> None:
         if self._action == MemberCoursesActionsEnum.ADD:
             self._member.active_courses.add(*self.validated_data.get("courses", []))
             self._member.cancelled_courses.remove(*self.validated_data.get("courses", []))

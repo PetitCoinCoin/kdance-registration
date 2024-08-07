@@ -140,6 +140,7 @@ class Payment(models.Model):
     other_payment = models.OneToOneField(OtherPayment, null=True, on_delete=models.SET_NULL)
     comment = models.CharField(null=False, blank=True, max_length=700, default='')
     refund = models.FloatField(null=False, default=0.0, validators=[MinValueValidator(0)])
+    special_discount = models.FloatField(null=False, default=0.0, validators=[MinValueValidator(0)])
 
     @property
     def due(self) -> float:
@@ -151,6 +152,7 @@ class Payment(models.Model):
                 total += 1
                 due += course.price
         # Discount
+        due -= self.special_discount
         if total >= self.season.discount_limit:
             due *= round(((100 - self.season.discount_percent) / 100), 2)
         # Adhesion and license
@@ -162,7 +164,7 @@ class Payment(models.Model):
 
     @property
     def paid(self) -> float:
-        paid = self.cash - self.refund
+        paid = self.cash
         if hasattr(self, "sport_coupon"):
             paid += self.sport_coupon.amount
         if hasattr(self, "ancv"):
@@ -172,7 +174,7 @@ class Payment(models.Model):
         for check in self.check_payment.all():
             paid += check.amount
         for member in Member.objects.filter(user=self.user, season=self.season).all():
-            if member.sport_pass_id:
+            if member.sport_pass:
                 paid += member.sport_pass.amount
         return paid
 
@@ -267,7 +269,7 @@ class ContactManager(models.Manager):
     def clean_orphan(self) -> None:
         """If contact is linked to no one, we delete it."""
         for contact in self.all():
-            if not contact.member_set.all():
+            if not contact.member_set.all():  # type:ignore[attr-defined]
                 contact.delete()
 
 

@@ -151,7 +151,9 @@ function getUser() {
       previousMembers.map((m) => {
         memberSelect.append($('<option>', { value: m.id, text: `${m.first_name} ${m.last_name}` }));
       })
-      data.payment.map((item, i) => {
+      data.payment.sort(
+        (a,b) => (a.season.year < b.season.year) ? 1 : ((b.season.year < a.season.year) ? -1 : 0)
+      ).map((item, i) => {
         const clone = accordionTemplate.content.cloneNode(true);
         // Payment info
         let title = clone.querySelector('span');
@@ -159,6 +161,7 @@ function getUser() {
         let dd = clone.querySelectorAll('dd.payment');
         dd[0].textContent = `${item.due}€`;
         dd[1].textContent = `${item.paid}€`;
+        dd[2].textContent = `${item.refund}€`;
         // Collapsible
         let collapseBtn = clone.querySelector('button');
         collapseBtn.dataset.bsTarget = `#accordion-${i}`;
@@ -209,9 +212,8 @@ function getUser() {
       })
     },
     error: (error) => {
-      // if (!error.responseJSON) {
-      //     $('#message-error-signup').removeAttr('hidden');
-      // }
+      showToast('Impossible de récupérer vos informations pour le moment.');
+      console.log(error);
     }
   });
 }
@@ -239,22 +241,22 @@ function patchUser() {
       data: JSON.stringify(data),
       dataType: 'json',
       success: () => {
-        // Check pwd update
         event.currentTarget.submit();
       },
       error: (error) => {
         if (!error.responseJSON) {
-          //   $('#message-error-signup').removeAttr('hidden');
+          showToast('Une erreur est survenue lors de la mise à jour de vos informations.');
+          console.log(error);
         }
-        if (error.responseJSON.username) {
+        if (error.responseJSON && error.responseJSON.username) {
           $('#invalid-edit-me-username').html(error.responseJSON.username[0]);
           $('#invalid-edit-me-username').addClass('d-inline');
         }
-        if (error.responseJSON.profile && error.responseJSON.profile.phone) {
+        if (error.responseJSON && error.responseJSON.profile && error.responseJSON.profile.phone) {
           $('#invalid-edit-me-phone').html(error.responseJSON.profile.phone[0] + ' Format attendu: 0123456789.');
           $('#invalid-edit-me-phone').addClass('d-inline');
         }
-        if (error.responseJSON.email) {
+        if (error.responseJSON && error.responseJSON.email) {
           $('#invalid-edit-me-email').html(error.responseJSON.email[0]);
           $('#invalid-edit-me-email').addClass('d-inline');
         }
@@ -286,15 +288,17 @@ function getCourses() {
         });
       },
       error: (error) => {
-        // if (!error.responseJSON) {
-        //     $('#message-error-signup').removeAttr('hidden');
-        // }
+        showToast('Impossible de récupérer les cours de la saison.');
+        console.log(error);
       }
     });
     let memberSeason = $('#member-season');
     memberSeason.append($('<option>', { value: seasonId, text: data[0].year }));
     memberSeason.val(seasonId)
-  }).catch(error => console.log(error));
+  }).catch(error => {
+    showToast('Impossible de récupérer la saison en cours.');
+    console.log(error);
+  });
 }
 
 function createUpdateMember() {
@@ -420,9 +424,8 @@ function getMember(member, isEdition) {
       });
     },
     error: (error) => {
-      // if (!error.responseJSON) {
-      //     $('#message-error-signup').removeAttr('hidden');
-      // }
+      showToast('Impossible de récupérer les informations de cet adhérent.');
+      console.log(error);
     }
   });
 }
@@ -434,6 +437,7 @@ function isMe(contact) {
 
 function postOrPatchMember(url, method, event) {
     $('.invalid-feedback').removeClass('d-inline');
+    $('#message-error-contact').addClass('d-none');
     let data = {
       first_name: $('#member-firstname').val(),
       last_name: $('#member-lastname').val(),
@@ -468,9 +472,45 @@ function postOrPatchMember(url, method, event) {
         event.currentTarget.submit();
       },
       error: (error) => {
-        // if (!error.responseJSON) {
-        //   $('#message-error-signup').removeAttr('hidden');
-        // }
+        if (!error.responseJSON) {
+          showToast('Une erreur est survenue lors de l\'enregistrement du membre.');
+          console.log(error);
+        } else {
+          const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('user-error-toast'));
+          let message = 'Certaines informations sont manquantes ou erronées. Veuillez vérifier les différents champs.';
+          if (error.responseJSON.contacts) {
+            message += ' Il y a notamment un souci au niveau des contacts.';
+          }
+          $('#user-error-body').text(message);
+          toast.show();
+        }
+        if (error.responseJSON && error.responseJSON.first_name) {
+          $('#invalid-member-first-name').html(error.responseJSON.first_name[0]);
+          $('#invalid-member-first-name').addClass('d-inline');
+        }
+        if (error.responseJSON && error.responseJSON.last_name) {
+          $('#invalid-member-last-name').html(error.responseJSON.last_name[0]);
+          $('#invalid-member-last-name').addClass('d-inline');
+        }
+        if (error.responseJSON && error.responseJSON.birthday) {
+          $('#invalid-member-birthday').html('Veuillez saisir une date valide.');
+          $('#invalid-member-birthday').addClass('d-inline');
+        }
+        if (error.responseJSON && error.responseJSON.address) {
+          $('#invalid-member-address').html(error.responseJSON.address[0]);
+          $('#invalid-member-address').addClass('d-inline');
+        }
+        if (error.responseJSON && error.responseJSON.email) {
+          $('#invalid-member-email').html(error.responseJSON.email[0]);
+          $('#invalid-member-email').addClass('d-inline');
+        }
+        if (error.responseJSON && error.responseJSON.phone) {
+          $('#invalid-member-phone').html(error.responseJSON.phone[0] + ' Format attendu: 0123456789.');
+          $('#invalid-member-phone').addClass('d-inline');
+        }
+        if (error.responseJSON && error.responseJSON.contacts) {
+          $('#message-error-contact').removeClass('d-none');
+        }
       }
   });
 }
@@ -547,9 +587,8 @@ function deleteItem() {
             location.reload();
           },
           error: (error) => {
-            // if (!error.responseJSON) {
-            //   $('#message-error-signup').removeAttr('hidden');
-            // }
+            showToast('Impossible ne erreur est survenue, impossible de supprimer le compte pour le moment.');
+            console.log(error);
           }
         });
       });
@@ -663,7 +702,7 @@ function updatePwd() {
         },
         error: (error) => {
           if (!error.responseJSON) {
-            $('#message-error-signup').removeAttr('hidden');
+            $('#message-error-edit-pwd').removeAttr('hidden');
           }
           if (error.responseJSON.old_password) {
             $('#invalid-pwd-old').html(error.responseJSON.old_password[0]);
@@ -680,4 +719,10 @@ function updatePwd() {
       return
     }
   });
+}
+
+function showToast(text) {
+  const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('user-error-toast'));
+  $('#user-error-body').text(`${text} ${ERROR_SUFFIX}`);
+  toast.show();
 }

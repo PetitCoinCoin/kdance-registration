@@ -19,6 +19,16 @@
       </div>
     </div>
 
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      <div id="user-error-toast" class="toast align-items-center bg-alert" role="alert" aria-live="assertive"
+        aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body fw-semibold" id="user-error-body"></div>
+          <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal -->
     {% csrf_token %}
     <div class="modal fade" id="edit-me-modal" tabindex="-1" aria-hidden="true">
@@ -90,7 +100,7 @@
             <div class="modal-body">
               <div class="row">
                 <div class="mb-4 fst-italic">
-                  <i class="bi-info-circle" style="color: purple;"></i>
+                  <i class="bi-info-circle" style="color: #852243;"></i>
                   Toute inscription est définitive, et l'adhésion restera dûe, même en cas de demande d'annulation de
                   cours.
                 </div>
@@ -123,19 +133,22 @@
                           <div class="col-4">
                             <div class="form-outline mb-4">
                               <label class="form-label required" for="member-firstname">Prénom</label>
-                              <input type="text" id="member-firstname" class="form-control" required />
+                              <input type="text" id="member-firstname" class="form-control" />
+                              <div id="invalid-member-first-name" class="invalid-feedback"></div>
                             </div>
                           </div>
                           <div class="col-4">
                             <div class="form-outline mb-4">
                               <label class="form-label required" for="member-lastname">Nom de famille</label>
-                              <input type="text" id="member-lastname" class="form-control" required />
+                              <input type="text" id="member-lastname" class="form-control" />
+                              <div id="invalid-member-last-name" class="invalid-feedback"></div>
                             </div>
                           </div>
                           <div class="col-4">
                             <div class="form-outline mb-4">
                               <label class="form-label required" for="member-birthday">Date de naissance</label>
-                              <input type="date" id="member-birthday" class="form-control" required />
+                              <input type="date" id="member-birthday" class="form-control"  />
+                              <div id="invalid-member-birthday" class="invalid-feedback"></div>
                             </div>
                           </div>
                         </div>
@@ -144,14 +157,14 @@
                             <div class="row">
                               <div class="form-outline mb-1">
                                 <label class="form-label required" for="member-phone">Téléphone</label>
-                                <input type="text" id="member-phone" class="form-control" maxlength="10" required />
+                                <input type="text" id="member-phone" class="form-control" maxlength="10" />
                                 <div id="invalid-member-phone" class="invalid-feedback"></div>
                               </div>
                             </div>
                             <div class="row">
                               <div class="form-outline mb-4">
                                 <label class="form-label required" for="member-email">Email</label>
-                                <input type="text" id="member-email" class="form-control" required />
+                                <input type="text" id="member-email" class="form-control" />
                                 <div id="invalid-member-email" class="invalid-feedback"></div>
                               </div>
                             </div>
@@ -159,7 +172,8 @@
                           <div class="col-8">
                             <div class="form-outline mb-4">
                               <label class="form-label required" for="member-address">Adresse</label>
-                              <textarea class="form-control" id="member-address" rows="4" required></textarea>
+                              <textarea class="form-control" id="member-address" rows="4"></textarea>
+                              <div id="invalid-member-address" class="invalid-feedback"></div>
                             </div>
                           </div>
                         </div>
@@ -217,6 +231,11 @@
                               </span>
                             </div>
                             <p class="mt-3 mb-0 fst-italic">Autres contacts d'urgence:</p>
+                        </div>
+                        <div id="message-error-contact" class="p-3 mb-2 bg-danger-subtle text-danger-emphasis d-none">
+                          Tous les champs d'un contact sont obligatoires.<br>
+                          Format attendu pour le téléphone: 0123456789.<br>
+                          Pour les responsables légaux (si besoin), vérifiez également que l'adresse email a un format valide.
                         </div>
                       </div>
                     </div>
@@ -354,6 +373,9 @@
                 </div>
                 <div id="invalid-pwd-confirmation" class="invalid-feedback">Le mot de passe ne correspond pas !</div>
               </div>
+              <div id="message-error-edit-pwd" class="p-3 mb-2 bg-danger-subtle text-danger-emphasis d-none">
+                Une erreur est survenue. Veuillez ré-essayer plus tard ou contacter K'Dance.
+              </div>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
@@ -390,11 +412,11 @@
         <div class="fst-italic mb-4">
           <p>Cet espace vous permet de gérer vos inscriptions d'une année sur l'autre. Pensez à bien maintenir vos
           coordonnées à jour afin de pouvoir vous joindre facilement et partager les différentes informations avec vous
-          tout au long de l'année.<br>
-          A ce jour, le paiement en ligne n'est pas encore possible, mais vous pouvez voir facilement un statut de votre
+          tout au long de l'année.</p>
+          <p>A ce jour, le paiement en ligne n'est pas encore possible, mais vous pouvez voir facilement un statut de votre
           compte pour la saison en cours, et faire passer votre règlement à K'Dance au forum des associations ou lors des
-          permanences.</p>
-          Pour commencer l'inscription, cliquez sur <i class="bi-plus-square" style="color: purple;"></i> <span
+          permanences. <a href = "/about">En savoir plus</a>.</p>
+          Pour commencer l'inscription, cliquez sur <i class="bi-plus-square" style="color: #852243;"></i> <span
             style="color:#0dcaf0;">Ajouter un nouvel adhérent</span> dans la saison en cours.
         </div>
         <div class="row mb-3">
@@ -464,6 +486,10 @@
                     <dt class="me-2">Payé:</dt>
                     <dd class="payment">€</dd>
                   </dl>
+                  <dl class="d-flex">
+                    <dt class="me-2">Remboursement perçu:</dt>
+                    <dd class="payment">€</dd>
+                  </dl>
                 </div>
               </div>
             </div>
@@ -490,12 +516,12 @@
         <template id="member-btn-template">
           <button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#copy-member-modal"
             id="copy-member-btn">
-            <i class="bi-plus-square" style="color: purple;"></i>
+            <i class="bi-plus-square" style="color: #852243;"></i>
             Ajouter un adhérent d'une saison précédente
           </button>
           <button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#member-modal"
             id="add-member-btn">
-            <i class="bi-plus-square" style="color: purple;"></i>
+            <i class="bi-plus-square" style="color: #852243;"></i>
             Ajouter un nouvel adhérent
           </button>
         </template>
@@ -518,26 +544,26 @@
             <div class="row flex-wrap align-items-end">
               <div class="col">
                 <div class="form-outline mb-4">
-                  <label class="form-label" for="firstname-">Prénom</label>
+                  <label class="form-label required" for="firstname-">Prénom</label>
                   <input type="text" id="firstname-" class="form-control" />
                 </div>
               </div>
               <div class="col">
                 <div class="form-outline mb-4">
-                  <label class="form-label" for="lastname-">Nom de famille</label>
+                  <label class="form-label required" for="lastname-">Nom de famille</label>
                   <input type="text" id="lastname-" class="form-control" />
                 </div>
               </div>
               <div class="col-3">
                 <div class="form-outline mb-4">
-                  <label class="form-label" for="phone-">Téléphone</label>
+                  <label class="form-label required" for="phone-">Téléphone</label>
                   <input type="text" id="phone-" maxlength="10" class="form-control" />
                   <div id="invalid-phone-" class="invalid-feedback"></div>
                 </div>
               </div>
               <div class="col-3">
                 <div class="form-outline mb-4">
-                  <label class="form-label" for="email-">Email</label>
+                  <label class="form-label required" for="email-">Email</label>
                   <input type="text" id="email-" class="form-control" />
                   <div id="invalid-email-" class="invalid-feedback"></div>
                 </div>

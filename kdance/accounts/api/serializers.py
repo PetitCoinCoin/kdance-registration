@@ -1,14 +1,14 @@
 import logging
 import re
 
+from contextlib import suppress
 from datetime import timedelta
 from hashlib import sha512
 from secrets import token_urlsafe
 from typing import Any
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.contrib.auth.models import User as UserType
+from django.contrib.auth.models import User
 from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.utils import timezone
@@ -21,7 +21,6 @@ from members.api.serializers import (
     PaymentSerializer,
 )
 
-User = get_user_model()
 _logger = logging.getLogger(__name__)
 
 PHONE_FORMAT_MSG = "Ce numéro de téléphone n'est pas valide. Format attendu: 0123456789."
@@ -77,14 +76,14 @@ class UserBaseSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def validate_email(email: str) -> str:
-        if User.objects.filter(email=email).exists():
+        if User.objects.filter(email=email.lower()).exists():
             raise serializers.ValidationError("Un utilisateur est déjà associé à cet email.")
         if re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
             return email.lower()
         raise serializers.ValidationError("Cette addresse email ne semble pas avoir un format valide.")
 
-    def create(self, validated_data: dict) -> UserType:
-        user: UserType = User.objects.create_user(
+    def create(self, validated_data: dict) -> User:
+        user: User = User.objects.create_user(
             username=validated_data["username"],
             email=validated_data["email"].lower(),
             password=validated_data["password"],
@@ -95,15 +94,15 @@ class UserBaseSerializer(serializers.ModelSerializer):
 
     @classmethod
     @transaction.atomic
-    def delete(cls, user: UserType) -> None:
+    def delete(cls, user: User) -> None:
         if user.username == settings.SUPERUSER:
             raise serializers.ValidationError("Cet utilisateur ne peut pas être supprimé.")
         user.delete()
 
     @transaction.atomic
-    def save(self, **kwargs: UserType) -> UserType:
+    def save(self, **kwargs: User) -> User:
         profile_data = self.validated_data.pop("profile", None)
-        user: UserType = super().save(**kwargs)
+        user: User = super().save(**kwargs)
         if profile_data:
             profile, _ = Profile.objects.get_or_create(user=user)
             profile.address = profile_data.get("address")
@@ -153,11 +152,62 @@ class UserCreateSerializer(UserBaseSerializer):
         return validate_phone(phone)
 
     @transaction.atomic
-    def save(self, **kwargs: UserType) -> None:
-        user: UserType = super().save(**kwargs)
+    def save(self, **kwargs: User) -> User:
+        user: User = super().save(**kwargs)
         if Season.objects.filter(is_current=True).exists():
             payment = Payment(user=user, season=Season.objects.get(is_current=True))
             payment.save()
+        return user
+
+    @classmethod
+    def send_email(cls, username: str) -> None:
+        with suppress(User.DoesNotExist):
+            user: User = User.objects.get(username=username)
+            _logger.info("Envoi d'un email de création de compte")
+            _logger.debug(f"Envoi vers {user.email}")
+            mail = EmailMultiAlternatives(
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[user.email],
+                reply_to=[settings.DEFAULT_FROM_EMAIL],
+                subject="Création d'un compte K'Dance",
+                body=cls.__build_text(username),
+            )
+            mail.attach_alternative(cls.__build_html(username), "text/html")
+            sent = mail.send()
+            if not sent:
+                _logger.warning("Echec de l'envoi du mail de créataion de compte pour %s", username)
+
+    @classmethod
+    def __build_text(cls, username: str) -> str:
+        message = f"""
+Bonjour
+
+Vous venez de créer votre compte K'Dance! Utilisez votre nom d'utilisateur ({username}) pour vous connecter.
+Vous pouvez désormais ajouter et gérer les adhérents de votre famille pour chaque nouvelle saison.
+N'oubliez pas d'utiliser également cet espace pour mettre à jour vos coordonnées en cas de changement.
+
+Bonne journée et à bientôt
+Tech K'Dance
+"""
+        return message
+
+    @classmethod
+    def __build_html(cls, username: str) -> str:
+        message = f"""
+<p>Bonjour</p>
+<p>
+  Vous venez de créer votre compte K'Dance! Utilisez votre nom d'utilisateur ({username}) pour vous connecter.
+  Vous pouvez désormais ajouter et gérer les adhérents de votre famille pour chaque nouvelle saison.
+</p>
+<p>
+  N'oubliez pas d'utiliser également cet espace pour mettre à jour vos coordonnées en cas de changement.
+</p>
+<p>
+  Bonne journée et à bientôt<br>
+  Tech K'Dance
+</p>
+"""
+        return message
 
 
 class UserSerializer(UserBaseSerializer):
@@ -202,13 +252,14 @@ class UserAdminActionSerializer(serializers.Serializer):
         super().__init__(**kwargs)
 
     def validate_emails(self, emails: list[str]) -> list:
-        if not self._is_admin and settings.SUPERUSER_EMAIL in emails:
+        normalized = [email.lower() for email in emails]
+        if settings.SUPERUSER_EMAIL in normalized and not self._is_admin:
             raise serializers.ValidationError(f"{settings.SUPERUSER}: cet utilisateur ne peut pas être supprimé.")
-        return emails
+        return normalized
 
     def save(self, **k_) -> dict:
         emails = self.validated_data.get("emails", [])
-        details = {
+        details: dict[str, list[str]] = {
             "processed": [],
             "not_found": [],
             "other": [],
@@ -231,7 +282,7 @@ class UserChangePwdSerializer(serializers.Serializer):
     old_password = serializers.CharField()
     new_password = serializers.CharField()
 
-    def __init__(self, user: UserType, **kwargs: Any) -> None:
+    def __init__(self, user: User, **kwargs: Any) -> None:
         self._user = user
         super().__init__(**kwargs)
 
@@ -252,7 +303,18 @@ class UserChangePwdSerializer(serializers.Serializer):
 class UserResetPwdSerializer(serializers.Serializer):
     email = serializers.CharField()
 
-    def save(self, user: UserType, path: str, **k_) -> None:
+    @staticmethod
+    def validate_email(email: str) -> str:
+        user = User.objects.filter(email=email.lower()).first()
+        if not user:
+            raise serializers.ValidationError("Email incorrect, cet utilisateur n'existe pas.")
+        return email.lower()
+
+    def save(self, **kwargs: Any) -> None:
+        user = User.objects.filter(email=self.validated_data["email"]).first()
+        path = kwargs.pop("path")
+        if not user or path is None:
+            raise
         token = token_urlsafe()
         if not ResetPassword.objects.filter(user=user).exists():
             ResetPassword(
@@ -324,6 +386,10 @@ class UserNewPwdSerializer(serializers.Serializer):
         validate_pwd(pwd)
         return pwd
 
+    @staticmethod
+    def validate_email(email: str) -> str:
+        return email.lower()
+
     def validate(self, attr: dict) -> dict:
         validated = super().validate(attr)
         user = User.objects.filter(email=validated.get("email")).first()
@@ -347,16 +413,15 @@ class UserNewPwdSerializer(serializers.Serializer):
 
 
 def validate_pwd(pwd: str) -> None:
-    if not pwd or len(pwd) < 8:
-            raise serializers.ValidationError("Votre mot de passe doit contenir au moins 8 caractères.")
-    if all(letter.islower() for letter in pwd):
-        raise serializers.ValidationError("Votre mot de passe doit contenir au moins une majuscule.")
-    if all(letter.isupper() for letter in pwd):
+    if not pwd or len(pwd) < 12:
+            raise serializers.ValidationError("Votre mot de passe doit contenir au moins 12 caractères.")
+    if all(letter.isupper() for letter in pwd if letter.isalpha()):
         raise serializers.ValidationError("Votre mot de passe doit contenir au moins une minuscule.")
+    if all(letter.islower() for letter in pwd if letter.isalpha()):
+        raise serializers.ValidationError("Votre mot de passe doit contenir au moins une majuscule.")
     if not any(letter.isdigit() for letter in pwd):
         raise serializers.ValidationError("Votre mot de passe doit contenir au moins un chiffre.")
-    if pwd.replace(" ", "").isalnum():
-        raise serializers.ValidationError("Votre mot de passe doit contenir au moins un caractère spécial.")
+
 
 def validate_phone(phone: str) -> str:
     if re.fullmatch(r"\d{10}", phone):

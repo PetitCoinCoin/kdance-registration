@@ -1,0 +1,54 @@
+{% extends 'layouts/base.html' %}
+
+{% load static %}
+
+{% block content %}
+
+<main>
+  <section>
+    <!-- Content -->
+    <div class="container">
+      <div class="text-center">
+        <h1 class="display-4 mb-3">A propos</h1>
+      </div>
+      <div id="about-div" class="container mt-5">
+        <p>
+          Cet espace a été conçu pour vous permettre de gérer facilement vos inscriptions aux cours de
+          l'association K'Dance. Vous pourrez désormais également facilement mettre à jour vos coordonnées,
+          afin de pouvoir recevoir toutes les informations envoyées pendant l'année.
+        </p>
+        <p>
+          C'est la première année! Nous avons essayé d'avoir le nécessaire, mais nous avons déjà d'autres idées de
+          fonctionnalités en tête. Si vous aussi vous avez des suggestions, des remarques, ou que vous constatez un
+          problème, n'hésitez pas à envoyer un email au support technique: 
+          <a href="mailto:tech@association-kdance.fr">tech@association-kdance.fr</a>.<br>
+          Ce site a été testé sous Firefox, sur ordinateur. Il est possible que pour le moment le rendu soit dégradé 
+          dans une autre configuration.
+        </p>
+        <p>
+          Parmi les fonctionnalités envisagées, il y a bien sur le règlement de l'inscription en ligne. Nous
+          réfléchissons encore au sujet, et avons choisi de le mettre de côté pour cette rentrée 2024, afin de tout de
+          même pouvoir vous proposer cet outil.<br>En attendant, une fois toutes vos inscriptions effectuées pour la
+          nouvelle saison, vous verrez dans votre espace le montant dû pour la saison. Vous pourrez alors régler en
+          espèces / chèques (jusqu'à 6) / ANCV / Pass Sport / Coupons sport comme les années précédentes. Le règlement
+          sera à déposer au forum, ou lors de permanences qui auront lieu à la fin du mois de septembre.
+        </p>
+        <p>
+          Vos données sont conservées, comme les années précédentes, uniquement afin de pouvoir vous joindre en cas de
+          problème, ou tout simplement pour diffuser des informations liées à la vie de l'association. Il est également
+          prévu (mais pas encore implémenté !) de supprimer toutes vos données après un certain temps d'inactivité sur
+          le compte.
+        </p>
+        <p>
+          Vous savez tout ! Vous pouvez désormais {% if user.is_authenticated %}<a href="/">retourner sur votre
+            compte</a>{% else %}<a href="/login">aller vous connecter</a>{% endif %}.<br>A bientôt,
+        </p>
+        <p>
+          L'équipe K'Dance
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
+
+{% endblock content %}
