@@ -39,7 +39,7 @@ class TestPasswordResetView(AuthTestCase):
     def test_reset_password(self, email):
         assert ResetPassword.objects.count() == 0
         response = self.client.post(self.view_url, data={"email": email})
-        assert response.status_code == 202, response.json()
+        assert response.status_code == 202, response
         assert ResetPassword.objects.count() == 1
         assert len(mail.outbox) == 1
         email_sent = mail.outbox[0]
@@ -57,7 +57,7 @@ class TestPasswordResetView(AuthTestCase):
             data["email"] = email
         assert ResetPassword.objects.count() == 0
         response = self.client.post(self.view_url, data=data)
-        assert response.status_code == 400, response.json()
+        assert response.status_code == 400, response
         assert message in response.json()["email"]
         assert ResetPassword.objects.count() == 0
         assert len(mail.outbox) == 0
@@ -106,7 +106,7 @@ class TestPasswordNewView(AuthTestCase):
 
             },
         )
-        assert response.status_code == 200, response.json()
+        assert response.status_code == 200, response
         assert ResetPassword.objects.count() == 0
         self.testuser.refresh_from_db()
         assert self.testuser.check_password(new_pwd)
@@ -130,7 +130,7 @@ class TestPasswordNewView(AuthTestCase):
 
             },
         )
-        assert response.status_code == 400, response.json()
+        assert response.status_code == 400, response
         assert error_key in response.json().keys()
         assert message in response.json()[error_key]
         assert ResetPassword.objects.count() == 1
@@ -147,7 +147,7 @@ class TestPasswordNewView(AuthTestCase):
 
             },
         )
-        assert response.status_code == 400, response.json()
+        assert response.status_code == 400, response
         assert "token" in response.json().keys()
         assert "Lien de réinitialisation expiré. Veuillez refaire une demande de réinitialisation." in response.json()["token"]
         assert ResetPassword.objects.count() == 1

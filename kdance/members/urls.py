@@ -35,7 +35,4 @@ urlpatterns = [
     path("super/member_mgmt/", member_mgmt, name="member_mgmt"),
     path("super/list_dl/", list_dl, name="list_dl"),
     path("api/", include(router.urls)),
-    path("api/members/<int:pk>/courses/<str:action>/", MemberViewSet.as_view(actions={
-        "patch": "courses",
-    }), name="api-member-courses"),
 ]

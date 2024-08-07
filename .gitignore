@@ -3,6 +3,7 @@
 
 # tests
 htmlcov
+db.sqlite3
 .coverage
 .pytest_cache
 

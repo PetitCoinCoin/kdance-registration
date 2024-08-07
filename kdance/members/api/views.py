@@ -141,7 +141,7 @@ class MemberViewSet(
     DestroyModelMixin,
     GenericViewSet,
 ):
-    http_method_names = ["get", "post", "patch", "delete"]
+    http_method_names = ["get", "post", "patch", "delete", "put"]
 
     def get_serializer_class(self):
         if self.request.method.lower() == "get":
@@ -167,6 +167,25 @@ class MemberViewSet(
                 queryset = queryset.filter(ffd_license=0)
         return queryset.order_by("-season__year", "last_name", "first_name")
 
+    def retrieve(self, request: Request, *a, **k) -> Response:
+        instance = self.get_object()
+        if not request.user.is_superuser and instance.user != request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    def list(self, request: Request, *a, **k) -> Response:
+        queryset = self.filter_queryset(self.get_queryset())
+        if not request.user.is_superuser:
+            queryset = queryset.filter(user__id=request.user.pk)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
     def create(self, request: Request, *a, **k) -> Response:
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -174,11 +193,24 @@ class MemberViewSet(
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+    def update(self, request: Request, *args, **kwargs) -> Response:
+        if request.method and request.method.lower() == "put":
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        instance = self.get_object()
+        if not request.user.is_superuser and instance.user != request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        return super().update(request, *args, **kwargs)
+
     def perform_update(self, serializer: serializers.BaseSerializer):
         user = self.get_object().user
         serializer.save(user=user)
 
-    @action(detail=True, methods=["put"], serializer_class=MemberCoursesSerializer)
+    @action(
+        detail=True,
+        methods=["put"],
+        serializer_class=MemberCoursesSerializer,
+        url_path=r"courses/(?P<action>\w+)",
+    )
     def courses(self, request: Request, action: str, *_a, **_k) -> Response:
         if action not in [action.value for action in MemberCoursesActionsEnum]:
             return Response(status=status.HTTP_404_NOT_FOUND)

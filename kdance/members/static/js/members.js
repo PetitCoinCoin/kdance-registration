@@ -639,7 +639,7 @@ function patchMemberCoursesActions(memberId, action) {
   }
   $.ajax({
     url: membersUrl + memberId + '/courses/' + action + '/',
-    type: 'PATCH',
+    type: 'PUT',
     contentType: 'application/json',
     headers: { 'X-CSRFToken': csrftoken },
     mode: 'same-origin',

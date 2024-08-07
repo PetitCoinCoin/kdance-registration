@@ -5,6 +5,7 @@ from typing import Any
 
 from django.contrib.auth.models import User
 from django.db import transaction
+from django.db.utils import IntegrityError
 from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework import serializers
 
@@ -287,7 +288,13 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
         self.validated_data["user"] = User.objects.get(username=username)
         contacts = self.validated_data.pop("contacts", None)
         documents = self.validated_data.pop("documents", None) if self.partial else None
-        member = super().save()
+        try:
+            member = super().save()
+        except IntegrityError:
+            raise serializers.ValidationError({
+                "first_name": "Cet adhérent existe déjà pour la saison.",
+                "last_name": "Cet adhérent existe déjà pour la saison.",
+            })
         if contacts is not None:
             member.contacts.clear()
             for contact in contacts:
@@ -329,6 +336,8 @@ class MemberCoursesSerializer(serializers.Serializer):
         validated = super().validate(attr)
         if self._action == MemberCoursesActionsEnum.REMOVE and validated.get("cancel_refund") is None:
             raise serializers.ValidationError({"cancel_refund": "Ce champ est obligatoire pour retirer un cours."})
+        if self._action == MemberCoursesActionsEnum.ADD and validated.get("cancel_refund") is not None:
+            raise serializers.ValidationError({"cancel_refund": "Ce champ ne doit pas être modifié pour ajouter un cours."})
         return validated
 
     def save(self, **kwargs: Any) -> None:

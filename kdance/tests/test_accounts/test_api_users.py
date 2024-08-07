@@ -75,7 +75,7 @@ class TestUsersView(AuthTestCase):
     def test_get(self):
         with AuthenticatedAction(self.client, self.super_testuser):
             response = self.client.get(self.view_url)
-            assert response.status_code == 200, response.json()
+            assert response.status_code == 200, response
             response_json = response.json()
             assert len(response_json) == 3  # kdance, testuser, super_testuser
             super_user = next(user for user in response_json if user["username"] == self.super_testuser.username)
@@ -85,7 +85,7 @@ class TestUsersView(AuthTestCase):
     def test_post_authenticated(self):
         with AuthenticatedAction(self.client, self.super_testuser):
             response = self.client.post(self.view_url, data=self._TEST_DATA, content_type="application/json")
-            assert response.status_code == 201, response.json()
+            assert response.status_code == 201, response
             new_user = User.objects.last()
             assert new_user.first_name == self._TEST_DATA["first_name"]
             assert new_user.profile.phone == self._TEST_DATA["phone"]
@@ -98,7 +98,7 @@ class TestUsersView(AuthTestCase):
 
     def test_post_not_authenticated(self):
         response = self.client.post(self.view_url, data=self._TEST_DATA, content_type="application/json")
-        assert response.status_code == 201, response.json()
+        assert response.status_code == 201, response
         new_user = User.objects.last()
         assert new_user.first_name == self._TEST_DATA["first_name"]
         assert new_user.profile.phone == self._TEST_DATA["phone"]
@@ -126,7 +126,7 @@ class TestUsersView(AuthTestCase):
         data = deepcopy(self._TEST_DATA)
         data[key] = value
         response = self.client.post(self.view_url, data=data, content_type="application/json")
-        assert response.status_code == 400, response.json()
+        assert response.status_code == 400, response
         assert message in response.json()[key]
 
     def test_post_payload_format(self):
@@ -144,7 +144,7 @@ class TestUsersView(AuthTestCase):
             },
             content_type="application/json",
         )
-        assert response.status_code == 201, response.json()
+        assert response.status_code == 201, response
         response_json = response.json()
         assert response_json["first_name"] == "Plip Plip"
         assert response_json["last_name"] == "Plop"
@@ -227,7 +227,7 @@ class TestUsersAdminView(AuthTestCase):
                 data={"emails": emails},
                 content_type="application/json",
             )
-            assert response.status_code == status_code, response.json()
+            assert response.status_code == status_code, response
             response_json = response.json()
             assert response_json["processed"] == processed
             assert response_json["not_found"] == not_found
@@ -243,7 +243,7 @@ class TestUsersAdminView(AuthTestCase):
                 data={"emails": []},
                 content_type="application/json",
             )
-            assert response.status_code == 404, response.json()
+            assert response.status_code == 404, response
 
     def test_put_deactivate_kdance_impossible(self):
         self._kwargs["action"] = "deactivate"
@@ -253,6 +253,6 @@ class TestUsersAdminView(AuthTestCase):
                 data={"emails": [settings.SUPERUSER_EMAIL, self._tmp_user.email]},
                 content_type="application/json",
             )
-            assert response.status_code == 400, response.json()
+            assert response.status_code == 400, response
             assert f"{settings.SUPERUSER}: cet utilisateur ne peut pas être supprimé." in response.json()["emails"]
             assert User.objects.get(username=settings.SUPERUSER).is_superuser is True

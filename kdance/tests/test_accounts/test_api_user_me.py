@@ -50,7 +50,7 @@ class TestUserMeView(AuthTestCase):
     def test_get(self):
         with AuthenticatedAction(self.client, self.testuser):
             response = self.client.get(self.view_url)
-            assert response.status_code == 200, response.json()
+            assert response.status_code == 200, response
             response_json = response.json()
             assert response_json["username"] == self.testuser.username
             assert response_json["email"] == self.testuser.email
@@ -59,7 +59,7 @@ class TestUserMeView(AuthTestCase):
     def test_patch(self):
         with AuthenticatedAction(self.client, self.testuser):
             response = self.client.patch(self.view_url, data=self._TEST_DATA, content_type="application/json")
-            assert response.status_code == 200, response.json()
+            assert response.status_code == 200, response
             self.testuser.refresh_from_db()
             assert self.testuser.first_name == self._TEST_DATA["first_name"]
             assert self.testuser.profile.phone == self._TEST_DATA["profile"]["phone"]
@@ -151,7 +151,7 @@ class TestUserMePasswordView(AuthTestCase):
                 data={"old_password": self._PASSWORD, "new_password": "SuperM0tdePass3Auss1"},
                 content_type="application/json",
             )
-            assert response.status_code == 204, response.json()
+            assert response.status_code == 204, response
 
     @parameterized.expand([
         ("Oupsy", "SuperM0tdePass3Auss1", "old_password", "Mot de passe actuel invalide."),
@@ -167,5 +167,5 @@ class TestUserMePasswordView(AuthTestCase):
                 data={"old_password": old_pwd, "new_password": new_pwd},
                 content_type="application/json",
             )
-            assert response.status_code == 400, response.json()
+            assert response.status_code == 400, response
             assert message in response.json()[key]
