@@ -100,7 +100,7 @@ class TestMembersApiView(AuthTestCase):
     ])
     def test_authentication_mandatory(self, method, with_pk):
         self._kwargs = {"pk": self._member.pk} if with_pk else {}
-        assert self.authentication_is_mandatory(method)
+        assert self.anonymous_has_permission(method, 403)
 
     @parameterized.expand([
         (200, False, False),
@@ -420,9 +420,9 @@ class TestMembersCoursesApiView(AuthTestCase):
     ])
     def test_authentication_mandatory(self, method):
         self._kwargs["action"] = "add"
-        assert self.authentication_is_mandatory(method)
+        assert self.anonymous_has_permission(method, 403)
         self._kwargs["action"] = "remove"
-        assert self.authentication_is_mandatory(method)
+        assert self.anonymous_has_permission(method, 403)
 
     def test_add(self):
         course = self.set_course()

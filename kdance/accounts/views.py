@@ -1,10 +1,13 @@
 from django.contrib.auth import login, logout, authenticate
 from django.http import Http404, HttpRequest, HttpResponse
+from django.views.decorators.http import require_http_methods
 from django.shortcuts import redirect, render
 
+@require_http_methods(["GET"])
 def signup_view(request: HttpRequest) -> HttpResponse:
     return render(request, "registration/signup.html")
 
+@require_http_methods(["GET", "POST"])
 def login_view(request: HttpRequest) -> HttpResponse:
     logout(request)
     message = ""
@@ -24,9 +27,13 @@ def login_view(request: HttpRequest) -> HttpResponse:
     else:
         return render(request, "registration/login.html", context={"error": None})
 
+@require_http_methods(["GET"])
 def password_reset_view(request) -> HttpResponse:
+    if request.user.is_authenticated:
+        return redirect("index")
     return render(request, "pages/pwd_reset.html")
 
+@require_http_methods(["GET"])
 def password_new_view(request) -> HttpResponse:
     if not request.GET.get("token"):
         raise Http404

@@ -74,9 +74,10 @@ class AuthTestCase(TestCase):
                     return False
         return True
 
-    def authentication_is_mandatory(
+    def anonymous_has_permission(
         self,
         method: str,
+        status: int,
         urls: list[str] | str | None = None,
         **kwargs
     ) -> bool:
@@ -88,6 +89,6 @@ class AuthTestCase(TestCase):
         for url in urls:
             response = getattr(self.client, method)(url, **kwargs)
             _logger.debug("without auth response: %s", response)
-            if response.status_code != 403:
+            if response.status_code != status:
                 return False
         return True

@@ -45,7 +45,7 @@ class TestUserMeView(AuthTestCase):
         "get", "post", "put", "patch", "delete",
     ])
     def test_authentication_mandatory(self, method):
-        assert self.authentication_is_mandatory(method)
+        assert self.anonymous_has_permission(method, 403)
 
     def test_get(self):
         with AuthenticatedAction(self.client, self.testuser):
@@ -142,7 +142,7 @@ class TestUserMePasswordView(AuthTestCase):
         "get", "post", "put", "patch", "delete",
     ])
     def test_authentication_mandatory(self, method):
-        assert self.authentication_is_mandatory(method)
+        assert self.anonymous_has_permission(method, 403)
 
     def test_put(self):
         with AuthenticatedAction(self.client, self._tmp_user):

@@ -70,7 +70,12 @@ class TestUsersView(AuthTestCase):
     def test_authentication_mandatory(self, method, url):
         """Mandatory except for POST (user creation)."""
         url = url or self.view_url
-        assert self.authentication_is_mandatory(method, url) is (method != "post")
+        status = 400 if method == "post" else 403
+        assert self.anonymous_has_permission(
+            method=method,
+            status=status,
+            urls=[url],
+        )
 
     def test_get(self):
         with AuthenticatedAction(self.client, self.super_testuser):
@@ -201,7 +206,8 @@ class TestUsersAdminView(AuthTestCase):
     ])
     def test_authentication_mandatory(self, method):
         # POST does not require authentication for user creation, but does not exist on this url, thus 405.
-        assert self.authentication_is_mandatory(method) is (method != "post")
+        status = 405 if method == "post" else 403
+        assert self.anonymous_has_permission(method, status)
 
     @parameterized.expand([
         (None, "activate", 200, None, [], []),

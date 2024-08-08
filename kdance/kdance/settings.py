@@ -140,6 +140,7 @@ SUPERUSER_PWD = os.getenv("SUPERUSER_PWD")
 LOGIN_URL = "/login/"
 LOGOUT_REDIRECT_URL = "/login/"
 CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 7  # 1 week
 
 # Internationalization
 LANGUAGE_CODE = "fr-fr"
