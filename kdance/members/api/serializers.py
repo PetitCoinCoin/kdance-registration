@@ -39,9 +39,9 @@ class SeasonSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def validate_year(year: str) -> str:
-        last_season = Season.objects.order_by('year').last()
+        last_season = Season.objects.order_by("year").last()
         if last_season and year < last_season.year:
-            raise serializers.ValidationError('On ne peut pas créer de saison dans le passé !')
+            raise serializers.ValidationError("On ne peut pas créer de saison dans le passé !")
         return year
 
 class TeacherSerializer(serializers.ModelSerializer):

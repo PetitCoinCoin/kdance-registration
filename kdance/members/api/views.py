@@ -51,9 +51,9 @@ class SeasonViewSet(
     def get_queryset(self):
         queryset = Season.objects.all()
         is_current = self.request.query_params.get("is_current", "")
-        if is_current.lower() in ["true", 1]:
+        if is_current.lower() in ["true", "1"]:
             queryset = queryset.filter(is_current=True)
-        elif is_current.lower() in ["false", 0]:
+        elif is_current.lower() in ["false", "0"]:
             queryset = queryset.filter(is_current=False)
         return queryset.order_by("-year")
 

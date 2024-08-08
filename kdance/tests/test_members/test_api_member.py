@@ -1,7 +1,7 @@
-"""Tests related to Members API view."""
-import pytest
-
+"""Tests related to Member API view."""
 from datetime import datetime, time, timezone
+
+import pytest
 
 from django.urls import reverse
 from parameterized import parameterized
@@ -17,7 +17,7 @@ from tests.authentication import AuthenticatedAction, AuthTestCase
 
 
 @pytest.mark.django_db
-class TestMembersApiView(AuthTestCase):
+class TestMemberApiView(AuthTestCase):
     view_function = MemberViewSet
     _kwargs = {}
 
