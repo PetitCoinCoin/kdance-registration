@@ -2,7 +2,6 @@ from django.contrib.auth import login, logout, authenticate
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 
-
 def signup_view(request: HttpRequest) -> HttpResponse:
     return render(request, "registration/signup.html")
 
@@ -15,6 +14,9 @@ def login_view(request: HttpRequest) -> HttpResponse:
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
+            if not request.POST.get("remember", ""):
+                # session cookie will expire when the user’s web browser is closed.
+                request.session.set_expiry(0)
             return redirect("super_index" if user.is_superuser else "index")  # type: ignore[attr-defined]
         else:
             message = "Utilisateur et/ou mot de passe incorrect(s). La connexion a échoué."
