@@ -10,7 +10,11 @@ class SuperUserPermission(BasePermission):
         if request.user and request.user.is_authenticated:
             if request.user.is_superuser or request.path.startswith("/api/user/me"):
                 return True
-            if request.method == "GET" and not request.path.startswith("/api/users") and not request.path.startswith("/api/members"):
+            if request.method == "GET" and not (
+                request.path.startswith("/api/users") or \
+                    request.path.startswith("/api/members") or \
+                        request.path.startswith("/api/payments") or \
+                            request.path.startswith("/api/checks")):
                 return True
             if request.method not in ("PUT", "DELETE") and request.path.startswith("/api/members/"):
                 return True

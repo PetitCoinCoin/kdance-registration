@@ -210,9 +210,8 @@ class PaymentSerializer(WritableNestedModelSerializer, serializers.ModelSerializ
         )
 
     def validate(self, attr: dict) -> dict:
-        _logger.info("ici")
         if not attr.get("other_payment", {}).get("comment", "") and not attr.get("other_payment", {}).get("amount", 0):
-            attr.pop("other_payment")
+            attr.pop("other_payment", None)
         return super().validate(attr)
 
     @transaction.atomic
