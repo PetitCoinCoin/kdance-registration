@@ -45,6 +45,16 @@ class TestMemberApiView(AuthTestCase):
         )
         self._member = member
 
+    def setup_course(self) -> Course:
+        return Course.objects.create(
+            name="Cha cha cha",
+            season=self._season,
+            price=10,
+            weekday=0,
+            start_hour=time(10, 0),
+            end_hour=time(11, 0),
+        )
+
     @property
     def view_url(self):
         return reverse(
@@ -58,6 +68,7 @@ class TestMemberApiView(AuthTestCase):
         ("post", 400, 400, False),
         ("put", 403, 405, True),
         ("patch", 200, 200, True),
+        ("delete", 403, 204, True),
     ])
     def test_permissions(self, method, user_status, superuser_status, with_pk):
         self._kwargs = {"pk": self._member.pk} if with_pk else {}
@@ -65,29 +76,6 @@ class TestMemberApiView(AuthTestCase):
             method=method,
             user_status=user_status,
             superuser_status=superuser_status,
-        )
-
-    def test_delete_permissions(self):
-        def gen_pk():
-            val = 0
-            new_member = Member.objects.create(
-                user=self.testuser,
-                season=self._season,
-                first_name=f"Plip{val}",
-                last_name="Plop",
-                birthday=datetime(1900, 1, 10 + val, tzinfo=timezone.utc),
-                address="Par ici",
-                email="plip@plop.fr",
-                phone="0987654321",
-            )
-            yield new_member.pk
-            val += 1
-
-        assert self.users_have_permission(
-            urls=(reverse("api-members-detail", args=[next(gen_pk())]), self.view_function),
-            method="delete",
-            user_status=403,
-            superuser_status=204,
         )
 
     @parameterized.expand([
@@ -172,6 +160,7 @@ class TestMemberApiView(AuthTestCase):
     ])
     def test_post(self, first_name, exp_first_name, last_name, exp_last_name, email, exp_email):
         """Tests creation with data formating."""
+        course = self.setup_course()
         data = {
             "season": self._season.pk,
             "first_name": first_name,
@@ -184,6 +173,7 @@ class TestMemberApiView(AuthTestCase):
                 "code": "AZE-AZE-AZE",
                 "amount": 50,
             },
+            "active_courses": [course.pk],
             "contacts": [],
             "documents": {
                 "authorise_photos": False,
@@ -213,19 +203,21 @@ class TestMemberApiView(AuthTestCase):
         assert Documents.objects.filter(member__id=new_member.pk)
 
     @parameterized.expand([
-        ("Plip", "Plop", None, None, None, None, "first_name", "Cet adhérent existe déjà pour la saison."),
-        ("plip", "PLOP", None, None, None, None, "last_name", "Cet adhérent existe déjà pour la saison."),
-        ("", "Pouet", None, None, None, None, "first_name", "Ce champ ne peut être vide."),
-        ("Jean-Mich", "", None, None, None, None, "last_name", "Ce champ ne peut être vide."),
-        (None, None, "jm.com", None, None, None, "email", "Saisissez une adresse e-mail valide."),
-        (None, None, "", None, None, None, "email", "Ce champ ne peut être vide."),
-        (None, None, None, "+331234", None, None, "phone", "Saisissez une valeur valide."),
-        (None, None, None, "", None, None, "phone", "Ce champ ne peut être vide."),
-        (None, None, None, None, "", None, "address", "Ce champ ne peut être vide."),
-        (None, None, None, None, None, "24/12/2000", "birthday", "La date n'a pas le bon format. Utilisez un des formats suivants\xa0: YYYY-MM-DD."),
-        (None, None, None, None, None, "", "birthday", "La date n'a pas le bon format. Utilisez un des formats suivants\xa0: YYYY-MM-DD."),
+        ("Plip", "Plop", None, None, None, None, True, "first_name", "Cet adhérent existe déjà pour la saison."),
+        ("plip", "PLOP", None, None, None, None, True, "last_name", "Cet adhérent existe déjà pour la saison."),
+        ("", "Pouet", None, None, None, None, True, "first_name", "Ce champ ne peut être vide."),
+        ("Jean-Mich", "", None, None, None, None, True, "last_name", "Ce champ ne peut être vide."),
+        (None, None, "jm.com", None, None, None, True, "email", "Saisissez une adresse e-mail valide."),
+        (None, None, "", None, None, None, True, "email", "Ce champ ne peut être vide."),
+        (None, None, None, "+331234", None, None, True, "phone", "Saisissez une valeur valide."),
+        (None, None, None, "", None, None, True, "phone", "Ce champ ne peut être vide."),
+        (None, None, None, None, "", None, True, "address", "Ce champ ne peut être vide."),
+        (None, None, None, None, None, None, False, "active_courses", "Vous devez sélectionner au moins un cours."),
+        (None, None, None, None, None, "24/12/2000", True, "birthday", "La date n'a pas le bon format. Utilisez un des formats suivants\xa0: YYYY-MM-DD."),
+        (None, None, None, None, None, "", True, "birthday", "La date n'a pas le bon format. Utilisez un des formats suivants\xa0: YYYY-MM-DD."),
     ])
-    def test_post_payload_error(self, first_name, last_name, email, phone, address, birthday, key, message):
+    def test_post_payload_error(self, first_name, last_name, email, phone, address, birthday, courses, key, message):
+        course = self.setup_course()
         data = {
             "user": self.testuser.pk,
             "season": self._season.pk,
@@ -235,6 +227,7 @@ class TestMemberApiView(AuthTestCase):
             "address": "Par ici",
             "email": "j@m.com",
             "phone": "0987654321",
+            "active_courses": [course.pk],
             "contacts": [],
             "documents": {
                 "authorise_photos": False,
@@ -254,6 +247,8 @@ class TestMemberApiView(AuthTestCase):
             data["address"] = address
         if birthday is not None:
             data["birthday"] = birthday
+        if not courses:
+            data.pop("active_courses")
         self._kwargs = {}
         assert Member.objects.count() == 1
 

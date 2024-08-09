@@ -177,5 +177,5 @@ class TestPaymentApiView(AuthTestCase):
         assert self.testuser.payment_set.first().paid == paid
         assert self.testuser.payment_set.first().due == due
 
-    def test_patch_payload_error():
+    def test_patch_payload_error(self):
         pass

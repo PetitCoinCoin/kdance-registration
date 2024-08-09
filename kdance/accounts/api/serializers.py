@@ -63,7 +63,7 @@ class UserBaseSerializer(serializers.ModelSerializer):
     @staticmethod
     def validate_username(username: str) -> str:
         if User.objects.filter(username__iexact=username).exists():
-            raise serializers.ValidationError("Ce nom d'utilisateur est déjà pris.")
+            raise serializers.ValidationError("Cet identifiant est déjà pris.")
         return username
 
     @staticmethod
@@ -182,7 +182,7 @@ class UserCreateSerializer(UserBaseSerializer):
         message = f"""
 Bonjour
 
-Vous venez de créer votre compte K'Dance! Utilisez votre nom d'utilisateur ({username}) pour vous connecter.
+Vous venez de créer votre compte K'Dance! Utilisez votre identifiant ({username}) pour vous connecter.
 Vous pouvez désormais ajouter et gérer les adhérents de votre famille pour chaque nouvelle saison.
 N'oubliez pas d'utiliser également cet espace pour mettre à jour vos coordonnées en cas de changement.
 
@@ -196,7 +196,7 @@ Tech K'Dance
         message = f"""
 <p>Bonjour</p>
 <p>
-  Vous venez de créer votre compte K'Dance! Utilisez votre nom d'utilisateur ({username}) pour vous connecter.
+  Vous venez de créer votre compte K'Dance! Utilisez votre identifiant ({username}) pour vous connecter.
   Vous pouvez désormais ajouter et gérer les adhérents de votre famille pour chaque nouvelle saison.
 </p>
 <p>

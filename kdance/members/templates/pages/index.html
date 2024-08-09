@@ -41,7 +41,7 @@
           <form id="form-me" name="form-me">
             <div class="modal-body">
               <div class="form-outline mb-4">
-                <label class="form-label required" for="edit-me-username">Nom d'utilisateur</label>
+                <label class="form-label required" for="edit-me-username">Identifiant</label>
                 <input type="text" id="edit-me-username" class="form-control" required />
                 <div id="invalid-edit-me-username" class="invalid-feedback"></div>
               </div>
@@ -256,13 +256,10 @@
                             <label class="form-label min-w-fit me-3" for="member-courses">License FFD</label>
                             <select id="member-license" class="form-select"></select>
                           </div>
-                          <label class="form-label" for="member-courses"><i>Maintenir la touche Ctrl enfoncée pour
-                              sélectionner plusieurs cours</i></label>
-                          <select id="member-courses" class="form-select" multiple></select>
-                          <div class="invalid-feedback d-block">
-                            Attention, toute modification, ajout ou suppression ultérieure de cours devra se faire
-                            auprès de l'équipe K'Dance.
-                          </div>
+                          <label class="form-label color-alert" for="member-courses"><i>Attention, toute modification, ajout ou suppression ultérieure de cours devra se faire
+                            auprès de l'équipe K'Dance.</i></label>
+                          <div id="member-courses"><i>pouet</i></div>
+                          <div id="invalid-member-courses" class="invalid-feedback"></div>
                           <p class="mb-2 mt-2"><strong>Adhésion à l'association:</strong> 10€</p>
                         </div>
                       </div>
@@ -410,14 +407,11 @@
       {% if user.is_authenticated %}
       <div class="container">
         <div class="fst-italic mb-4">
-          <p>Cet espace vous permet de gérer vos inscriptions d'une année sur l'autre. Pensez à bien maintenir vos
-          coordonnées à jour afin de pouvoir vous joindre facilement et partager les différentes informations avec vous
-          tout au long de l'année.</p>
           <p>A ce jour, le paiement en ligne n'est pas encore possible, mais vous pouvez voir facilement un statut de votre
-          compte pour la saison en cours, et faire passer votre règlement à K'Dance au forum des associations ou lors des
-          permanences. <a href = "/about">En savoir plus</a>.</p>
+          compte pour la saison en cours, et faire passer votre règlement à K'Dance, ainsi que votre attestation ou certificat
+          médical au forum des associations ou lors des permanences. <a href = "/about">En savoir plus</a>.</p>
           Pour commencer l'inscription, cliquez sur <i class="bi-plus-square" style="color: #852243;"></i> <span
-            style="color:#0dcaf0;">Ajouter un nouvel adhérent</span> dans la saison en cours.
+            style="color:#0dcaf0;">Ajouter un nouvel adhérent</span> dans la saison en cours, pour chaque personne à inscrire.
         </div>
         <div class="row mb-3">
           <div class="col-2">
@@ -429,7 +423,7 @@
               <dd id="desc-firstname" class="col-sm-7"></dd>
               <dt class="col-sm-5">Nom:</dt>
               <dd id="desc-lastname" class="col-sm-7"></dd>
-              <dt class="col-sm-5">Nom d'utilisateur:</dt>
+              <dt class="col-sm-5">Identifiant:</dt>
               <dd id="desc-username" class="col-sm-7"></dd>
               <dt class="col-sm-5">Email:</dt>
               <dd id="desc-email" class="col-sm-7"></dd>

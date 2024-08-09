@@ -95,6 +95,10 @@ a {
   background-color: #baffc9 !important;
 }
 
+.color-alert {
+  color: var(--bs-form-invalid-color);
+}
+
 #about-div {
   text-align: justify;
   max-width: 1000px;

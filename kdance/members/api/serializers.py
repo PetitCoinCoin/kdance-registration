@@ -274,6 +274,11 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             "created": {"read_only": True}
         }
 
+    def validate_active_courses(self, courses: list) -> list:
+        if not len(courses):
+            raise serializers.ValidationError("Vous devez sélectionner au moins un cours.")
+        return courses
+
     def validate(self, attr: dict) -> dict:
         validated = super().validate(attr)
         for course in validated.get("active_courses", []):

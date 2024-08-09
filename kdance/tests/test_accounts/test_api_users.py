@@ -115,8 +115,8 @@ class TestUsersView(AuthTestCase):
 
     @parameterized.expand([
         ("", "username", "Ce champ ne peut être vide."),
-        (TESTUSER, "username", "Ce nom d'utilisateur est déjà pris."),
-        ("TestUser", "username", "Ce nom d'utilisateur est déjà pris."),
+        (TESTUSER, "username", "Cet identifiant est déjà pris."),
+        ("TestUser", "username", "Cet identifiant est déjà pris."),
         ("", "email", "Ce champ ne peut être vide."),
         (TESTUSER_EMAIL, "email", "Un utilisateur est déjà associé à cet email."),
         ("TEST@Kdance.com", "email", "Un utilisateur est déjà associé à cet email."),

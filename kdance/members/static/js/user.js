@@ -204,6 +204,13 @@ function getUser() {
               liItem.textContent = `${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
               memberInfos.appendChild(liItem);
             })
+            member.cancelled_courses.map((course) => {
+              let liItem = document.createElement('li');
+              liItem.className = 'list-group-item fst-italic';
+              const startHour = course.start_hour.split(':');
+              liItem.textContent = `(Annulé) ${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
+              memberInfos.appendChild(liItem);
+            })
             populateDocuments(member, memberInfos);
             body.appendChild(cardClone);
           }
@@ -279,12 +286,17 @@ function getCourses() {
       url: coursesUrl + `?season=${seasonId}`,
       type: 'GET',
       success: (data) => {
-        let memberCourses = $('#member-courses');
+        let memberCourses = document.querySelector('#member-courses');
+        memberCourses.innerHTML = '';
         data.map((course) => {
           const startHour = course.start_hour.split(':');
           const endHour = course.end_hour.split(':');
           const label = `${course.name} - ${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]} à ${endHour[0]}h${endHour[1]} - ${course.price}€`;
-          memberCourses.append($('<option>', { value: course.id, text: label }));
+          memberCourses.innerHTML += `<div class="form-check">
+  <input class="form-check-input course-checkbox" type="checkbox" value="${course.id}" id="check-${course.id}">
+  <label class="form-check-label" for="check-${course.id}">${label}</label>
+</div>
+`
         });
       },
       error: (error) => {
@@ -306,6 +318,7 @@ function createUpdateMember() {
   if (memberModal) {
     $('#member-modal').on('show.bs.modal', function(event) {
       // Reset accordion collapsed items and focus
+      $('.invalid-feedback').removeClass('d-inline');
       ['contact', 'courses', 'authorise'].forEach(item => {
         $(`#member-${item}-section`).removeClass('show');
         $(`#member-${item}-section`).addClass('collapsed');
@@ -360,6 +373,7 @@ function createUpdateMember() {
 }
 
 function cleanMemberForm() {
+  $('.invalid-feedback').removeClass('d-inline');
   $('#me-switch').prop('disabled', false);
   $('#member-modal-title').html('Ajouter un nouvel adhérent');
   $('#member-firstname').val(undefined);
@@ -368,7 +382,7 @@ function cleanMemberForm() {
   $('#member-phone').val(undefined);
   $('#member-address').val(undefined);
   $('#member-birthday').val(undefined);
-  $("#member-courses").val(undefined);
+  document.querySelectorAll('.course-checkbox').forEach(item => item.checked = false);
   $("#member-license").val(0);
 }
 
@@ -393,7 +407,9 @@ function getMember(member, isEdition) {
       const withPass = !(data.sport_pass === null || data.sport_pass?.code === null || data.sport_pass?.code === '');
       $('#pass-div').attr('hidden', !withPass);
       $('#pass-switch').prop('checked', withPass);
-      $('#member-courses').val(isEdition ? data.active_courses.map((c) => c.id) : undefined);
+      document.querySelectorAll('.course-checkbox').forEach(item => {
+        item.checked = data.active_courses.map(c => c.id.toString()).indexOf(item.value) > -1;
+      });
       $('#member-license').val(isEdition ? data.ffd_license : 0);
       if (isMe(data)) {
         $('#emergency-me-switch').attr('disabled', true);
@@ -446,7 +462,6 @@ function postOrPatchMember(url, method, event) {
       address: $('#member-address').val(),
       birthday: $('#member-birthday').val(),
       season: $('#member-season').val(),
-      active_courses: $('#member-courses').val(),
       ffd_license: $('#member-license').val(),
       contacts: buildContactsData(),
       documents: {
@@ -454,6 +469,15 @@ function postOrPatchMember(url, method, event) {
         authorise_emergency: $('#authorise-emergency').is(':checked'),
       }
     };
+    if (method == "POST") {
+      let courses = [];
+      document.querySelectorAll('.course-checkbox').forEach(item => {
+        if (item.checked) {
+          courses.push(item.value);
+        }
+      });
+      data.active_courses = courses;
+    }
     if ($('#member-pass-code').val() !== '') {
       data.sport_pass = {
         code: $('#member-pass-code').val(),
@@ -507,6 +531,10 @@ function postOrPatchMember(url, method, event) {
         if (error.responseJSON && error.responseJSON.phone) {
           $('#invalid-member-phone').html(error.responseJSON.phone[0] + ' Format attendu: 0123456789.');
           $('#invalid-member-phone').addClass('d-inline');
+        }
+        if (error.responseJSON && error.responseJSON.active_courses) {
+          $('#invalid-member-courses').html(error.responseJSON.active_courses[0]);
+          $('#invalid-member-courses').addClass('d-inline');
         }
         if (error.responseJSON && error.responseJSON.contacts) {
           $('#message-error-contact').removeClass('d-none');
