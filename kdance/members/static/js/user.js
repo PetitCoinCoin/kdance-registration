@@ -130,14 +130,12 @@ function getUser() {
     success: (data) => {
       $('#desc-firstname').html(data.first_name);
       $('#desc-lastname').html(data.last_name);
-      $('#desc-username').html(data.username);
       $('#desc-email').html(data.email);
       $('#desc-phone').html(data.profile.phone);
       $('#desc-address').html(data.profile.address);
       $('#desc-picture').attr('src', `https://api.dicebear.com/8.x/thumbs/svg?seed=${data.first_name + data.last_name}`);
       $('#edit-me-firstname').val(data.first_name);
       $('#edit-me-lastname').val(data.last_name);
-      $('#edit-me-username').val(data.username);
       $('#edit-me-email').val(data.email);
       $('#edit-me-phone').val(data.profile.phone);
       $('#edit-me-address').val(data.profile.address);
@@ -232,7 +230,7 @@ function patchUser() {
     const data = {
       first_name: $('#edit-me-firstname').val(),
       last_name: $('#edit-me-lastname').val(),
-      username: $('#edit-me-username').val(),
+      username: $('#edit-me-email').val().toLowerCase(),
       email: $('#edit-me-email').val().toLowerCase(),
       profile: {
         phone: $('#edit-me-phone').val(),
@@ -254,10 +252,6 @@ function patchUser() {
         if (!error.responseJSON) {
           showToast('Une erreur est survenue lors de la mise à jour de vos informations.');
           console.log(error);
-        }
-        if (error.responseJSON && error.responseJSON.username) {
-          $('#invalid-edit-me-username').html(error.responseJSON.username[0]);
-          $('#invalid-edit-me-username').addClass('d-inline');
         }
         if (error.responseJSON && error.responseJSON.profile && error.responseJSON.profile.phone) {
           $('#invalid-edit-me-phone').html(error.responseJSON.profile.phone[0] + ' Format attendu: 0123456789.');

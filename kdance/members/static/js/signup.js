@@ -16,7 +16,7 @@ function postSignup() {
     $('#message-error-signup').addClass('d-none');
     if (confirmPassword()) {
       const data = {
-        username: $('#username').val(),
+        username: $('#email').val().toLowerCase(),
         first_name: $('#firstname').val(),
         last_name: $('#lastname').val(),
         phone: $('#phone').val(),
