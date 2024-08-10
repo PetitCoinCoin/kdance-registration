@@ -64,7 +64,7 @@ class UsersApiViewSet(
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.username == settings.SUPERUSER:
+        if instance.username == settings.SUPERUSER_EMAIL:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -100,7 +100,7 @@ class UserMeApiViewSet(
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.username == settings.SUPERUSER:
+        if instance.username == settings.SUPERUSER_EMAIL:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)

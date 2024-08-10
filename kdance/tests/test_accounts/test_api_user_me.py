@@ -103,7 +103,7 @@ class TestUserMeView(AuthTestCase):
 
     def test_delete_kdance_impossible(self):
         """Tests that automatic superuser kdance cannot be deleted."""
-        superuser = User.objects.get(username=settings.SUPERUSER)
+        superuser = User.objects.get(username=settings.SUPERUSER_EMAIL)
         with AuthenticatedAction(self.client, superuser):
             response = self.client.delete(self.view_url)
             assert response.status_code == 401

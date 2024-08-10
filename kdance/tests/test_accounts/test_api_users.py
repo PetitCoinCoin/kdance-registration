@@ -158,7 +158,7 @@ class TestUsersView(AuthTestCase):
 
     def test_delete_kdance_impossible(self):
         """Tests that automatic superuser kdance cannot be deleted."""
-        superuser = User.objects.get(username=settings.SUPERUSER)
+        superuser = User.objects.get(username=settings.SUPERUSER_EMAIL)
         with AuthenticatedAction(self.client, self.super_testuser):
             response = self.client.delete(reverse("api-users-detail", args=[superuser.pk]))
             assert response.status_code == 401
@@ -260,5 +260,5 @@ class TestUsersAdminView(AuthTestCase):
                 content_type="application/json",
             )
             assert response.status_code == 400, response
-            assert f"{settings.SUPERUSER}: cet utilisateur ne peut pas être supprimé." in response.json()["emails"]
-            assert User.objects.get(username=settings.SUPERUSER).is_superuser is True
+            assert f"{settings.SUPERUSER_EMAIL}: cet utilisateur ne peut pas être supprimé." in response.json()["emails"]
+            assert User.objects.get(username=settings.SUPERUSER_EMAIL).is_superuser is True

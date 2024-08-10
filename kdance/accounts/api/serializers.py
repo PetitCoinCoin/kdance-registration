@@ -95,7 +95,7 @@ class UserBaseSerializer(serializers.ModelSerializer):
     @classmethod
     @transaction.atomic
     def delete(cls, user: User) -> None:
-        if user.username == settings.SUPERUSER:
+        if user.username == settings.SUPERUSER_EMAIL:
             raise serializers.ValidationError("Cet utilisateur ne peut pas être supprimé.")
         user.delete()
 
@@ -254,7 +254,7 @@ class UserAdminActionSerializer(serializers.Serializer):
     def validate_emails(self, emails: list[str]) -> list:
         normalized = [email.lower() for email in emails]
         if settings.SUPERUSER_EMAIL in normalized and not self._is_admin:
-            raise serializers.ValidationError(f"{settings.SUPERUSER}: cet utilisateur ne peut pas être supprimé.")
+            raise serializers.ValidationError(f"{settings.SUPERUSER_EMAIL}: cet utilisateur ne peut pas être supprimé.")
         return normalized
 
     def save(self, **k_) -> dict:

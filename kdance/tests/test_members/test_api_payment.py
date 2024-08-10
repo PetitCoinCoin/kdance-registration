@@ -152,7 +152,7 @@ class TestPaymentApiView(AuthTestCase):
             assert len(response_json) == 6  # Don't forget permanent superuser !
             # test sorting: decreasing season year, then user last name (then first name - but not tested)
             assert response_json[0]["season"]["id"] == new_season.pk
-            assert response_json[0]["comment"] == settings.SUPERUSER
+            assert response_json[0]["comment"] == settings.SUPERUSER_EMAIL
             assert response_json[-1]["season"]["id"] == self._season.pk
             assert response_json[-1]["comment"] == self.testuser.username
 
@@ -162,6 +162,7 @@ class TestPaymentApiView(AuthTestCase):
         ("comment", "C'est cadeau", 0, 0),
         ("refund", 50, 0, 0),
         ("special_discount", 50, 0, -50),
+        ("check_payment", [{"amount": 10.0, "bank": "bank", "month": 1, "name": "Bob", "number": 10}], 10, 0),
     ])
     def test_patch(self, key, value, paid, due):
         self._kwargs = {"pk": self.testuser.payment_set.first().pk}
@@ -172,10 +173,33 @@ class TestPaymentApiView(AuthTestCase):
                 content_type="application/json",
             )
             assert response.status_code == 200, response
-            assert response.json()[key] == value
+            response_json = response.json()
+            if key == "check_payment":
+                for k, v in value[0].items():
+                    assert response_json[key][0][k] == v
+            else:
+                assert response_json[key] == value
         self.testuser.refresh_from_db()
         assert self.testuser.payment_set.first().paid == paid
         assert self.testuser.payment_set.first().due == due
 
-    def test_patch_payload_error(self):
-        pass
+    @parameterized.expand([
+        ("ancv", {"amount": 0, "count": 2}, "amount", "Une valeur non nulle est obligatoire."),
+        ("ancv", {"amount": 10, "count": 0}, "count", "Une valeur non nulle est obligatoire."),
+        ("other_payment", {"amount": 100, "comment": ""}, "comment", "Ce champ ne peut être vide."),
+        ("sport_coupon", {"amount": 10, "count": 0}, "count", "Une valeur non nulle est obligatoire."),
+        ("check_payment", [{"amount": 10, "bank": "bank", "month": 1, "name": "", "number": 10}], "name", "Ce champ ne peut être vide."),
+    ])
+    def test_patch_payload_error(self, key, value, subkey, message):
+        self._kwargs = {"pk": self.testuser.payment_set.first().pk}
+        with AuthenticatedAction(self.client, self.super_testuser):
+            response = self.client.patch(
+                self.view_url,
+                data={key: value},
+                content_type="application/json",
+            )
+            assert response.status_code == 400, response
+            if isinstance(value, list):
+                assert message in response.json()[key][0][subkey]
+            else:
+                assert message in response.json()[key][subkey]

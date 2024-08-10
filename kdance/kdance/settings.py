@@ -132,7 +132,6 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
-SUPERUSER = os.getenv("SUPERUSER")
 SUPERUSER_EMAIL = os.getenv("SUPERUSER_EMAIL")
 SUPERUSER_ADDRESS = os.getenv("SUPERUSER_ADDRESS")
 SUPERUSER_PHONE = os.getenv("SUPERUSER_PHONE")
