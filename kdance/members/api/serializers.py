@@ -199,6 +199,7 @@ class PaymentSerializer(WritableNestedModelSerializer, serializers.ModelSerializ
             "season",
             "paid",
             "due",
+            "due_detail",
             "cash",
             "sport_coupon",
             "ancv",

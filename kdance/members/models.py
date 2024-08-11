@@ -163,6 +163,36 @@ class Payment(models.Model):
         return due
 
     @property
+    def due_detail(self) -> list[str]:
+        members_count = 0
+        courses_count = 0
+        courses_price = 0
+        members = self.user.member_set.filter(season=self.season).all()
+        for member in members:
+            members_count += 1
+            for course in member.courses:
+                courses_count += 1
+                courses_price += course.price
+        discount = 0
+        if courses_count > self.season.discount_limit:
+            discount = round((courses_price * self.season.discount_percent / 100), 2)
+        licenses = [member.ffd_license for member in members if member.ffd_license > 0]
+        license_count = len(licenses)
+        license_price = sum(licenses)
+        cancelled = sum(member.cancel_refund for member in members)
+        info = [
+            f"{members_count} adhésion(s): {10 * members_count}€",
+            f"{courses_count} cours: {courses_price}€",
+        ]
+        if discount:
+            info.append(f"Remise de {self.season.discount_percent}% sur les cours: -{discount}€")
+        if license_price:
+            info.append(f"{license_count} licence(s): {license_price}€")
+        if cancelled:
+            info.append(f"Annulation(s): -{cancelled}€")
+        return info
+
+    @property
     def paid(self) -> float:
         paid = self.cash
         if hasattr(self, "sport_coupon"):

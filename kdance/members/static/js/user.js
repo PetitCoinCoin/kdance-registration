@@ -91,7 +91,11 @@ function populateDocuments(member, memberInfos) {
   const medicalDocStatus = Boolean(member.documents != undefined && member.documents.medical_document !== 'Manquant')
   icons[2].className = medicalDocStatus ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
   icons[2].style = medicalDocStatus ? 'color: #baffc9;' : 'color: #ffb3ba;';
-  liItems[2].innerHTML += `Document médical: ${member.documents?.medical_document}`;
+  const doc = member.documents?.medical_document || '';
+  liItems[2].innerHTML += `Document médical: ${doc} ${
+    doc === 'Manquant' || doc === ''
+    ? buildHelper('Vous pourrez apporter votre attestation ou votre certificat médical lors du forum ou des permanences. Vous pourrez également les faire passer lors des cours ou par email à kdance31340@gmail.com')
+    : ''}`;
   memberInfos.appendChild(clone);
 }
 
@@ -157,9 +161,10 @@ function getUser() {
         let title = clone.querySelector('span');
         title.textContent = `Saison ${item.season.year}`;
         let dd = clone.querySelectorAll('dd.payment');
-        dd[0].textContent = `${item.due}€`;
-        dd[1].textContent = `${item.paid}€`;
-        dd[2].textContent = `${item.refund}€`;
+        let details = 'Details:<br>- ' + item.due_detail.join('<br>- ');
+        dd[0].innerHTML = `${item.due}€ ${buildHelper(details)}`;
+        dd[1].innerHTML = `${item.paid}€`; 
+        dd[2].innerHTML = `${item.refund}€`;
         // Collapsible
         let collapseBtn = clone.querySelector('button');
         collapseBtn.dataset.bsTarget = `#accordion-${i}`;
@@ -214,6 +219,7 @@ function getUser() {
           }
         });
         accordionParent.appendChild(clone);
+        activatePopovers();
       })
     },
     error: (error) => {
@@ -747,4 +753,12 @@ function showToast(text) {
   const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('user-error-toast'));
   $('#user-error-body').text(`${text} ${ERROR_SUFFIX}`);
   toast.show();
+}
+
+function buildHelper(text) {
+  return `
+<span tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-content="${text}" data-bs-placement="right" data-bs-html="true">
+  <i class="bi-info-circle main-blue"></i>
+</span>
+`
 }
