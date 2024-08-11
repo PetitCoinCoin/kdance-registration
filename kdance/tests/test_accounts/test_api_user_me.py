@@ -71,7 +71,7 @@ class TestUserMeView(AuthTestCase):
         (None, "", None, "Ce champ ne peut être vide."),
         (None, SUPERTESTUSER_EMAIL, None, "Un utilisateur est déjà associé à cet email."),
         (None, "TESTSUPER@kdance.COM", None, "Un utilisateur est déjà associé à cet email."),
-        (None, "plop.com", None, "Cette addresse email ne semble pas avoir un format valide."),
+        (None, "plop.com", None, "Cette adresse email ne semble pas avoir un format valide."),
         (None, None, "+336", "Saisissez une valeur valide."),
         (None, None, "", "Ce champ ne peut être vide."),
     ])

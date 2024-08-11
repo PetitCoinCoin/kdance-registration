@@ -120,7 +120,7 @@ class TestUsersView(AuthTestCase):
         ("", "email", "Ce champ ne peut être vide."),
         (TESTUSER_EMAIL, "email", "Un utilisateur est déjà associé à cet email."),
         ("TEST@Kdance.com", "email", "Un utilisateur est déjà associé à cet email."),
-        ("plop.com", "email", "Cette addresse email ne semble pas avoir un format valide."),
+        ("plop.com", "email", "Cette adresse email ne semble pas avoir un format valide."),
         ("", "phone", "Ce champ ne peut être vide."),
         ("+336", "phone", "Ce numéro de téléphone n'est pas valide. Format attendu: 0123456789."),
         ("", "address", "Ce champ ne peut être vide."),

@@ -80,7 +80,7 @@ class UserBaseSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Un utilisateur est déjà associé à cet email.")
         if re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
             return email.lower()
-        raise serializers.ValidationError("Cette addresse email ne semble pas avoir un format valide.")
+        raise serializers.ValidationError("Cette adresse email ne semble pas avoir un format valide.")
 
     def create(self, validated_data: dict) -> User:
         user: User = User.objects.create_user(

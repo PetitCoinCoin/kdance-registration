@@ -156,7 +156,11 @@ function putUser(action, data) {
         } else if (error.responseJSON && error.responseJSON.other) {
           $('#message-error-modal').text(`Une erreur est survenue avec ces adresses: ${error.responseJSON.not_found.join(', ')}. Ré-essayez plus tard ou contactez le support.`);
         }
+        if (error.responseJSON && error.responseJSON.emails) {
+          const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('admin-warning-toast'));
+          $('#admin-warning-body').text(error.responseJSON.emails[0])
+          toast.show();
+        }
       }
     });
-  // });
 }
