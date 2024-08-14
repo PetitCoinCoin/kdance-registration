@@ -126,6 +126,14 @@ class UserMeApiViewSet(
         update_session_auth_hash(request, user)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @action(detail=False, methods=["put"])
+    def validate(self, request: Request) -> Response:
+        user = self.get_object()
+        for member in user.member_set.filter(season__is_current=True).all():
+            member.is_validated = True
+            member.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class PasswordApiViewSet(GenericViewSet):
     http_method_names = ["post"]

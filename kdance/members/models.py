@@ -154,7 +154,7 @@ class Payment(models.Model):
         # Discount
         due -= self.special_discount
         if total >= self.season.discount_limit:
-            due *= round(((100 - self.season.discount_percent) / 100), 2)
+            due *= int(round((100 - self.season.discount_percent) / 100))
         # Adhesion and license
         due += len(members) * 10
         due += sum([member.ffd_license for member in members])
@@ -175,7 +175,7 @@ class Payment(models.Model):
                 courses_price += course.price
         discount = 0
         if courses_count > self.season.discount_limit:
-            discount = round((courses_price * self.season.discount_percent / 100), 2)
+            discount = int(round(courses_price * self.season.discount_percent / 100))
         licenses = [member.ffd_license for member in members if member.ffd_license > 0]
         license_count = len(licenses)
         license_price = sum(licenses)
@@ -207,6 +207,20 @@ class Payment(models.Model):
             if member.sport_pass:
                 paid += member.sport_pass.amount
         return paid
+
+
+    @transaction.atomic
+    def save(self, *args, **kwargs) -> None:
+        super().save(*args, **kwargs)
+        if Member.objects.filter(user=self.user, season=self.season, is_validated=False).count() and self.paid > 0:
+            sport_pass = 0
+            for member in Member.objects.filter(user=self.user, season=self.season).all():
+                if member.sport_pass:
+                    sport_pass += member.sport_pass.amount
+            if sport_pass < self.paid:
+                for member in Member.objects.filter(user=self.user, season=self.season).all():
+                    member.is_validated = True
+                    member.save()
 
 
 class SportCoupon(models.Model):
@@ -341,6 +355,7 @@ class Member(PersonModel):
         ],
         default=0,
     )
+    is_validated = models.BooleanField(default=False, null=False)
 
     class Meta:
         unique_together = ("first_name", "last_name", "user", "season")
@@ -352,6 +367,7 @@ class Member(PersonModel):
     @property
     def courses(self) -> list:
         return list(self.active_courses.all()) + list(self.cancelled_courses.all())
+
 
 @receiver(post_delete, sender=Member)
 def post_delete_documents(sender, instance, *args, **kwargs):

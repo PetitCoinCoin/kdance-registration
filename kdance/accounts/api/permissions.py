@@ -16,7 +16,7 @@ class SuperUserPermission(BasePermission):
                         request.path.startswith("/api/payments") or \
                             request.path.startswith("/api/checks")):
                 return True
-            if request.method not in ("PUT", "DELETE") and request.path.startswith("/api/members/"):
+            if request.method != "PUT" and request.path.startswith("/api/members/"):
                 return True
         if (request.method == "POST" and request.path.startswith("/api/users/")) or \
             request.path.startswith("/api/password/"):

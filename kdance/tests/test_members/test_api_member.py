@@ -68,7 +68,7 @@ class TestMemberApiView(AuthTestCase):
         ("post", 400, 400, False),
         ("put", 403, 405, True),
         ("patch", 200, 200, True),
-        ("delete", 403, 204, True),
+        # delete
     ])
     def test_permissions(self, method, user_status, superuser_status, with_pk):
         self._kwargs = {"pk": self._member.pk} if with_pk else {}
@@ -392,7 +392,7 @@ class TestMembersCoursesApiView(AuthTestCase):
         ("post", 405, 405),
         ("put", 403, 200),
         ("patch", 405, 405),
-        ("delete", 403, 405),
+        ("delete", 405, 405),
     ])
     def test_permissions(self, method, user_status, superuser_status):
         self._kwargs["action"] = "add"

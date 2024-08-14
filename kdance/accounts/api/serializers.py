@@ -394,14 +394,14 @@ class UserNewPwdSerializer(serializers.Serializer):
         validated = super().validate(attr)
         user = User.objects.filter(email=validated.get("email")).first()
         if not user:
-            raise serializers.ValidationError({"email": "Email incorrect, cet utilisateur n'existe pas."})
+            raise serializers.ValidationError({"email": ["Email incorrect, cet utilisateur n'existe pas."]})
         reset_pwd = ResetPassword.objects.filter(user=user).first()
         if not reset_pwd:
-            raise serializers.ValidationError({"email": "Email incorrect, aucune demande de réinitialisation trouvée."})
+            raise serializers.ValidationError({"email": ["Email incorrect, aucune demande de réinitialisation trouvée."]})
         if reset_pwd.request_hash != sha512(validated.get("token").encode()).hexdigest():
-            raise serializers.ValidationError({"token": "Lien de réinitialisation incorrect pour cet utilisateur."})
+            raise serializers.ValidationError({"token": ["Lien de réinitialisation incorrect pour cet utilisateur."]})
         if timezone.now() - reset_pwd.created > timedelta(minutes=31):
-            raise serializers.ValidationError({"token": "Lien de réinitialisation expiré. Veuillez refaire une demande de réinitialisation."})
+            raise serializers.ValidationError({"token": ["Lien de réinitialisation expiré. Veuillez refaire une demande de réinitialisation."]})
         return validated
 
     @transaction.atomic

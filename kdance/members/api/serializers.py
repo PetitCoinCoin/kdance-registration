@@ -130,7 +130,7 @@ class ContactSerializer(serializers.ModelSerializer):
     def validate(self, attr: dict) -> dict:
         validated = super().validate(attr)
         if not validated.get("email", "") and validated.get("contact_type") == Contact.ContactEnum.RESPONSIBLE.value:
-            raise serializers.ValidationError({"email": "L'email est obligatoire pour le responsable."})
+            raise serializers.ValidationError({"email": ["L'email est obligatoire pour le responsable."]})
         return validated
 
 
@@ -143,9 +143,9 @@ class AncvSerializer(serializers.ModelSerializer):
     def validate(self, attr: dict) -> dict:
         validated = super().validate(attr)
         if validated.get("amount", 0) > 0 and validated.get("count", 0) == 0:
-            raise serializers.ValidationError({"count": "Une valeur non nulle est obligatoire."})
+            raise serializers.ValidationError({"count": ["Une valeur non nulle est obligatoire."]})
         if validated.get("count", 0) > 0 and validated.get("amount", 0) == 0:
-            raise serializers.ValidationError({"amount": "Une valeur non nulle est obligatoire."})
+            raise serializers.ValidationError({"amount": ["Une valeur non nulle est obligatoire."]})
         return validated
 
 
@@ -158,9 +158,9 @@ class SportCouponSerializer(serializers.ModelSerializer):
     def validate(self, attr: dict) -> dict:
         validated = super().validate(attr)
         if validated.get("amount", 0) > 0 and validated.get("count", 0) == 0:
-            raise serializers.ValidationError({"count": "Une valeur non nulle est obligatoire."})
+            raise serializers.ValidationError({"count": ["Une valeur non nulle est obligatoire."]})
         if validated.get("count", 0) > 0 and validated.get("amount", 0) == 0:
-            raise serializers.ValidationError({"amount": "Une valeur non nulle est obligatoire."})
+            raise serializers.ValidationError({"amount": ["Une valeur non nulle est obligatoire."]})
         return validated
 
 
@@ -265,6 +265,7 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             "active_courses",
             "cancelled_courses",
             "ffd_license",
+            "is_validated",
             "documents",
             "contacts",
             "payment",
@@ -297,8 +298,8 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             member = super().save()
         except IntegrityError:
             raise serializers.ValidationError({
-                "first_name": "Cet adhérent existe déjà pour la saison.",
-                "last_name": "Cet adhérent existe déjà pour la saison.",
+                "first_name": ["Cet adhérent existe déjà pour la saison."],
+                "last_name": ["Cet adhérent existe déjà pour la saison."],
             })
         if contacts is not None:
             member.contacts.clear()
@@ -340,9 +341,9 @@ class MemberCoursesSerializer(serializers.Serializer):
     def validate(self, attr: dict) -> dict:
         validated = super().validate(attr)
         if self._action == MemberCoursesActionsEnum.REMOVE and validated.get("cancel_refund") is None:
-            raise serializers.ValidationError({"cancel_refund": "Ce champ est obligatoire pour retirer un cours."})
+            raise serializers.ValidationError({"cancel_refund": ["Ce champ est obligatoire pour retirer un cours."]})
         if self._action == MemberCoursesActionsEnum.ADD and validated.get("cancel_refund") is not None:
-            raise serializers.ValidationError({"cancel_refund": "Ce champ ne doit pas être modifié pour ajouter un cours."})
+            raise serializers.ValidationError({"cancel_refund": ["Ce champ ne doit pas être modifié pour ajouter un cours."]})
         return validated
 
     def save(self, **kwargs: Any) -> None:

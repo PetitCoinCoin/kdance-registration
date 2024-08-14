@@ -205,6 +205,13 @@ class MemberViewSet(
         user = self.get_object().user
         serializer.save(user=user)
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if not request.user.is_superuser and instance.user != request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     @action(
         detail=True,
         methods=["put"],

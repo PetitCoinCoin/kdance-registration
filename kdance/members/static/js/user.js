@@ -11,6 +11,7 @@ $(document).ready(() => {
   handleContacts();
   handleSwitches();
   updatePwd();
+  validateMembers();
   const birthdaySelect = document.querySelector('#member-birthday');
   birthdaySelect.addEventListener('change', () => {
     const isMajor = Boolean(getAge($('#member-birthday').val()) >= 18);
@@ -27,10 +28,6 @@ function handleSwitches() {
   const meSwitch = document.querySelector('#me-switch');
   meSwitch.addEventListener('change', () => {
     const isMe = $('#me-switch').is(':checked');
-    $('#member-firstname').val(isMe ? $('#desc-firstname').html() : '');
-    $('#member-firstname').trigger('change');
-    $('#member-lastname').val(isMe ? $('#desc-lastname').html() : '');
-    $('#member-lastname').trigger('change');
     $('#member-email').val(isMe ? $('#desc-email').html() : '');
     $('#member-phone').val(isMe ? $('#desc-phone').html() : '');
     $('#member-address').val(isMe ? $('#desc-address').html() : '');
@@ -96,6 +93,10 @@ function populateDocuments(member, memberInfos) {
     doc === 'Manquant' || doc === ''
     ? buildHelper('Vous pourrez apporter votre attestation ou votre certificat médical lors du forum ou des permanences. Vous pourrez également les faire passer lors des cours ou par email à kdance31340@gmail.com')
     : ''}`;
+  const isMajor = Boolean(getAge(member.birthday) >= 18);
+  if (isMajor) {
+    liItems[1].remove()
+  }
   memberInfos.appendChild(clone);
 }
 
@@ -162,7 +163,7 @@ function getUser() {
         title.textContent = `Saison ${item.season.year}`;
         let dd = clone.querySelectorAll('dd.payment');
         let details = 'Details:<br>- ' + item.due_detail.join('<br>- ');
-        dd[0].innerHTML = `${item.due}€ ${buildHelper(details)}`;
+        dd[0].innerHTML = `${item.due}€ ${item.due > 0 ? buildHelper(details) : ''}`;
         dd[1].innerHTML = `${item.paid}€`; 
         dd[2].innerHTML = `${item.refund}€`;
         // Collapsible
@@ -182,7 +183,10 @@ function getUser() {
             let copyBtn = memberBtnClone.querySelector('#copy-member-btn');
             copyBtn.remove();
           }
-          const btnParent = clone.querySelector('div.accordion-body').children[0];
+          const btnParent = clone.querySelector('.season-btn-div');
+          if (data.members.filter((member) => member.season.id == item.season.id && !member.is_validated).length == 0) {
+            memberBtnClone.querySelector('#validate-members-btn').disabled = true;
+          }
           btnParent.appendChild(memberBtnClone);
         }
         // Member info
@@ -194,10 +198,16 @@ function getUser() {
             memberTitle.textContent = `${member.first_name} ${member.last_name}`;
             let avatar = cardClone.querySelector('img');
             avatar.src = `https://api.dicebear.com/8.x/thumbs/svg?seed=${member.first_name + member.last_name}&radius=50`;
-            let button = cardClone.querySelector('button');
-            button.dataset.bsMid = member.id;
+            let editButton = cardClone.querySelector('.m-edit-btn');
+            editButton.dataset.bsMid = member.id;
+            let deleteButton = cardClone.querySelector('.m-delete-btn');
+            deleteButton.dataset.bsMid = member.id;
+            deleteButton.dataset.bsMname = `${member.first_name} ${member.last_name}`;
             if (!item.season.is_current) {
-              button.remove();
+              editButton.remove();
+              deleteButton.remove();
+            } else if (member.is_validated) {
+              deleteButton.remove();
             }
             let memberInfos = cardClone.querySelector('ul');
             member.active_courses.map((course) => {
@@ -353,10 +363,6 @@ function createUpdateMember() {
       } else {
         // Update member
         getMember(member, true);
-        $('#member-courses-accordion').addClass('d-none');
-        $('#authorise-photos').prop('disabled', true);
-        $('#authorise-emergency').prop('disabled', true);
-        $('#member-btn').html('Modifier');
         url = url + member + '/';
         method = 'PATCH';
       }
@@ -375,6 +381,7 @@ function createUpdateMember() {
 function cleanMemberForm() {
   $('.invalid-feedback').removeClass('d-inline');
   $('#me-switch').prop('disabled', false);
+  $('#me-switch').prop('checked', false);
   $('#member-modal-title').html('Ajouter un nouvel adhérent');
   $('#member-firstname').val(undefined);
   $('#member-lastname').val(undefined);
@@ -411,6 +418,12 @@ function getMember(member, isEdition) {
         item.checked = data.active_courses.map(c => c.id.toString()).indexOf(item.value) > -1;
       });
       $('#member-license').val(isEdition ? data.ffd_license : 0);
+      if (isEdition && data.is_validated) {
+        $('#member-courses-accordion').addClass('d-none');
+        $('#authorise-photos').prop('disabled', true);
+        $('#authorise-emergency').prop('disabled', true);
+        $('#member-btn').html('Modifier');
+      }
       if (isMe(data)) {
         $('#emergency-me-switch').attr('disabled', true);
         $('#emergency-me-switch').prop('checked', false);
@@ -598,12 +611,23 @@ function deleteItem() {
     deleteModal.addEventListener('show.bs.modal', event => {
       const button = event.relatedTarget;
       const buttonId = button.getAttribute('id');
+      const buttonClass = button.getAttribute('class');
       const modalBody = deleteModal.querySelector('.modal-body');
       let url = '';
+      let errorMessage = '';
       if (buttonId === 'delete-me-btn') {
         $('#delete-modal-title').html('Supprimer mon compte');
         modalBody.textContent = `Etes-vous sur.e de vouloir supprimer votre compte ainsi que tous les adhérents associés ?`;
         url = userMeUrl;
+        errorMessage = 'Une erreur est survenue, impossible de supprimer le compte pour le moment.';
+      }
+      else if (buttonClass.includes('m-delete-btn')) {
+        $('#delete-modal-title').html('Supprimer un adhérent');
+        const memberId = button.getAttribute('data-bs-mid');
+        const member = button.getAttribute('data-bs-mname');
+        modalBody.textContent = `Etes-vous sur.e de vouloir supprimer ${member} pour cette saison ?`;
+        url = membersUrl + memberId + '/';
+        errorMessage = 'Une erreur est survenue, impossible de supprimer cet adhérent pour le moment.';
       }
       $(document).on("click", "#delete-btn", function () {
         $.ajax({
@@ -615,7 +639,30 @@ function deleteItem() {
             location.reload();
           },
           error: (error) => {
-            showToast('Impossible ne erreur est survenue, impossible de supprimer le compte pour le moment.');
+            showToast(errorMessage);
+            console.log(error);
+          }
+        });
+      });
+    });
+  }
+}
+
+function validateMembers() {
+  const validateModal = document.getElementById('validate-modal');
+  if (validateModal) {
+    validateModal.addEventListener('show.bs.modal', event => {
+      $(document).on("click", "#validate-btn", function () {
+        $.ajax({
+          url: userMeValidateUrl,
+          type: 'PUT',
+          headers: { 'X-CSRFToken': csrftoken },
+          mode: 'same-origin',
+          success: () => {
+            location.reload();
+          },
+          error: (error) => {
+            showToast(errorMessage);
             console.log(error);
           }
         });
