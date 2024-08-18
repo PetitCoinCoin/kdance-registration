@@ -92,16 +92,20 @@ class TestTeacherApiView(AuthTestCase):
             assert response.status_code == 201, response
             assert response.json()["name"] == "Chip"
 
-    def test_post_payload_error(self):
+    @parameterized.expand([
+        ("Globule", "Un objet teacher avec ce champ name existe déjà."),
+        ("gloBule", "Ce professeur existe déjà."),
+    ])
+    def test_post_payload_error(self, name, message):
         self._kwargs = {}
         with AuthenticatedAction(self.client, self.super_testuser):
             response = self.client.post(
                 self.view_url,
-                data={"name": self._teacher.name},
+                data={"name": name},
                 content_type="application/json",
             )
             assert response.status_code == 400, response
-            assert "Un objet teacher avec ce champ name existe déjà." in response.json()["name"]
+            assert message in response.json()["name"]
 
     def test_patch(self):
         new_teacher = Teacher.objects.create(name="Chip")

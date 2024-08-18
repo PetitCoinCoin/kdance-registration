@@ -188,6 +188,7 @@ class TestPaymentApiView(AuthTestCase):
         ("ancv", {"amount": 10, "count": 0}, "count", "Une valeur non nulle est obligatoire."),
         ("other_payment", {"amount": 100, "comment": ""}, "comment", "Ce champ ne peut être vide."),
         ("sport_coupon", {"amount": 10, "count": 0}, "count", "Une valeur non nulle est obligatoire."),
+        ("sport_coupon", {"amount": 0, "count": 10}, "amount", "Une valeur non nulle est obligatoire."),
         ("check_payment", [{"amount": 10, "bank": "bank", "month": 1, "name": "", "number": 10}], "name", "Ce champ ne peut être vide."),
     ])
     def test_patch_payload_error(self, key, value, subkey, message):

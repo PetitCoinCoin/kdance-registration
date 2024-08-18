@@ -15,22 +15,23 @@
 					{% csrf_token %}
 					<div class="form-outline mb-4 mt-4">
 						<label class="form-label" for="email">Email</label>
-						<input type="text" id="email" class="form-control" required/>
-            <div id="invalid-email" class="invalid-feedback"></div>
+						<input type="text" id="email" class="form-control" required />
+						<div id="invalid-email" class="invalid-feedback"></div>
 					</div>
 					<div class="mb-4">Entrez l'email rattaché à votre compte, et nous vous enverrons un lien valide
 						pendant 30 minutes pour vous permettre de définir un nouveau mot de passe.</div>
-          <div id="message-error-reset-pwd" class="p-3 mb-2 bg-danger-subtle text-danger-emphasis d-none"></div>
-          <button type="submit" class="btn btn-info mb-4">Envoyer une demande</button>
-          <div id="message-ok-reset-pwd" class="p-3 mb-2 bg-success-subtle text-success-emphasis d-none">
-            Demande effectuée avec succès. Un email contenant un lien de réinitialisation vient de partir !
-          </div>
+					<div id="message-error-reset-pwd" class="p-3 mb-2 bg-danger-subtle text-danger-emphasis d-none">
+					</div>
+					<button type="submit" class="btn btn-info mb-4">Envoyer une demande</button>
+					<div id="message-ok-reset-pwd" class="p-3 mb-2 bg-success-subtle text-success-emphasis d-none">
+						Demande effectuée avec succès. Un email contenant un lien de réinitialisation vient de partir !
+					</div>
 				</form>
 			</div>
 		</div>
 	</section>
 	<script type="text/javascript">
-	  const passwordResetUrl = "{% url 'api-password-reset' %}"
+		const passwordResetUrl = "{% url 'api-password-reset' %}"
 	</script>
 	<script src="{% static 'js/pwd.js' %}"></script>
 </main>

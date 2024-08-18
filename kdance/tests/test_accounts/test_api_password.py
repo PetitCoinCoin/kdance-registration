@@ -6,6 +6,7 @@ from hashlib import sha512
 from secrets import token_urlsafe
 from unittest.mock import patch
 
+from django.contrib.auth.models import User
 from django.core import mail
 from django.urls import reverse
 from parameterized import parameterized
@@ -35,9 +36,17 @@ class TestPasswordResetView(AuthTestCase):
             superuser_status=superuser_status,
         )
 
-    @parameterized.expand([TESTUSER_EMAIL, SUPERTESTUSER_EMAIL, "TesT@KDance.COM"])
-    def test_reset_password(self, email):
+    @parameterized.expand([
+        (TESTUSER_EMAIL, False),
+        (SUPERTESTUSER_EMAIL, False),
+        ("TesT@KDance.COM", False),
+        (TESTUSER_EMAIL, True),
+    ])
+    def test_reset_password(self, email, exists_already):
         assert ResetPassword.objects.count() == 0
+        if exists_already:
+            user = User.objects.get(email=TESTUSER_EMAIL)
+            ResetPassword.objects.create(user=user, request_hash="somehash")
         response = self.client.post(self.view_url, data={"email": email})
         assert response.status_code == 202, response
         assert ResetPassword.objects.count() == 1

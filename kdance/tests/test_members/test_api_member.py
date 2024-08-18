@@ -154,6 +154,31 @@ class TestMemberApiView(AuthTestCase):
                 assert response_json["first_name"] == "Plup"
 
     @parameterized.expand([
+        (204, True, False),
+        (403, False, True),
+    ])
+    def test_delete_permissions_limitations(self, status_code, with_pk, with_super_pk):
+        """Tests that DELETE request are allowed for simple user, but only for their members."""
+        super_member, _ = Member.objects.get_or_create(
+            user=self.super_testuser,
+            season=self._season,
+            first_name="Superplip",
+            last_name="Superplop",
+            birthday=datetime(1900, 10, 1, tzinfo=timezone.utc),
+            address="Par ici",
+            email="superplip@plop.fr",
+            phone="0987654321",
+        )
+        assert Member.objects.count() == 2
+        if with_pk:
+            self._kwargs["pk"] = self._member.pk
+        if with_super_pk:
+            self._kwargs["pk"] = super_member.pk
+        with AuthenticatedAction(self.client, self.testuser):
+            response = self.client.delete(self.view_url)
+            assert response.status_code == status_code, response
+
+    @parameterized.expand([
         ("Jean-Mich", "Jean-Mich", "Pouet", "Pouet", "j@m.com", "j@m.com"),
         ("jean-mich", "Jean-Mich", "pouet", "Pouet", "J@M.com", "j@m.com"),
         ("JEAN-MICH", "Jean-Mich", "POUET", "Pouet", "J@M.COM", "j@m.com"),

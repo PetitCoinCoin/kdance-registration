@@ -10,6 +10,7 @@ from django.urls import reverse
 from parameterized import parameterized
 
 from accounts.api.views import UsersApiViewSet
+from members.models import Payment, Season
 from tests.authentication import AuthenticatedAction, AuthTestCase
 from tests.data_tests import TESTUSER, TESTUSER_EMAIL
 
@@ -101,7 +102,10 @@ class TestUsersView(AuthTestCase):
             assert email_sent.subject == "Création d'un compte K'Dance"
             assert list(email_sent.to) == [self._TEST_DATA["email"]]
 
-    def test_post_not_authenticated(self):
+    @parameterized.expand([True, False])
+    def test_post_not_authenticated(self, with_season):
+        if with_season:
+            season = Season.objects.create(year="2010-2011", is_current=True)
         response = self.client.post(self.view_url, data=self._TEST_DATA, content_type="application/json")
         assert response.status_code == 201, response
         new_user = User.objects.last()
@@ -112,6 +116,10 @@ class TestUsersView(AuthTestCase):
         email_sent = mail.outbox[0]
         assert email_sent.subject == "Création d'un compte K'Dance"
         assert list(email_sent.to) == [self._TEST_DATA["email"]]
+        if with_season:
+            assert Payment.objects.filter(user=new_user, season=season).exists()
+        else:
+            assert Payment.objects.count() == 0
 
     @parameterized.expand([
         ("", "username", "Ce champ ne peut être vide."),
@@ -260,5 +268,5 @@ class TestUsersAdminView(AuthTestCase):
                 content_type="application/json",
             )
             assert response.status_code == 400, response
-            assert f"{settings.SUPERUSER_EMAIL}: cet utilisateur ne peut pas être supprimé." in response.json()["emails"]
+            assert f"{settings.SUPERUSER_EMAIL}: cet utilisateur ne peut pas être supprimé des administrateurs." in response.json()["emails"]
             assert User.objects.get(username=settings.SUPERUSER_EMAIL).is_superuser is True

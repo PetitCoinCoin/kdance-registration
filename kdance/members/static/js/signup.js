@@ -1,4 +1,5 @@
 $(document).ready(() => {
+  activatePopovers();
   togglePasswords();
   postSignup();
 });
@@ -7,6 +8,11 @@ function confirmPassword() {
   const pwd = $('#password');
   const pwdConfirmation = $('#password-confirmation');
   return pwdConfirmation.val() === pwd.val()
+}
+
+function activatePopovers() {
+  const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+  [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
 }
 
 function postSignup() {
