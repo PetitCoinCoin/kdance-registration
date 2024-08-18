@@ -74,6 +74,18 @@ a {
   color: #0dcaf0;
 }
 
+.main-red {
+  color: #852243;
+}
+
+.main-blue {
+  color: #0dcaf0;
+}
+
+.main-green {
+  color: #198754;
+}
+
 .fs-8 {
   font-size: 0.8rem !important;
 }
@@ -93,6 +105,14 @@ a {
 
 .bg-info {
   background-color: #baffc9 !important;
+}
+
+.color-alert {
+  color: var(--bs-form-invalid-color);
+}
+
+.text-justify {
+  text-align: justify;
 }
 
 #about-div {

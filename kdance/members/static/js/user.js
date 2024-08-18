@@ -11,6 +11,7 @@ $(document).ready(() => {
   handleContacts();
   handleSwitches();
   updatePwd();
+  validateMembers();
   const birthdaySelect = document.querySelector('#member-birthday');
   birthdaySelect.addEventListener('change', () => {
     const isMajor = Boolean(getAge($('#member-birthday').val()) >= 18);
@@ -27,10 +28,6 @@ function handleSwitches() {
   const meSwitch = document.querySelector('#me-switch');
   meSwitch.addEventListener('change', () => {
     const isMe = $('#me-switch').is(':checked');
-    $('#member-firstname').val(isMe ? $('#desc-firstname').html() : '');
-    $('#member-firstname').trigger('change');
-    $('#member-lastname').val(isMe ? $('#desc-lastname').html() : '');
-    $('#member-lastname').trigger('change');
     $('#member-email').val(isMe ? $('#desc-email').html() : '');
     $('#member-phone').val(isMe ? $('#desc-phone').html() : '');
     $('#member-address').val(isMe ? $('#desc-address').html() : '');
@@ -91,7 +88,15 @@ function populateDocuments(member, memberInfos) {
   const medicalDocStatus = Boolean(member.documents != undefined && member.documents.medical_document !== 'Manquant')
   icons[2].className = medicalDocStatus ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
   icons[2].style = medicalDocStatus ? 'color: #baffc9;' : 'color: #ffb3ba;';
-  liItems[2].innerHTML += `Document médical: ${member.documents?.medical_document}`;
+  const doc = member.documents?.medical_document || '';
+  liItems[2].innerHTML += `Document médical: ${doc} ${
+    doc === 'Manquant' || doc === ''
+    ? buildHelper('Vous pourrez apporter votre attestation ou votre certificat médical lors du forum ou des permanences. Vous pourrez également les faire passer lors des cours ou par email à kdance31340@gmail.com')
+    : ''}`;
+  const isMajor = Boolean(getAge(member.birthday) >= 18);
+  if (isMajor) {
+    liItems[1].remove()
+  }
   memberInfos.appendChild(clone);
 }
 
@@ -130,14 +135,12 @@ function getUser() {
     success: (data) => {
       $('#desc-firstname').html(data.first_name);
       $('#desc-lastname').html(data.last_name);
-      $('#desc-username').html(data.username);
       $('#desc-email').html(data.email);
       $('#desc-phone').html(data.profile.phone);
       $('#desc-address').html(data.profile.address);
       $('#desc-picture').attr('src', `https://api.dicebear.com/8.x/thumbs/svg?seed=${data.first_name + data.last_name}`);
       $('#edit-me-firstname').val(data.first_name);
       $('#edit-me-lastname').val(data.last_name);
-      $('#edit-me-username').val(data.username);
       $('#edit-me-email').val(data.email);
       $('#edit-me-phone').val(data.profile.phone);
       $('#edit-me-address').val(data.profile.address);
@@ -159,9 +162,10 @@ function getUser() {
         let title = clone.querySelector('span');
         title.textContent = `Saison ${item.season.year}`;
         let dd = clone.querySelectorAll('dd.payment');
-        dd[0].textContent = `${item.due}€`;
-        dd[1].textContent = `${item.paid}€`;
-        dd[2].textContent = `${item.refund}€`;
+        let details = 'Details:<br>- ' + item.due_detail.join('<br>- ');
+        dd[0].innerHTML = `${item.due}€ ${item.due > 0 ? buildHelper(details) : ''}`;
+        dd[1].innerHTML = `${item.paid}€`; 
+        dd[2].innerHTML = `${item.refund}€`;
         // Collapsible
         let collapseBtn = clone.querySelector('button');
         collapseBtn.dataset.bsTarget = `#accordion-${i}`;
@@ -179,7 +183,10 @@ function getUser() {
             let copyBtn = memberBtnClone.querySelector('#copy-member-btn');
             copyBtn.remove();
           }
-          const btnParent = clone.querySelector('div.accordion-body').children[0];
+          const btnParent = clone.querySelector('.season-btn-div');
+          if (data.members.filter((member) => member.season.id == item.season.id && !member.is_validated).length == 0) {
+            memberBtnClone.querySelector('#validate-members-btn').disabled = true;
+          }
           btnParent.appendChild(memberBtnClone);
         }
         // Member info
@@ -191,10 +198,16 @@ function getUser() {
             memberTitle.textContent = `${member.first_name} ${member.last_name}`;
             let avatar = cardClone.querySelector('img');
             avatar.src = `https://api.dicebear.com/8.x/thumbs/svg?seed=${member.first_name + member.last_name}&radius=50`;
-            let button = cardClone.querySelector('button');
-            button.dataset.bsMid = member.id;
+            let editButton = cardClone.querySelector('.m-edit-btn');
+            editButton.dataset.bsMid = member.id;
+            let deleteButton = cardClone.querySelector('.m-delete-btn');
+            deleteButton.dataset.bsMid = member.id;
+            deleteButton.dataset.bsMname = `${member.first_name} ${member.last_name}`;
             if (!item.season.is_current) {
-              button.remove();
+              editButton.remove();
+              deleteButton.remove();
+            } else if (member.is_validated) {
+              deleteButton.remove();
             }
             let memberInfos = cardClone.querySelector('ul');
             member.active_courses.map((course) => {
@@ -204,11 +217,19 @@ function getUser() {
               liItem.textContent = `${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
               memberInfos.appendChild(liItem);
             })
+            member.cancelled_courses.map((course) => {
+              let liItem = document.createElement('li');
+              liItem.className = 'list-group-item fst-italic';
+              const startHour = course.start_hour.split(':');
+              liItem.textContent = `(Annulé) ${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
+              memberInfos.appendChild(liItem);
+            })
             populateDocuments(member, memberInfos);
             body.appendChild(cardClone);
           }
         });
         accordionParent.appendChild(clone);
+        activatePopovers();
       })
     },
     error: (error) => {
@@ -225,7 +246,7 @@ function patchUser() {
     const data = {
       first_name: $('#edit-me-firstname').val(),
       last_name: $('#edit-me-lastname').val(),
-      username: $('#edit-me-username').val(),
+      username: $('#edit-me-email').val().toLowerCase(),
       email: $('#edit-me-email').val().toLowerCase(),
       profile: {
         phone: $('#edit-me-phone').val(),
@@ -247,10 +268,6 @@ function patchUser() {
         if (!error.responseJSON) {
           showToast('Une erreur est survenue lors de la mise à jour de vos informations.');
           console.log(error);
-        }
-        if (error.responseJSON && error.responseJSON.username) {
-          $('#invalid-edit-me-username').html(error.responseJSON.username[0]);
-          $('#invalid-edit-me-username').addClass('d-inline');
         }
         if (error.responseJSON && error.responseJSON.profile && error.responseJSON.profile.phone) {
           $('#invalid-edit-me-phone').html(error.responseJSON.profile.phone[0] + ' Format attendu: 0123456789.');
@@ -279,12 +296,17 @@ function getCourses() {
       url: coursesUrl + `?season=${seasonId}`,
       type: 'GET',
       success: (data) => {
-        let memberCourses = $('#member-courses');
+        let memberCourses = document.querySelector('#member-courses');
+        memberCourses.innerHTML = '';
         data.map((course) => {
           const startHour = course.start_hour.split(':');
           const endHour = course.end_hour.split(':');
           const label = `${course.name} - ${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]} à ${endHour[0]}h${endHour[1]} - ${course.price}€`;
-          memberCourses.append($('<option>', { value: course.id, text: label }));
+          memberCourses.innerHTML += `<div class="form-check">
+  <input class="form-check-input course-checkbox" type="checkbox" value="${course.id}" id="check-${course.id}">
+  <label class="form-check-label" for="check-${course.id}">${label}</label>
+</div>
+`
         });
       },
       error: (error) => {
@@ -306,6 +328,7 @@ function createUpdateMember() {
   if (memberModal) {
     $('#member-modal').on('show.bs.modal', function(event) {
       // Reset accordion collapsed items and focus
+      $('.invalid-feedback').removeClass('d-inline');
       ['contact', 'courses', 'authorise'].forEach(item => {
         $(`#member-${item}-section`).removeClass('show');
         $(`#member-${item}-section`).addClass('collapsed');
@@ -340,10 +363,6 @@ function createUpdateMember() {
       } else {
         // Update member
         getMember(member, true);
-        $('#member-courses-accordion').addClass('d-none');
-        $('#authorise-photos').prop('disabled', true);
-        $('#authorise-emergency').prop('disabled', true);
-        $('#member-btn').html('Modifier');
         url = url + member + '/';
         method = 'PATCH';
       }
@@ -360,7 +379,9 @@ function createUpdateMember() {
 }
 
 function cleanMemberForm() {
+  $('.invalid-feedback').removeClass('d-inline');
   $('#me-switch').prop('disabled', false);
+  $('#me-switch').prop('checked', false);
   $('#member-modal-title').html('Ajouter un nouvel adhérent');
   $('#member-firstname').val(undefined);
   $('#member-lastname').val(undefined);
@@ -368,7 +389,7 @@ function cleanMemberForm() {
   $('#member-phone').val(undefined);
   $('#member-address').val(undefined);
   $('#member-birthday').val(undefined);
-  $("#member-courses").val(undefined);
+  document.querySelectorAll('.course-checkbox').forEach(item => item.checked = false);
   $("#member-license").val(0);
 }
 
@@ -393,8 +414,16 @@ function getMember(member, isEdition) {
       const withPass = !(data.sport_pass === null || data.sport_pass?.code === null || data.sport_pass?.code === '');
       $('#pass-div').attr('hidden', !withPass);
       $('#pass-switch').prop('checked', withPass);
-      $('#member-courses').val(isEdition ? data.active_courses.map((c) => c.id) : undefined);
+      document.querySelectorAll('.course-checkbox').forEach(item => {
+        item.checked = data.active_courses.map(c => c.id.toString()).indexOf(item.value) > -1;
+      });
       $('#member-license').val(isEdition ? data.ffd_license : 0);
+      if (isEdition && data.is_validated) {
+        $('#member-courses-accordion').addClass('d-none');
+        $('#authorise-photos').prop('disabled', true);
+        $('#authorise-emergency').prop('disabled', true);
+        $('#member-btn').html('Modifier');
+      }
       if (isMe(data)) {
         $('#emergency-me-switch').attr('disabled', true);
         $('#emergency-me-switch').prop('checked', false);
@@ -446,7 +475,6 @@ function postOrPatchMember(url, method, event) {
       address: $('#member-address').val(),
       birthday: $('#member-birthday').val(),
       season: $('#member-season').val(),
-      active_courses: $('#member-courses').val(),
       ffd_license: $('#member-license').val(),
       contacts: buildContactsData(),
       documents: {
@@ -454,6 +482,15 @@ function postOrPatchMember(url, method, event) {
         authorise_emergency: $('#authorise-emergency').is(':checked'),
       }
     };
+    if (method == "POST") {
+      let courses = [];
+      document.querySelectorAll('.course-checkbox').forEach(item => {
+        if (item.checked) {
+          courses.push(item.value);
+        }
+      });
+      data.active_courses = courses;
+    }
     if ($('#member-pass-code').val() !== '') {
       data.sport_pass = {
         code: $('#member-pass-code').val(),
@@ -507,6 +544,10 @@ function postOrPatchMember(url, method, event) {
         if (error.responseJSON && error.responseJSON.phone) {
           $('#invalid-member-phone').html(error.responseJSON.phone[0] + ' Format attendu: 0123456789.');
           $('#invalid-member-phone').addClass('d-inline');
+        }
+        if (error.responseJSON && error.responseJSON.active_courses) {
+          $('#invalid-member-courses').html(error.responseJSON.active_courses[0]);
+          $('#invalid-member-courses').addClass('d-inline');
         }
         if (error.responseJSON && error.responseJSON.contacts) {
           $('#message-error-contact').removeClass('d-none');
@@ -570,12 +611,23 @@ function deleteItem() {
     deleteModal.addEventListener('show.bs.modal', event => {
       const button = event.relatedTarget;
       const buttonId = button.getAttribute('id');
+      const buttonClass = button.getAttribute('class');
       const modalBody = deleteModal.querySelector('.modal-body');
       let url = '';
+      let errorMessage = '';
       if (buttonId === 'delete-me-btn') {
         $('#delete-modal-title').html('Supprimer mon compte');
         modalBody.textContent = `Etes-vous sur.e de vouloir supprimer votre compte ainsi que tous les adhérents associés ?`;
         url = userMeUrl;
+        errorMessage = 'Une erreur est survenue, impossible de supprimer le compte pour le moment.';
+      }
+      else if (buttonClass.includes('m-delete-btn')) {
+        $('#delete-modal-title').html('Supprimer un adhérent');
+        const memberId = button.getAttribute('data-bs-mid');
+        const member = button.getAttribute('data-bs-mname');
+        modalBody.textContent = `Etes-vous sur.e de vouloir supprimer ${member} pour cette saison ?`;
+        url = membersUrl + memberId + '/';
+        errorMessage = 'Une erreur est survenue, impossible de supprimer cet adhérent pour le moment.';
       }
       $(document).on("click", "#delete-btn", function () {
         $.ajax({
@@ -587,7 +639,30 @@ function deleteItem() {
             location.reload();
           },
           error: (error) => {
-            showToast('Impossible ne erreur est survenue, impossible de supprimer le compte pour le moment.');
+            showToast(errorMessage);
+            console.log(error);
+          }
+        });
+      });
+    });
+  }
+}
+
+function validateMembers() {
+  const validateModal = document.getElementById('validate-modal');
+  if (validateModal) {
+    validateModal.addEventListener('show.bs.modal', event => {
+      $(document).on("click", "#validate-btn", function () {
+        $.ajax({
+          url: userMeValidateUrl,
+          type: 'PUT',
+          headers: { 'X-CSRFToken': csrftoken },
+          mode: 'same-origin',
+          success: () => {
+            location.reload();
+          },
+          error: (error) => {
+            showToast(errorMessage);
             console.log(error);
           }
         });
@@ -725,4 +800,12 @@ function showToast(text) {
   const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('user-error-toast'));
   $('#user-error-body').text(`${text} ${ERROR_SUFFIX}`);
   toast.show();
+}
+
+function buildHelper(text) {
+  return `
+<span tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-content="${text}" data-bs-placement="right" data-bs-html="true">
+  <i class="bi-info-circle main-blue"></i>
+</span>
+`
 }

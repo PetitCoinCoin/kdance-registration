@@ -1,7 +1,7 @@
-"""Tests related to Members API view."""
-import pytest
-
+"""Tests related to Member API view."""
 from datetime import datetime, time, timezone
+
+import pytest
 
 from django.urls import reverse
 from parameterized import parameterized
@@ -17,7 +17,7 @@ from tests.authentication import AuthenticatedAction, AuthTestCase
 
 
 @pytest.mark.django_db
-class TestMembersApiView(AuthTestCase):
+class TestMemberApiView(AuthTestCase):
     view_function = MemberViewSet
     _kwargs = {}
 
@@ -45,6 +45,16 @@ class TestMembersApiView(AuthTestCase):
         )
         self._member = member
 
+    def setup_course(self) -> Course:
+        return Course.objects.create(
+            name="Cha cha cha",
+            season=self._season,
+            price=10,
+            weekday=0,
+            start_hour=time(10, 0),
+            end_hour=time(11, 0),
+        )
+
     @property
     def view_url(self):
         return reverse(
@@ -58,6 +68,7 @@ class TestMembersApiView(AuthTestCase):
         ("post", 400, 400, False),
         ("put", 403, 405, True),
         ("patch", 200, 200, True),
+        # delete
     ])
     def test_permissions(self, method, user_status, superuser_status, with_pk):
         self._kwargs = {"pk": self._member.pk} if with_pk else {}
@@ -65,29 +76,6 @@ class TestMembersApiView(AuthTestCase):
             method=method,
             user_status=user_status,
             superuser_status=superuser_status,
-        )
-
-    def test_delete_permissions(self):
-        def gen_pk():
-            val = 0
-            new_member = Member.objects.create(
-                user=self.testuser,
-                season=self._season,
-                first_name=f"Plip{val}",
-                last_name="Plop",
-                birthday=datetime(1900, 1, 10 + val, tzinfo=timezone.utc),
-                address="Par ici",
-                email="plip@plop.fr",
-                phone="0987654321",
-            )
-            yield new_member.pk
-            val += 1
-
-        assert self.users_have_permission(
-            urls=(reverse("api-members-detail", args=[next(gen_pk())]), self.view_function),
-            method="delete",
-            user_status=403,
-            superuser_status=204,
         )
 
     @parameterized.expand([
@@ -100,7 +88,7 @@ class TestMembersApiView(AuthTestCase):
     ])
     def test_authentication_mandatory(self, method, with_pk):
         self._kwargs = {"pk": self._member.pk} if with_pk else {}
-        assert self.authentication_is_mandatory(method)
+        assert self.anonymous_has_permission(method, 403)
 
     @parameterized.expand([
         (200, False, False),
@@ -166,12 +154,38 @@ class TestMembersApiView(AuthTestCase):
                 assert response_json["first_name"] == "Plup"
 
     @parameterized.expand([
+        (204, True, False),
+        (403, False, True),
+    ])
+    def test_delete_permissions_limitations(self, status_code, with_pk, with_super_pk):
+        """Tests that DELETE request are allowed for simple user, but only for their members."""
+        super_member, _ = Member.objects.get_or_create(
+            user=self.super_testuser,
+            season=self._season,
+            first_name="Superplip",
+            last_name="Superplop",
+            birthday=datetime(1900, 10, 1, tzinfo=timezone.utc),
+            address="Par ici",
+            email="superplip@plop.fr",
+            phone="0987654321",
+        )
+        assert Member.objects.count() == 2
+        if with_pk:
+            self._kwargs["pk"] = self._member.pk
+        if with_super_pk:
+            self._kwargs["pk"] = super_member.pk
+        with AuthenticatedAction(self.client, self.testuser):
+            response = self.client.delete(self.view_url)
+            assert response.status_code == status_code, response
+
+    @parameterized.expand([
         ("Jean-Mich", "Jean-Mich", "Pouet", "Pouet", "j@m.com", "j@m.com"),
         ("jean-mich", "Jean-Mich", "pouet", "Pouet", "J@M.com", "j@m.com"),
         ("JEAN-MICH", "Jean-Mich", "POUET", "Pouet", "J@M.COM", "j@m.com"),
     ])
     def test_post(self, first_name, exp_first_name, last_name, exp_last_name, email, exp_email):
         """Tests creation with data formating."""
+        course = self.setup_course()
         data = {
             "season": self._season.pk,
             "first_name": first_name,
@@ -184,6 +198,7 @@ class TestMembersApiView(AuthTestCase):
                 "code": "AZE-AZE-AZE",
                 "amount": 50,
             },
+            "active_courses": [course.pk],
             "contacts": [],
             "documents": {
                 "authorise_photos": False,
@@ -213,19 +228,21 @@ class TestMembersApiView(AuthTestCase):
         assert Documents.objects.filter(member__id=new_member.pk)
 
     @parameterized.expand([
-        ("Plip", "Plop", None, None, None, None, "first_name", "Cet adhérent existe déjà pour la saison."),
-        ("plip", "PLOP", None, None, None, None, "last_name", "Cet adhérent existe déjà pour la saison."),
-        ("", "Pouet", None, None, None, None, "first_name", "Ce champ ne peut être vide."),
-        ("Jean-Mich", "", None, None, None, None, "last_name", "Ce champ ne peut être vide."),
-        (None, None, "jm.com", None, None, None, "email", "Saisissez une adresse e-mail valide."),
-        (None, None, "", None, None, None, "email", "Ce champ ne peut être vide."),
-        (None, None, None, "+331234", None, None, "phone", "Saisissez une valeur valide."),
-        (None, None, None, "", None, None, "phone", "Ce champ ne peut être vide."),
-        (None, None, None, None, "", None, "address", "Ce champ ne peut être vide."),
-        (None, None, None, None, None, "24/12/2000", "birthday", "La date n'a pas le bon format. Utilisez un des formats suivants\xa0: YYYY-MM-DD."),
-        (None, None, None, None, None, "", "birthday", "La date n'a pas le bon format. Utilisez un des formats suivants\xa0: YYYY-MM-DD."),
+        ("Plip", "Plop", None, None, None, None, True, "first_name", "Cet adhérent existe déjà pour la saison."),
+        ("plip", "PLOP", None, None, None, None, True, "last_name", "Cet adhérent existe déjà pour la saison."),
+        ("", "Pouet", None, None, None, None, True, "first_name", "Ce champ ne peut être vide."),
+        ("Jean-Mich", "", None, None, None, None, True, "last_name", "Ce champ ne peut être vide."),
+        (None, None, "jm.com", None, None, None, True, "email", "Saisissez une adresse e-mail valide."),
+        (None, None, "", None, None, None, True, "email", "Ce champ ne peut être vide."),
+        (None, None, None, "+331234", None, None, True, "phone", "Saisissez une valeur valide."),
+        (None, None, None, "", None, None, True, "phone", "Ce champ ne peut être vide."),
+        (None, None, None, None, "", None, True, "address", "Ce champ ne peut être vide."),
+        (None, None, None, None, None, None, False, "active_courses", "Vous devez sélectionner au moins un cours."),
+        (None, None, None, None, None, "24/12/2000", True, "birthday", "La date n'a pas le bon format. Utilisez un des formats suivants\xa0: YYYY-MM-DD."),
+        (None, None, None, None, None, "", True, "birthday", "La date n'a pas le bon format. Utilisez un des formats suivants\xa0: YYYY-MM-DD."),
     ])
-    def test_post_payload_error(self, first_name, last_name, email, phone, address, birthday, key, message):
+    def test_post_payload_error(self, first_name, last_name, email, phone, address, birthday, courses, key, message):
+        course = self.setup_course()
         data = {
             "user": self.testuser.pk,
             "season": self._season.pk,
@@ -235,6 +252,7 @@ class TestMembersApiView(AuthTestCase):
             "address": "Par ici",
             "email": "j@m.com",
             "phone": "0987654321",
+            "active_courses": [course.pk],
             "contacts": [],
             "documents": {
                 "authorise_photos": False,
@@ -254,6 +272,8 @@ class TestMembersApiView(AuthTestCase):
             data["address"] = address
         if birthday is not None:
             data["birthday"] = birthday
+        if not courses:
+            data.pop("active_courses")
         self._kwargs = {}
         assert Member.objects.count() == 1
 
@@ -397,7 +417,7 @@ class TestMembersCoursesApiView(AuthTestCase):
         ("post", 405, 405),
         ("put", 403, 200),
         ("patch", 405, 405),
-        ("delete", 403, 405),
+        ("delete", 405, 405),
     ])
     def test_permissions(self, method, user_status, superuser_status):
         self._kwargs["action"] = "add"
@@ -420,9 +440,9 @@ class TestMembersCoursesApiView(AuthTestCase):
     ])
     def test_authentication_mandatory(self, method):
         self._kwargs["action"] = "add"
-        assert self.authentication_is_mandatory(method)
+        assert self.anonymous_has_permission(method, 403)
         self._kwargs["action"] = "remove"
-        assert self.authentication_is_mandatory(method)
+        assert self.anonymous_has_permission(method, 403)
 
     def test_add(self):
         course = self.set_course()

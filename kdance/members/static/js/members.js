@@ -361,7 +361,6 @@ function getMember(memberId) {
       $('#check-switch').prop('checked', withCheck);
 
       // Courses
-      $('#member-courses-section').data('memberId', memberId);
       $('#courses-select').empty();
       data.active_courses.map((course) => {
         const startHour = course.start_hour.split(':');
@@ -427,7 +426,7 @@ function updateMember() {
       let memberId = button.getAttribute('memberId');
       getMember(memberId);
       $('#add-btn').data('memberId', memberId);
-      $('#cancel-btn').data('memberId', memberId);
+      $('#delete-btn').data('memberId', memberId);
     });
   }
 }

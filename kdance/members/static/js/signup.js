@@ -1,4 +1,5 @@
 $(document).ready(() => {
+  activatePopovers();
   togglePasswords();
   postSignup();
 });
@@ -9,6 +10,11 @@ function confirmPassword() {
   return pwdConfirmation.val() === pwd.val()
 }
 
+function activatePopovers() {
+  const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+  [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
+}
+
 function postSignup() {
   $('#form-signup').submit((event) => {
     event.preventDefault();
@@ -16,7 +22,7 @@ function postSignup() {
     $('#message-error-signup').addClass('d-none');
     if (confirmPassword()) {
       const data = {
-        username: $('#username').val(),
+        username: $('#email').val().toLowerCase(),
         first_name: $('#firstname').val(),
         last_name: $('#lastname').val(),
         phone: $('#phone').val(),

@@ -30,17 +30,16 @@ class MembersViewsTestCase(AuthTestCase):
         "get", "post", "put", "patch", "delete"
     ])
     def test_permissions(self, method):
+        user_status = 405 if method != "get" else 403 if self.ADMIN_ONLY else 200
+        superuser_status = 405 if method != "get" else 200
         assert self.users_have_permission(
             method=method,
-            user_status=403 if self.ADMIN_ONLY else 200,
-            superuser_status=200,
+            user_status=user_status,
+            superuser_status=superuser_status,
         )
 
-    @parameterized.expand([
-        "get", "post", "put", "patch", "delete"
-    ])
-    def test_login_redirection(self, method):
-        response = getattr(self.client, method)(self.view_url)
+    def test_login_redirection(self):
+        response = self.client.get(self.view_url)
         assert response.status_code == 302
         assert response.url == LOGIN_REDIRECT_PREFIX + self.view_url
 
@@ -95,14 +94,15 @@ class TestAboutView(AuthTestCase):
         "get", "post", "put", "patch", "delete"
     ])
     def test_permissions(self, method):
+        status = 405 if method != "get" else 200
         assert self.users_have_permission(
             method=method,
-            user_status=200,
-            superuser_status=200,
+            user_status=status,
+            superuser_status=status,
         )
 
-    @parameterized.expand([
-        "get", "post", "put", "patch", "delete"
-    ])
-    def test_authentication_not_mandatory(self, method):
-        assert not self.authentication_is_mandatory(method=method)
+    def test_authentication_not_mandatory(self):
+        assert self.anonymous_has_permission(
+            method="get",
+            status=200,
+        )

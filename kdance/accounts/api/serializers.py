@@ -63,7 +63,7 @@ class UserBaseSerializer(serializers.ModelSerializer):
     @staticmethod
     def validate_username(username: str) -> str:
         if User.objects.filter(username__iexact=username).exists():
-            raise serializers.ValidationError("Ce nom d'utilisateur est déjà pris.")
+            raise serializers.ValidationError("Cet identifiant est déjà pris.")
         return username
 
     @staticmethod
@@ -80,7 +80,7 @@ class UserBaseSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Un utilisateur est déjà associé à cet email.")
         if re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
             return email.lower()
-        raise serializers.ValidationError("Cette addresse email ne semble pas avoir un format valide.")
+        raise serializers.ValidationError("Cette adresse email ne semble pas avoir un format valide.")
 
     def create(self, validated_data: dict) -> User:
         user: User = User.objects.create_user(
@@ -91,13 +91,6 @@ class UserBaseSerializer(serializers.ModelSerializer):
             last_name=validated_data["last_name"],
         )
         return user
-
-    @classmethod
-    @transaction.atomic
-    def delete(cls, user: User) -> None:
-        if user.username == settings.SUPERUSER:
-            raise serializers.ValidationError("Cet utilisateur ne peut pas être supprimé.")
-        user.delete()
 
     @transaction.atomic
     def save(self, **kwargs: User) -> User:
@@ -182,7 +175,7 @@ class UserCreateSerializer(UserBaseSerializer):
         message = f"""
 Bonjour
 
-Vous venez de créer votre compte K'Dance! Utilisez votre nom d'utilisateur ({username}) pour vous connecter.
+Vous venez de créer votre compte K'Dance! Utilisez votre email ({username}) comme identifiant pour vous connecter.
 Vous pouvez désormais ajouter et gérer les adhérents de votre famille pour chaque nouvelle saison.
 N'oubliez pas d'utiliser également cet espace pour mettre à jour vos coordonnées en cas de changement.
 
@@ -196,7 +189,7 @@ Tech K'Dance
         message = f"""
 <p>Bonjour</p>
 <p>
-  Vous venez de créer votre compte K'Dance! Utilisez votre nom d'utilisateur ({username}) pour vous connecter.
+  Vous venez de créer votre compte K'Dance! Utilisez votre email ({username}) comme identifiant pour vous connecter.
   Vous pouvez désormais ajouter et gérer les adhérents de votre famille pour chaque nouvelle saison.
 </p>
 <p>
@@ -254,7 +247,7 @@ class UserAdminActionSerializer(serializers.Serializer):
     def validate_emails(self, emails: list[str]) -> list:
         normalized = [email.lower() for email in emails]
         if settings.SUPERUSER_EMAIL in normalized and not self._is_admin:
-            raise serializers.ValidationError(f"{settings.SUPERUSER}: cet utilisateur ne peut pas être supprimé.")
+            raise serializers.ValidationError(f"{settings.SUPERUSER_EMAIL}: cet utilisateur ne peut pas être supprimé des administrateurs.")
         return normalized
 
     def save(self, **k_) -> dict:
@@ -394,14 +387,14 @@ class UserNewPwdSerializer(serializers.Serializer):
         validated = super().validate(attr)
         user = User.objects.filter(email=validated.get("email")).first()
         if not user:
-            raise serializers.ValidationError({"email": "Email incorrect, cet utilisateur n'existe pas."})
+            raise serializers.ValidationError({"email": ["Email incorrect, cet utilisateur n'existe pas."]})
         reset_pwd = ResetPassword.objects.filter(user=user).first()
         if not reset_pwd:
-            raise serializers.ValidationError({"email": "Email incorrect, aucune demande de réinitialisation trouvée."})
+            raise serializers.ValidationError({"email": ["Email incorrect, aucune demande de réinitialisation trouvée."]})
         if reset_pwd.request_hash != sha512(validated.get("token").encode()).hexdigest():
-            raise serializers.ValidationError({"token": "Lien de réinitialisation incorrect pour cet utilisateur."})
+            raise serializers.ValidationError({"token": ["Lien de réinitialisation incorrect pour cet utilisateur."]})
         if timezone.now() - reset_pwd.created > timedelta(minutes=31):
-            raise serializers.ValidationError({"token": "Lien de réinitialisation expiré. Veuillez refaire une demande de réinitialisation."})
+            raise serializers.ValidationError({"token": ["Lien de réinitialisation expiré. Veuillez refaire une demande de réinitialisation."]})
         return validated
 
     @transaction.atomic

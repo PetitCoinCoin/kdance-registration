@@ -13,11 +13,6 @@
       </div>
       <form id="form-signup" name="form-signup" class="min-w-500 d-flex flex-column" method="post">
         {% csrf_token %}
-        <div class="form-outline mb-4">
-          <label class="form-label required" for="username">Nom d'utilisateur</label>
-          <input type="text" id="username" class="form-control" required />
-          <div id="invalid-username" class="invalid-feedback"></div>
-        </div>
         <div class="row">
           <div class="col-6">
             <div class="form-outline mb-4">
@@ -56,6 +51,9 @@
           <div class="col-6">
             <div class="form-group mb-4">
               <label class="form-label required" for="password">Mot de passe</label>
+              <span tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-content="Minimum 12 caractères<br>Au moins une minuscule<br>Au moins une majuscule<br>Au moins un chiffre" data-bs-placement="right" data-bs-html="true">
+                <i class="bi-info-circle main-blue"></i>
+              </span>
               <div class="input-group">
                 <input type="password" id="password" class="form-control" required/>
                 <span class="input-group-text">

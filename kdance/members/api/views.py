@@ -51,9 +51,9 @@ class SeasonViewSet(
     def get_queryset(self):
         queryset = Season.objects.all()
         is_current = self.request.query_params.get("is_current", "")
-        if is_current.lower() in ["true", 1]:
+        if is_current.lower() in ["true", "1"]:
             queryset = queryset.filter(is_current=True)
-        elif is_current.lower() in ["false", 0]:
+        elif is_current.lower() in ["false", "0"]:
             queryset = queryset.filter(is_current=False)
         return queryset.order_by("-year")
 
@@ -204,6 +204,13 @@ class MemberViewSet(
     def perform_update(self, serializer: serializers.BaseSerializer):
         user = self.get_object().user
         serializer.save(user=user)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if not request.user.is_superuser and instance.user != request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=True,

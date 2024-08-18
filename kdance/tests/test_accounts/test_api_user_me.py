@@ -45,7 +45,7 @@ class TestUserMeView(AuthTestCase):
         "get", "post", "put", "patch", "delete",
     ])
     def test_authentication_mandatory(self, method):
-        assert self.authentication_is_mandatory(method)
+        assert self.anonymous_has_permission(method, 403)
 
     def test_get(self):
         with AuthenticatedAction(self.client, self.testuser):
@@ -66,12 +66,12 @@ class TestUserMeView(AuthTestCase):
 
     @parameterized.expand([
         ("", None, None, "Ce champ ne peut être vide."),
-        (SUPERTESTUSER, None, None, "Ce nom d'utilisateur est déjà pris."),
-        ("SUPER_testuser", None, None, "Ce nom d'utilisateur est déjà pris."),
+        (SUPERTESTUSER, None, None, "Cet identifiant est déjà pris."),
+        ("SUPER_testuser", None, None, "Cet identifiant est déjà pris."),
         (None, "", None, "Ce champ ne peut être vide."),
         (None, SUPERTESTUSER_EMAIL, None, "Un utilisateur est déjà associé à cet email."),
         (None, "TESTSUPER@kdance.COM", None, "Un utilisateur est déjà associé à cet email."),
-        (None, "plop.com", None, "Cette addresse email ne semble pas avoir un format valide."),
+        (None, "plop.com", None, "Cette adresse email ne semble pas avoir un format valide."),
         (None, None, "+336", "Saisissez une valeur valide."),
         (None, None, "", "Ce champ ne peut être vide."),
     ])
@@ -103,7 +103,7 @@ class TestUserMeView(AuthTestCase):
 
     def test_delete_kdance_impossible(self):
         """Tests that automatic superuser kdance cannot be deleted."""
-        superuser = User.objects.get(username=settings.SUPERUSER)
+        superuser = User.objects.get(username=settings.SUPERUSER_EMAIL)
         with AuthenticatedAction(self.client, superuser):
             response = self.client.delete(self.view_url)
             assert response.status_code == 401
@@ -142,7 +142,7 @@ class TestUserMePasswordView(AuthTestCase):
         "get", "post", "put", "patch", "delete",
     ])
     def test_authentication_mandatory(self, method):
-        assert self.authentication_is_mandatory(method)
+        assert self.anonymous_has_permission(method, 403)
 
     def test_put(self):
         with AuthenticatedAction(self.client, self._tmp_user):

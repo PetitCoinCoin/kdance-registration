@@ -64,7 +64,7 @@ class UsersApiViewSet(
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.username == settings.SUPERUSER:
+        if instance.username == settings.SUPERUSER_EMAIL:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -100,7 +100,7 @@ class UserMeApiViewSet(
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.username == settings.SUPERUSER:
+        if instance.username == settings.SUPERUSER_EMAIL:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -124,6 +124,14 @@ class UserMeApiViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save()
         update_session_auth_hash(request, user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=["put"])
+    def validate(self, request: Request) -> Response:
+        user = self.get_object()
+        for member in user.member_set.filter(season__is_current=True).all():
+            member.is_validated = True
+            member.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

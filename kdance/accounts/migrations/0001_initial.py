@@ -10,7 +10,7 @@ def _create_superuser(apps, *_):
     User = apps.get_model("auth", "User")
     Profile = apps.get_model("accounts", "Profile")
     superuser = User.objects.create_superuser(
-        username=settings.SUPERUSER,
+        username=settings.SUPERUSER_EMAIL,
         email=settings.SUPERUSER_EMAIL,
         password=settings.SUPERUSER_PWD,
     )

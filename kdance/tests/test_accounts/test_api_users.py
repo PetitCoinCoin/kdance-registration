@@ -10,6 +10,7 @@ from django.urls import reverse
 from parameterized import parameterized
 
 from accounts.api.views import UsersApiViewSet
+from members.models import Payment, Season
 from tests.authentication import AuthenticatedAction, AuthTestCase
 from tests.data_tests import TESTUSER, TESTUSER_EMAIL
 
@@ -70,7 +71,12 @@ class TestUsersView(AuthTestCase):
     def test_authentication_mandatory(self, method, url):
         """Mandatory except for POST (user creation)."""
         url = url or self.view_url
-        assert self.authentication_is_mandatory(method, url) is (method != "post")
+        status = 400 if method == "post" else 403
+        assert self.anonymous_has_permission(
+            method=method,
+            status=status,
+            urls=[url],
+        )
 
     def test_get(self):
         with AuthenticatedAction(self.client, self.super_testuser):
@@ -96,7 +102,10 @@ class TestUsersView(AuthTestCase):
             assert email_sent.subject == "Création d'un compte K'Dance"
             assert list(email_sent.to) == [self._TEST_DATA["email"]]
 
-    def test_post_not_authenticated(self):
+    @parameterized.expand([True, False])
+    def test_post_not_authenticated(self, with_season):
+        if with_season:
+            season = Season.objects.create(year="2010-2011", is_current=True)
         response = self.client.post(self.view_url, data=self._TEST_DATA, content_type="application/json")
         assert response.status_code == 201, response
         new_user = User.objects.last()
@@ -107,15 +116,19 @@ class TestUsersView(AuthTestCase):
         email_sent = mail.outbox[0]
         assert email_sent.subject == "Création d'un compte K'Dance"
         assert list(email_sent.to) == [self._TEST_DATA["email"]]
+        if with_season:
+            assert Payment.objects.filter(user=new_user, season=season).exists()
+        else:
+            assert Payment.objects.count() == 0
 
     @parameterized.expand([
         ("", "username", "Ce champ ne peut être vide."),
-        (TESTUSER, "username", "Ce nom d'utilisateur est déjà pris."),
-        ("TestUser", "username", "Ce nom d'utilisateur est déjà pris."),
+        (TESTUSER, "username", "Cet identifiant est déjà pris."),
+        ("TestUser", "username", "Cet identifiant est déjà pris."),
         ("", "email", "Ce champ ne peut être vide."),
         (TESTUSER_EMAIL, "email", "Un utilisateur est déjà associé à cet email."),
         ("TEST@Kdance.com", "email", "Un utilisateur est déjà associé à cet email."),
-        ("plop.com", "email", "Cette addresse email ne semble pas avoir un format valide."),
+        ("plop.com", "email", "Cette adresse email ne semble pas avoir un format valide."),
         ("", "phone", "Ce champ ne peut être vide."),
         ("+336", "phone", "Ce numéro de téléphone n'est pas valide. Format attendu: 0123456789."),
         ("", "address", "Ce champ ne peut être vide."),
@@ -153,7 +166,7 @@ class TestUsersView(AuthTestCase):
 
     def test_delete_kdance_impossible(self):
         """Tests that automatic superuser kdance cannot be deleted."""
-        superuser = User.objects.get(username=settings.SUPERUSER)
+        superuser = User.objects.get(username=settings.SUPERUSER_EMAIL)
         with AuthenticatedAction(self.client, self.super_testuser):
             response = self.client.delete(reverse("api-users-detail", args=[superuser.pk]))
             assert response.status_code == 401
@@ -201,7 +214,8 @@ class TestUsersAdminView(AuthTestCase):
     ])
     def test_authentication_mandatory(self, method):
         # POST does not require authentication for user creation, but does not exist on this url, thus 405.
-        assert self.authentication_is_mandatory(method) is (method != "post")
+        status = 405 if method == "post" else 403
+        assert self.anonymous_has_permission(method, status)
 
     @parameterized.expand([
         (None, "activate", 200, None, [], []),
@@ -254,5 +268,5 @@ class TestUsersAdminView(AuthTestCase):
                 content_type="application/json",
             )
             assert response.status_code == 400, response
-            assert f"{settings.SUPERUSER}: cet utilisateur ne peut pas être supprimé." in response.json()["emails"]
-            assert User.objects.get(username=settings.SUPERUSER).is_superuser is True
+            assert f"{settings.SUPERUSER_EMAIL}: cet utilisateur ne peut pas être supprimé des administrateurs." in response.json()["emails"]
+            assert User.objects.get(username=settings.SUPERUSER_EMAIL).is_superuser is True
