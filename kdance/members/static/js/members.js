@@ -196,13 +196,13 @@ function getMembers(seasonId) {
         $('#members-table').bootstrapTable({
           ...COMMON_TABLE_PARAMS,
           columns: [{
-            field: 'last_name',
-            title: 'Nom de famille',
+            field: 'name',
+            title: 'Adhérent',
             searchable: true,
             sortable: true,
           }, {
-            field: 'first_name',
-            title: 'Prénom',
+            field: 'status',
+            title: 'Statut',
             searchable: true,
             sortable: true,
           }, {
@@ -258,6 +258,8 @@ function getMembers(seasonId) {
           data: data.map((m) => {
             return {
               ...m,
+              name: `${m.last_name} ${m.first_name}`,
+              status: m.is_validated ? 'Validé' : 'En attente',
               courses: m.active_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`).concat(m.cancelled_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)),
               solde: m.payment.due - m.payment.paid + m.payment.refund,
               documents: m.documents ? {
@@ -274,6 +276,8 @@ function getMembers(seasonId) {
         $('#members-table').bootstrapTable('load', data.map((m) => {
           return {
             ...m,
+            name: `${m.last_name} ${m.first_name}`,
+            status: m.is_validated ? 'Validé' : 'En attente',
             courses: m.active_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`).concat(m.cancelled_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)),
             solde: m.payment.due - m.payment.paid,
             documents: m.documents ? {

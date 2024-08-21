@@ -177,6 +177,13 @@ function buildMembersInfo(data) {
         title: 'Inscrit le',
         searchable: false,
         sortable: true,
+        visible: false,
+      }, {
+        field: 'status',
+        title: 'Statut',
+        searchable: true,
+        sortable: true,
+        visible: true,
       }, {
         field: 'phone',
         title: 'Téléphone',
@@ -268,6 +275,7 @@ function buildMembersInfo(data) {
     data: data.map(m => {
       return {
         ...m,
+        status: m.is_validated ? 'Validé' : 'En attente',
         created: (new Date(m.created)).toLocaleString('fr-FR'),
         name: `${m.last_name} ${m.first_name}`,
         courses: m.active_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`).concat(m.cancelled_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)),
@@ -323,10 +331,16 @@ function buildSportPassInfo(data) {
         title: 'Montant (€)',
         searchable: false,
         sortable: false,
-      }],
+      }, {
+        field: 'status',
+        title: 'Statut',
+        searchable: true,
+        sortable: true,
+  }],
     data: data.filter(m => m.sport_pass !== null).map((m) => {
       return {
         ...m,
+        status: m.is_validated ? 'Validé' : 'En attente',
         member: `${m.first_name} ${m.last_name}`
       }
     })
