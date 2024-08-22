@@ -154,13 +154,13 @@ class Payment(models.Model):
         # Discount
         due -= self.special_discount
         if total >= self.season.discount_limit:
-            due *= int(round((100 - self.season.discount_percent) / 100))
+            due *= (100 - self.season.discount_percent) / 100
         # Adhesion and license
         due += len(members) * 10
         due += sum([member.ffd_license for member in members])
         # Refund after cancellation
         due -= sum(member.cancel_refund for member in members)
-        return due
+        return int(round(due))
 
     @property
     def due_detail(self) -> list[str]:
