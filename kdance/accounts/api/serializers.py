@@ -264,7 +264,7 @@ class UserAdminActionSerializer(serializers.Serializer):
                 user.save()
             except User.DoesNotExist:
                 details["not_found"].append(email)
-            except:
+            except Exception :
                 details["other"].append(email)
             else:
                 details["processed"].append(email)

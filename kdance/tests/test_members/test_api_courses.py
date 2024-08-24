@@ -1,5 +1,5 @@
 """Tests related to Course API view."""
-from datetime import datetime, time, timezone
+from datetime import time
 
 import pytest
 
@@ -9,8 +9,6 @@ from parameterized import parameterized
 from members.api.views import CourseViewSet
 from members.models import (
     Course,
-    Documents,
-    Member,
     Season,
 )
 from tests.authentication import AuthenticatedAction, AuthTestCase
