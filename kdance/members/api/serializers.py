@@ -93,13 +93,13 @@ class CourseCopySeasonSerializer(serializers.Serializer):
     @staticmethod
     def validate_from_season(season_id: int) -> int:
         if not Season.objects.filter(id=season_id).exists():
-            raise serializers.ValidationError("Cette saison n'existe pas")
+            raise serializers.ValidationError("Cette saison n'existe pas.")
         return season_id
 
     @staticmethod
     def validate_to_season(season_id: int) -> int:
         if not Season.objects.filter(id=season_id).exists():
-            raise serializers.ValidationError("Cette saison n'existe pas")
+            raise serializers.ValidationError("Cette saison n'existe pas.")
         return season_id
 
 
