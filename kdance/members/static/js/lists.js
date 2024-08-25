@@ -41,7 +41,7 @@ function populateSecondSelect(previousValue) {
     case '1':
       getCourses($('#season-select').val());
       break
-    case '2':
+    case '3':
       $('#menu-2-select').empty();
       for (let [key, value] of Object.entries(MONTH)) {
         $('#menu-2-select').append($('<option>', { value: key, text: value, selected: key == '0' }));
@@ -55,7 +55,7 @@ function populateSecondSelect(previousValue) {
 
 function onMainChange(mainValue) {
   $('#menu-2-select').empty();
-  const empty_one = ['0', '3', '4'];
+  const empty_one = ['0', '2', '4', '5'];
   if (empty_one.indexOf(mainValue) > -1) {
     $('#menu-2-select').attr('hidden', true);
   } else {
@@ -85,11 +85,14 @@ function searchData() {
     const mainValue = $('#menu-1-select').val();
     switch (mainValue) {
       case '1':
-      case '3':
       case '4':
+      case '5':
         getMembersPerCourse(mainValue);
         break
       case '2':
+        getPayments();
+        break;
+      case '3':
         getChecksPerMonth();
         break
       default:
@@ -106,10 +109,10 @@ function getMembersPerCourse(mainValue) {
     case null:
       let filter = '';
       switch (mainValue) {
-        case '3':
+        case '4':
           filter = 'with_pass';
           break
-        case '4':
+        case '5':
           filter = 'with_license';
           break
         default:
@@ -134,12 +137,13 @@ function getMembersPerCourse(mainValue) {
           buildMembersInfo(data);
           break
         case '2':
+        case '3':
           console.log('This should not happen');
           return
-        case '3':
+        case '4':
           buildSportPassInfo(data);
           break
-        case '4':
+        case '5':
           buildLicenseInfo(data);
           break
         default:
@@ -379,8 +383,9 @@ function buildLicenseInfo(data) {
 
 function getChecksPerMonth() {
   if ($('#menu-2-select').val() === '0') {
-    // Error message to be displayed, no month selected
-    console.log('No month selected');
+    const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('list-error-toast'));
+    $('#list-error-body').text('Veuillez sélectionner un mois.');
+    toast.show();
     return
   }
   $.ajax({
@@ -433,6 +438,151 @@ function getChecksPerMonth() {
     },
     error: (error) => {
       showToast('Impossible de récupérer les chèques demandés.');
+      console.log(error);
+    }
+  });
+}
+
+function idFormatter() {
+  return 'Total'
+}
+
+function totalCountFormatter(data) {
+  var field = this.field
+  return data.map(row => row[field]).reduce((acc, val) => {
+    return acc + val || 0
+  }, 0)
+}
+
+function totalAmountFormatter(data) {
+  var field = this.field
+  return data.map(row => row[field]).reduce((acc, val) => {
+    return acc + val || 0
+  }, 0) + '€'
+}
+
+function getPayments() {
+  $.ajax({
+    url: `${paymentsUrl}?season=${$('#season-select').val()}`,
+    type: 'GET',
+    success: (data) => {
+      $('#data-table').bootstrapTable('destroy');
+      $('#data-table').bootstrapTable({
+        ...COMMON_TABLE_PARAMS,
+        showExport: true,
+        showFooter: true,
+        exportTypes: ['csv', 'xlsx', 'pdf', 'json'],
+        exportOptions: {
+          fileName: function () {
+            return `paiements_${$('#season-select option:selected').text()}`
+          }
+        },
+        columns: [
+          {
+            field: 'user_email',
+            title: 'Compte',
+            searchable: true,
+            sortable: true,
+            footerFormatter: idFormatter,
+          }, {
+            field: 'due',
+            title: 'Total dû',
+            sortable: true,
+            footerFormatter: totalAmountFormatter,
+          }, {
+            field: 'paid',
+            title: 'Total payé',
+            sortable: true,
+            footerFormatter: totalAmountFormatter,
+          }, {
+            field: 'cash',
+            title: 'Espèces',
+            sortable: true,
+            footerFormatter: totalAmountFormatter,
+          }, {
+            field: 'check_count',
+            title: 'Nb chèques',
+            sortable: true,
+            visible: false,
+            footerFormatter: totalCountFormatter,
+          }, {
+            field: 'check_amount',
+            title: 'Chèques (€)',
+            sortable: true,
+            footerFormatter: totalAmountFormatter,
+          }, {
+            field: 'sport_pass_count',
+            title: 'Nb Pass Sport',
+            sortable: true,
+            visible: false,
+            footerFormatter: totalCountFormatter,
+          }, {
+            field: 'sport_pass_amount',
+            title: 'Pass Sport (€)',
+            sortable: true,
+            footerFormatter: totalAmountFormatter,
+          }, {
+            field: 'ancv.count',
+            title: 'Nb ANCV',
+            sortable: true,
+            visible: false,
+            footerFormatter: totalCountFormatter,
+          }, {
+            field: 'ancv.amount',
+            title: 'ANCV (€)',
+            sortable: true,
+            footerFormatter: totalAmountFormatter,
+          }, {
+            field: 'sport_coupon.count',
+            title: 'Nb Coupons Sport',
+            sortable: true,
+            visible: false,
+            footerFormatter: totalCountFormatter,
+          }, {
+            field: 'sport_coupon.amount',
+            title: 'Coupons Sport (€)',
+            sortable: true,
+            footerFormatter: totalAmountFormatter,
+          }, {
+            field: 'other_payment.amount',
+            title: 'Autre (€)',
+            sortable: true,
+            footerFormatter: totalAmountFormatter,
+          }, {
+            field: 'refund',
+            title: 'Remboursement (€)',
+            sortable: true,
+            footerFormatter: totalAmountFormatter,
+          }, {
+            field: 'special_discount',
+            title: 'Remise exceptionnelle (€)',
+            sortable: true,
+            footerFormatter: totalAmountFormatter,
+          }, {
+            field: 'comment',
+            title: 'Commentaire',
+            sortable: true,
+            searchable: true,
+          }],
+        data: data.map(p => {
+          return {
+            ...p,
+            check_count: p.check_payment.length,
+            check_amount: p.check_payment.reduce((acc, val) => acc + val.amount, 0),
+          }
+        })
+      });
+      $('input[type=search]').attr('placeholder', 'Rechercher');
+      $('#total-count').text(data.length);
+      document.querySelector('#total-amount-div').className = 'd-flex';
+      const totalAmount = data.reduce(
+        (acc, val) => acc + val.paid,
+        0,
+      );
+      $('#total-amount').text(`${totalAmount}€`);
+    },
+    error: (error) => {
+      showToast('Impossible de récupérer les paiements demandés.');
       console.log(error);
     }
   });

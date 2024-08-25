@@ -38,9 +38,10 @@ const CONTACT_MAPPING = {
 const LIST_MAIN_MAPPING = {
   '0': '...',
   '1': 'Les adhérents par cours',
-  '2': 'Les chèques par mois',
-  '3': 'La liste des Pass Sport',
-  '4': 'La liste des licenciés',
+  '2': 'Le statut général des paiements',
+  '3': 'Les chèques par mois',
+  '4': 'La liste des Pass Sport',
+  '5': 'La liste des licenciés',
 }
 
 const COMMON_TABLE_PARAMS = {

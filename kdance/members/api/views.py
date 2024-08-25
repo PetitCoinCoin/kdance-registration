@@ -42,7 +42,7 @@ class SeasonViewSet(
     RetrieveModelMixin,
     UpdateModelMixin,
     DestroyModelMixin,
-    GenericViewSet
+    GenericViewSet,
 ):
     queryset = Season.objects.all().order_by("-year")
     serializer_class = SeasonSerializer
@@ -76,9 +76,15 @@ class PaymentViewSet(
     UpdateModelMixin,
     GenericViewSet,
 ):
-    queryset = Payment.objects.all().order_by("-season__year", "user__last_name", "user__first_name")
     serializer_class = PaymentSerializer
     http_method_names = ["get", "patch"]
+
+    def get_queryset(self):
+        queryset = Payment.objects.all()
+        season = self.request.query_params.get("season")
+        if season:
+            queryset = queryset.filter(season__id=season)
+        return queryset.order_by("-season__year", "user__username")
 
 
 class CheckViewSet(
@@ -157,11 +163,15 @@ class MemberViewSet(
         if season:
             queryset = queryset.filter(season__id=season)
         if course:
-            queryset = queryset.filter(Q(active_courses__id=course) | Q(cancelled_courses__id=course))
+            queryset = queryset.filter(
+                Q(active_courses__id=course) | Q(cancelled_courses__id=course)
+            )
         if with_pass:
-            queryset = queryset.filter(sport_pass__isnull=with_pass.lower() not in ['true', '1', 'y'])
+            queryset = queryset.filter(
+                sport_pass__isnull=with_pass.lower() not in ["true", "1", "y"]
+            )
         if with_license:
-            if with_license.lower() in ['true', '1', 'y']:
+            if with_license.lower() in ["true", "1", "y"]:
                 queryset = queryset.filter(ffd_license__gt=0)
             else:
                 queryset = queryset.filter(ffd_license=0)
@@ -191,7 +201,9 @@ class MemberViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save(user=self.request.user)
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
 
     def update(self, request: Request, *args, **kwargs) -> Response:
         if request.method and request.method.lower() == "put":
@@ -221,8 +233,10 @@ class MemberViewSet(
     def courses(self, request: Request, action: str, *_a, **_k) -> Response:
         if action not in [action.value for action in MemberCoursesActionsEnum]:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        member = self.get_object() 
-        serializer = MemberCoursesSerializer(data=request.data, member=member, action=action)
+        member = self.get_object()
+        serializer = MemberCoursesSerializer(
+            data=request.data, member=member, action=action
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)

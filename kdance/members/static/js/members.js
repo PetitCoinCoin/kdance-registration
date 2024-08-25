@@ -555,7 +555,7 @@ function patchPayment(memberId, paymentId, event) {
   }
   paymentData.check_payment = checks;
   $.ajax({
-    url: paymentssUrl + paymentId + '/',
+    url: paymentsUrl + paymentId + '/',
     type: 'PATCH',
     contentType: 'application/json',
     headers: { 'X-CSRFToken': csrftoken },

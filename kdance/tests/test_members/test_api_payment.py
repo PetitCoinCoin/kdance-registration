@@ -1,9 +1,9 @@
 """Tests related to Payment and Check API views."""
+
 from urllib.parse import urlencode
 
 import pytest
 
-from django.conf import settings
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
 from parameterized import parameterized
@@ -35,10 +35,12 @@ class TestCheckApiView(AuthTestCase):
         assert Check.objects.count() == 6
         return season_1, season_2
 
-    @parameterized.expand([
-        ("get", 403, 200),
-        ("post", 403, 405),
-    ])
+    @parameterized.expand(
+        [
+            ("get", 403, 200),
+            ("post", 403, 405),
+        ]
+    )
     def test_permissions(self, method, user_status, superuser_status):
         assert self.users_have_permission(
             method=method,
@@ -68,12 +70,14 @@ class TestCheckApiView(AuthTestCase):
             assert response_json[-1]["amount"] == 13
             assert response_json[-1]["month"] == 3
 
-    @parameterized.expand([
-        ({"season": 1}, 3),
-        ({"month": 1}, 2),
-        ({"season": 1, "month": 1}, 1),
-        ({"plop": "plup"}, 6),
-    ])
+    @parameterized.expand(
+        [
+            ({"season": 1}, 3),
+            ({"month": 1}, 2),
+            ({"season": 1, "month": 1}, 1),
+            ({"plop": "plup"}, 6),
+        ]
+    )
     def test_get_filter(self, query_params, count):
         season_1, season_2 = self.setup_list()
         if query_params.get("season"):
@@ -90,7 +94,7 @@ class TestPaymentApiView(AuthTestCase):
     view_function = PaymentViewSet
     _kwargs = {}
 
-    _season: Season| None = None
+    _season: Season | None = None
 
     @pytest.fixture(autouse=True)
     def set_season(self):
@@ -105,14 +109,16 @@ class TestPaymentApiView(AuthTestCase):
             kwargs=self._kwargs,
         )
 
-    @parameterized.expand([
-        ("get", 403, 200, False),
-        ("get", 403, 405, True),
-        ("post", 403, 405, False),
-        ("put", 403, 405, True),
-        ("patch", 403, 200, True),
-        ("delete", 403, 405, True),
-    ])
+    @parameterized.expand(
+        [
+            ("get", 403, 200, False),
+            ("get", 403, 405, True),
+            ("post", 403, 405, False),
+            ("put", 403, 405, True),
+            ("patch", 403, 200, True),
+            ("delete", 403, 405, True),
+        ]
+    )
     def test_permissions(self, method, user_status, superuser_status, with_pk):
         self._kwargs = {"pk": self.testuser.payment_set.first().pk} if with_pk else {}
         assert self.users_have_permission(
@@ -121,14 +127,16 @@ class TestPaymentApiView(AuthTestCase):
             superuser_status=superuser_status,
         )
 
-    @parameterized.expand([
-        ("get", False),
-        ("get", True),
-        ("post", False),
-        ("put", True),
-        ("patch", True),
-        ("delete", True),
-    ])
+    @parameterized.expand(
+        [
+            ("get", False),
+            ("get", True),
+            ("post", False),
+            ("put", True),
+            ("patch", True),
+            ("delete", True),
+        ]
+    )
     def test_authentication_mandatory(self, method, with_pk):
         self._kwargs = {"pk": self.testuser.payment_set.first().pk} if with_pk else {}
         assert self.anonymous_has_permission(method, 403)
@@ -149,21 +157,36 @@ class TestPaymentApiView(AuthTestCase):
             response = self.client.get(self.view_url)
             assert response.status_code == 200, response
             response_json = response.json()
-            assert len(response_json) == 6  # Don't forget permanent superuser !
+            assert len(response_json) == 4
             # test sorting: decreasing season year, then user last name (then first name - but not tested)
             assert response_json[0]["season"]["id"] == new_season.pk
-            assert response_json[0]["comment"] == settings.SUPERUSER_EMAIL
+            assert response_json[0]["comment"] == self.super_testuser.username
             assert response_json[-1]["season"]["id"] == self._season.pk
             assert response_json[-1]["comment"] == self.testuser.username
 
-    @parameterized.expand([
-        ("ancv", {"amount": 10, "count": 2}, 10, 0),
-        ("other_payment", {"amount": 100, "comment": "crypto"}, 100, 0),
-        ("comment", "C'est cadeau", 0, 0),
-        ("refund", 50, 0, 0),
-        ("special_discount", 50, 0, -50),
-        ("check_payment", [{"amount": 10.0, "bank": "bank", "month": 1, "name": "Bob", "number": 10}], 10, 0),
-    ])
+    @parameterized.expand(
+        [
+            ("ancv", {"amount": 10, "count": 2}, 10, 0),
+            ("other_payment", {"amount": 100, "comment": "crypto"}, 100, 0),
+            ("comment", "C'est cadeau", 0, 0),
+            ("refund", 50, 0, 0),
+            ("special_discount", 50, 0, -50),
+            (
+                "check_payment",
+                [
+                    {
+                        "amount": 10.0,
+                        "bank": "bank",
+                        "month": 1,
+                        "name": "Bob",
+                        "number": 10,
+                    }
+                ],
+                10,
+                0,
+            ),
+        ]
+    )
     def test_patch(self, key, value, paid, due):
         self._kwargs = {"pk": self.testuser.payment_set.first().pk}
         with AuthenticatedAction(self.client, self.super_testuser):
@@ -183,14 +206,46 @@ class TestPaymentApiView(AuthTestCase):
         assert self.testuser.payment_set.first().paid == paid
         assert self.testuser.payment_set.first().due == due
 
-    @parameterized.expand([
-        ("ancv", {"amount": 0, "count": 2}, "amount", "Une valeur non nulle est obligatoire."),
-        ("ancv", {"amount": 10, "count": 0}, "count", "Une valeur non nulle est obligatoire."),
-        ("other_payment", {"amount": 100, "comment": ""}, "comment", "Ce champ ne peut être vide."),
-        ("sport_coupon", {"amount": 10, "count": 0}, "count", "Une valeur non nulle est obligatoire."),
-        ("sport_coupon", {"amount": 0, "count": 10}, "amount", "Une valeur non nulle est obligatoire."),
-        ("check_payment", [{"amount": 10, "bank": "bank", "month": 1, "name": "", "number": 10}], "name", "Ce champ ne peut être vide."),
-    ])
+    @parameterized.expand(
+        [
+            (
+                "ancv",
+                {"amount": 0, "count": 2},
+                "amount",
+                "Une valeur non nulle est obligatoire.",
+            ),
+            (
+                "ancv",
+                {"amount": 10, "count": 0},
+                "count",
+                "Une valeur non nulle est obligatoire.",
+            ),
+            (
+                "other_payment",
+                {"amount": 100, "comment": ""},
+                "comment",
+                "Ce champ ne peut être vide.",
+            ),
+            (
+                "sport_coupon",
+                {"amount": 10, "count": 0},
+                "count",
+                "Une valeur non nulle est obligatoire.",
+            ),
+            (
+                "sport_coupon",
+                {"amount": 0, "count": 10},
+                "amount",
+                "Une valeur non nulle est obligatoire.",
+            ),
+            (
+                "check_payment",
+                [{"amount": 10, "bank": "bank", "month": 1, "name": "", "number": 10}],
+                "name",
+                "Ce champ ne peut être vide.",
+            ),
+        ]
+    )
     def test_patch_payload_error(self, key, value, subkey, message):
         self._kwargs = {"pk": self.testuser.payment_set.first().pk}
         with AuthenticatedAction(self.client, self.super_testuser):
