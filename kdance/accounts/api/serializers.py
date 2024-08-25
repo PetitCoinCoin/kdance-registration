@@ -23,7 +23,9 @@ from members.api.serializers import (
 
 _logger = logging.getLogger(__name__)
 
-PHONE_FORMAT_MSG = "Ce numéro de téléphone n'est pas valide. Format attendu: 0123456789."
+PHONE_FORMAT_MSG = (
+    "Ce numéro de téléphone n'est pas valide. Format attendu: 0123456789."
+)
 
 
 class EmailNotSentException(Exception):
@@ -77,10 +79,14 @@ class UserBaseSerializer(serializers.ModelSerializer):
     @staticmethod
     def validate_email(email: str) -> str:
         if User.objects.filter(email=email.lower()).exists():
-            raise serializers.ValidationError("Un utilisateur est déjà associé à cet email.")
+            raise serializers.ValidationError(
+                "Un utilisateur est déjà associé à cet email."
+            )
         if re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
             return email.lower()
-        raise serializers.ValidationError("Cette adresse email ne semble pas avoir un format valide.")
+        raise serializers.ValidationError(
+            "Cette adresse email ne semble pas avoir un format valide."
+        )
 
     def create(self, validated_data: dict) -> User:
         user: User = User.objects.create_user(
@@ -168,7 +174,9 @@ class UserCreateSerializer(UserBaseSerializer):
             mail.attach_alternative(cls.__build_html(username), "text/html")
             sent = mail.send()
             if not sent:
-                _logger.warning("Echec de l'envoi du mail de créataion de compte pour %s", username)
+                _logger.warning(
+                    "Echec de l'envoi du mail de créataion de compte pour %s", username
+                )
 
     @classmethod
     def __build_text(cls, username: str) -> str:
@@ -196,7 +204,7 @@ Tech K'Dance
   N'oubliez pas d'utiliser également cet espace pour mettre à jour vos coordonnées en cas de changement.
 </p>
 <p>
-  Bonne journée et à bientôt<br>
+  Bonne journée et à bientôt<br />
   Tech K'Dance
 </p>
 """
@@ -247,7 +255,9 @@ class UserAdminActionSerializer(serializers.Serializer):
     def validate_emails(self, emails: list[str]) -> list:
         normalized = [email.lower() for email in emails]
         if settings.SUPERUSER_EMAIL in normalized and not self._is_admin:
-            raise serializers.ValidationError(f"{settings.SUPERUSER_EMAIL}: cet utilisateur ne peut pas être supprimé des administrateurs.")
+            raise serializers.ValidationError(
+                f"{settings.SUPERUSER_EMAIL}: cet utilisateur ne peut pas être supprimé des administrateurs."
+            )
         return normalized
 
     def save(self, **k_) -> dict:
@@ -264,7 +274,7 @@ class UserAdminActionSerializer(serializers.Serializer):
                 user.save()
             except User.DoesNotExist:
                 details["not_found"].append(email)
-            except Exception :
+            except Exception:
                 details["other"].append(email)
             else:
                 details["processed"].append(email)
@@ -300,7 +310,9 @@ class UserResetPwdSerializer(serializers.Serializer):
     def validate_email(email: str) -> str:
         user = User.objects.filter(email=email.lower()).first()
         if not user:
-            raise serializers.ValidationError("Email incorrect, cet utilisateur n'existe pas.")
+            raise serializers.ValidationError(
+                "Email incorrect, cet utilisateur n'existe pas."
+            )
         return email.lower()
 
     def save(self, **kwargs: Any) -> None:
@@ -327,10 +339,14 @@ class UserResetPwdSerializer(serializers.Serializer):
             subject="Réinitialisation du mot de passe K'Dance",
             body=self.__build_text(path + "pwd_new?token=" + token),
         )
-        mail.attach_alternative(self.__build_html(path + "pwd_new?token=" + token), "text/html")
+        mail.attach_alternative(
+            self.__build_html(path + "pwd_new?token=" + token), "text/html"
+        )
         sent = mail.send()
         if not sent:
-            raise EmailNotSentException(f"Email de ré-initialisation non envoyé à {user.email}")
+            raise EmailNotSentException(
+                f"Email de ré-initialisation non envoyé à {user.email}"
+            )
 
     @classmethod
     def __build_text(cls, url: str) -> str:
@@ -362,7 +378,7 @@ Tech K'Dance
 <p>Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email, votre mot de passe restera
   inchangé.</p>
 <p>
-  Bonne journée et à bientôt<br>
+  Bonne journée et à bientôt<br />
   Tech K'Dance
 </p>
 """
@@ -387,14 +403,33 @@ class UserNewPwdSerializer(serializers.Serializer):
         validated = super().validate(attr)
         user = User.objects.filter(email=validated.get("email")).first()
         if not user:
-            raise serializers.ValidationError({"email": ["Email incorrect, cet utilisateur n'existe pas."]})
+            raise serializers.ValidationError(
+                {"email": ["Email incorrect, cet utilisateur n'existe pas."]}
+            )
         reset_pwd = ResetPassword.objects.filter(user=user).first()
         if not reset_pwd:
-            raise serializers.ValidationError({"email": ["Email incorrect, aucune demande de réinitialisation trouvée."]})
-        if reset_pwd.request_hash != sha512(validated.get("token").encode()).hexdigest():
-            raise serializers.ValidationError({"token": ["Lien de réinitialisation incorrect pour cet utilisateur."]})
+            raise serializers.ValidationError(
+                {
+                    "email": [
+                        "Email incorrect, aucune demande de réinitialisation trouvée."
+                    ]
+                }
+            )
+        if (
+            reset_pwd.request_hash
+            != sha512(validated.get("token").encode()).hexdigest()
+        ):
+            raise serializers.ValidationError(
+                {"token": ["Lien de réinitialisation incorrect pour cet utilisateur."]}
+            )
         if timezone.now() - reset_pwd.created > timedelta(minutes=31):
-            raise serializers.ValidationError({"token": ["Lien de réinitialisation expiré. Veuillez refaire une demande de réinitialisation."]})
+            raise serializers.ValidationError(
+                {
+                    "token": [
+                        "Lien de réinitialisation expiré. Veuillez refaire une demande de réinitialisation."
+                    ]
+                }
+            )
         return validated
 
     @transaction.atomic
@@ -407,16 +442,26 @@ class UserNewPwdSerializer(serializers.Serializer):
 
 def validate_pwd(pwd: str) -> None:
     if not pwd or len(pwd) < 12:
-            raise serializers.ValidationError("Votre mot de passe doit contenir au moins 12 caractères.")
+        raise serializers.ValidationError(
+            "Votre mot de passe doit contenir au moins 12 caractères."
+        )
     if all(letter.isupper() for letter in pwd if letter.isalpha()):
-        raise serializers.ValidationError("Votre mot de passe doit contenir au moins une minuscule.")
+        raise serializers.ValidationError(
+            "Votre mot de passe doit contenir au moins une minuscule."
+        )
     if all(letter.islower() for letter in pwd if letter.isalpha()):
-        raise serializers.ValidationError("Votre mot de passe doit contenir au moins une majuscule.")
+        raise serializers.ValidationError(
+            "Votre mot de passe doit contenir au moins une majuscule."
+        )
     if not any(letter.isdigit() for letter in pwd):
-        raise serializers.ValidationError("Votre mot de passe doit contenir au moins un chiffre.")
+        raise serializers.ValidationError(
+            "Votre mot de passe doit contenir au moins un chiffre."
+        )
 
 
 def validate_phone(phone: str) -> str:
     if re.fullmatch(r"\d{10}", phone):
         return phone
-    raise serializers.ValidationError("Ce numéro de téléphone n'est pas valide. Format attendu: 0123456789.")
+    raise serializers.ValidationError(
+        "Ce numéro de téléphone n'est pas valide. Format attendu: 0123456789."
+    )

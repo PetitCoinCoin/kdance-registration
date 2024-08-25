@@ -15,6 +15,13 @@
           <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
       </div>
+      <div id="member-success-toast" class="toast align-items-center bg-success" role="alert" aria-live="assertive"
+      aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body fw-semibold" id="member-success-body"></div>
+        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
     </div>
 
     <!-- Modal -->
@@ -182,15 +189,21 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
+            <div class="d-flex mb-3 align-items-center">
+              <label class="form-label min-w-fit me-3" for="member-courses">License FFD</label>
+              <select id="member-license" class="form-select"></select>
+              <button id="member-license-update-btn" type="button" class="btn btn-info ms-3" disabled>Enregistrer</button>
+            </div>
+            <hr />
             <div class="d-flex mb-2">
               <select id="courses-select" class="form-select me-2" multiple></select>
               <div class="d-flex flex-column justify-content-between">
-                <button id="add-course-btn" class="btn btn-outline-info" type="button" data-bs-toggle="modal"
+                <button id="add-course-btn" class="btn btn-info" type="button" data-bs-toggle="modal"
                   data-bs-target="#add-modal">
                   <i class="bi-plus-square main-red"></i>
                   Ajouter un cours
                 </button>
-                <button id="cancel-course-btn" class="btn btn-outline-danger" type="button" data-bs-toggle="modal"
+                <button id="cancel-course-btn" class="btn btn-danger" type="button" data-bs-toggle="modal"
                   data-bs-target="#delete-modal">
                   <i class="bi-trash3-fill" style="color: #ffb3ba;"></i>
                   Annuler les cours sélectionnés
@@ -202,7 +215,7 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">OK</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
           </div>
         </div>
       </div>
@@ -258,6 +271,22 @@
       </div>
     </div>
 
+    <div class="modal fade" id="member-delete-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title">Supprimer un adhérent</h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button id="member-delete-btn" type="submit" class="btn btn-danger">Supprimer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Content -->
     <div class="container">
       <div class="text-center">
@@ -273,10 +302,10 @@
       <div class="container mt-3">
         <p class="fst-italic mb-4">
           Pour modifier le document médical d'un adhérent, cliquez sur
-          <i class="bi-heart-pulse-fill main-blue" style="font-size: small;"></i>.<br>
-          Pour mettre à jour le paiement, cliquez sur <i class="bi-currency-dollar main-blue"></i>.<br>
-          Pour ajouter / retirer des cours à un adhérent (et bientôt une licence), cliquez sur
-          <i class="bi-pencil-fill main-blue" style="font-size: small"></i>.<br>
+          <i class="bi-heart-pulse-fill main-blue" style="font-size: small;"></i>.<br />
+          Pour mettre à jour le paiement, cliquez sur <i class="bi-currency-dollar main-blue"></i>.<br />
+          Pour ajouter / retirer des cours à un adhérent et/ou modifier sa licence, cliquez sur
+          <i class="bi-pencil-fill main-blue" style="font-size: small"></i>.<br />
           Il est nécessaire d'annuler un cours avant de procéder à son éventuel remboursement (même partiel).
         </p>
         <div class="mb-3">

@@ -5,6 +5,7 @@ $(document).ready(() => {
   handleCourseUpdate();
   getSeasons();
   updateMember();
+  deleteMember();
   const seasonSelect = document.querySelector('#season-select');
   seasonSelect.addEventListener('change', () =>
     onSeasonChange(seasonSelect.value)
@@ -15,6 +16,13 @@ function populateMonths(itemId) {
   monthSelectAdd = $(itemId);
   for (let key in MONTH) {
     monthSelectAdd.append($('<option>', { value: key, text: MONTH[key] }));
+  }
+}
+
+function populateLicense() {
+  for (let [key, value] of Object.entries(LICENSES)) {
+    const label = key === '0' ? value : `${value} (${key}€)`;
+    $('#member-license').append($('<option>', { value: key, text: label, selected: key == '0' }));
   }
 }
 
@@ -52,6 +60,33 @@ function handleCourseUpdate() {
   $('#add-btn').on('click', () => {
     patchMemberCoursesActions($('#add-btn').data('memberId'), "add");
   });
+  // License update
+  const licenseSelect = document.querySelector('#member-license');
+  licenseSelect.addEventListener('change', () =>
+    document.querySelector('#member-license-update-btn').disabled = false
+  );
+  $('#member-license-update-btn').on('click', () => {
+    const memberId = $('#add-btn').data('memberId');
+    $.ajax({
+      url: membersUrl + memberId + '/',
+      type: 'PATCH',
+      contentType: 'application/json',
+      headers: { 'X-CSRFToken': csrftoken },
+      mode: 'same-origin',
+      data: JSON.stringify({ffd_license: $('#member-license').val()}),
+      dataType: 'json',
+      success: () => {
+        document.querySelector('#member-license-update-btn').disabled = true;
+        const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('member-success-toast'));
+        $('#member-success-body').text('Licence mise à jour avec succès.');
+        toast.show();
+      },
+      error: (error) => {
+        showToast(`${DEFAULT_ERROR} Impossible de mettre à jour la licence.`);
+        console.log(error);
+      }
+    });
+  })
 }
 
 function displayPayments() {
@@ -169,7 +204,7 @@ function onSeasonChange(seasonId) {
 }
 
 function courseFormatter(value) {
-  return value.join('<br>')
+  return value.join('<br />')
 }
 
 function actionFormatter(value, row) {
@@ -182,6 +217,9 @@ function actionFormatter(value, row) {
     </button>
     <button class="btn btn-outline-info btn-sm" memberId="${row.id}" type="button" data-bs-toggle="modal" data-bs-target="#member-courses-modal">
       <i class="bi-pencil-fill"></i>
+    </button>
+    <button class="btn btn-outline-warning btn-sm" memberId="${row.id}" memberName="${row.name}" type="button" data-bs-toggle="modal" data-bs-target="#member-delete-modal">
+      <i class="bi-trash3-fill"></i>
     </button>
   `;
 }
@@ -304,11 +342,12 @@ function getMember(memberId) {
     success: (data) => {
       $('#member-doc-modal-title').html(`Mettre à jour les documents de ${data.first_name} ${data.last_name}`);
       $('#member-payment-modal-title').html(`Mettre à jour les paiements de ${data.first_name} ${data.last_name}`);
-      $('#member-courses-modal-title').html(`Mettre à jour les cours de ${data.first_name} ${data.last_name}`);
+      $('#member-courses-modal-title').html(`Mettre à jour les cours et/ou la licence de ${data.first_name} ${data.last_name}`);
       $('#member-name').text(`${data.first_name} ${data.last_name}`);  // Deletion modale
       $('#doc-select').val(data.documents?.medical_document || "Manquant");
       $('#authorise-photos').prop('checked', data.documents?.authorise_photos || false);
       $('#authorise-emergency').prop('checked', data.documents?.authorise_emergency || true);
+      $('#member-license').val(data.ffd_license || 0);
 
       // Payment
       $('#payment-cash').val(data.payment.cash);
@@ -426,11 +465,13 @@ function updateMember() {
   }
   if (memberCoursesModal) {
     $('#member-courses-modal').on('show.bs.modal', function (event) {
+      populateLicense();
       const button = event.relatedTarget;
       let memberId = button.getAttribute('memberId');
       getMember(memberId);
       $('#add-btn').data('memberId', memberId);
       $('#delete-btn').data('memberId', memberId);
+      $('#member-license-update-btn').data('memberId', memberId);
     });
   }
 }
@@ -660,6 +701,38 @@ function patchMemberCoursesActions(memberId, action) {
       }
     }
   });
+}
+
+function deleteMember() {
+  const deleteModal = document.getElementById('member-delete-modal');
+  if (deleteModal) {
+    deleteModal.addEventListener('show.bs.modal', event => {
+      const button = event.relatedTarget;
+      let memberId = button.getAttribute('memberId');
+      let memberName = button.getAttribute('memberName');
+      const modalBody = deleteModal.querySelector('.modal-body');
+      modalBody.innerHTML = `
+      <p>Êtes vous sûr de vouloir supprimer ${memberName} de la liste des adhérents de la saison ? Cela aura un impact sur le montant dû pour la saison.</p>
+      <p>Son adhésion à l'association notamment ne sera plus considérée comme due.</p>
+      <p>Pour simplement annuler ses cours, cliquez plutôt sur <i class="bi-pencil-fill main-blue" style="font-size: small"></i></p>
+      `;
+      $(document).on("click", "#member-delete-btn", function () {
+        $.ajax({
+          url: membersUrl + memberId + '/',
+          type: 'DELETE',
+          headers: { 'X-CSRFToken': csrftoken },
+          mode: 'same-origin',
+          success: () => {
+            location.reload();
+          },
+          error: (error) => {
+            showToast('Une erreur est survenue, impossible de supprimer l\'adhérent pour le moment.');
+            console.log(error);
+          }
+        });
+      });
+    });
+  }
 }
 
 function showToast(text) {

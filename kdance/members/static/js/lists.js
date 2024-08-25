@@ -171,7 +171,7 @@ function buildMembersInfo(data) {
         title: 'Adhérent',
         searchable: true,
         sortable: true,
-      }, 
+      },
       {
         field: 'created',
         title: 'Inscrit le',
@@ -257,7 +257,7 @@ function buildMembersInfo(data) {
         sortable: true,
         visible: false,
         formatter: function(value) {
-          return value.join('<br>')
+          return value.join('<br />')
         },
       }, {
         field: 'documents.authorise_photos',
