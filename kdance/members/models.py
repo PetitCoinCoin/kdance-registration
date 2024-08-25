@@ -2,8 +2,14 @@ import logging
 
 from enum import Enum
 
+from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.validators import EmailValidator, MaxValueValidator, MinValueValidator, RegexValidator
+from django.core.validators import (
+    EmailValidator,
+    MaxValueValidator,
+    MinValueValidator,
+    RegexValidator,
+)
 from django.db import models, transaction
 from django.db.models.signals import post_delete
 from django.db.utils import IntegrityError
@@ -11,12 +17,13 @@ from django.dispatch import receiver
 
 _logger = logging.getLogger(__name__)
 
+
 class Season(models.Model):
     year = models.CharField(
         null=False,
         blank=False,
         max_length=9,
-        validators=[RegexValidator(r"\d{4}-\d{4}")]
+        validators=[RegexValidator(r"\d{4}-\d{4}")],
     )
     is_current = models.BooleanField(null=False, blank=False, default=True)
     discount_percent = models.PositiveIntegerField(
@@ -43,7 +50,7 @@ class Season(models.Model):
             Season.objects.exclude(year=self.year).update(is_current=False)
         # At creation, we add Payment object for each User
         if created:
-            for user in User.objects.all():
+            for user in User.objects.exclude(username=settings.SUPERUSER_EMAIL).all():
                 Payment(user=user, season=self).save()
 
     def __repr__(self) -> str:
@@ -107,7 +114,7 @@ class Course(models.Model):
 
     def __repr__(self) -> str:
         return f"{self.name} {self.season.year}"
-    
+
     class Meta:
         unique_together = ("name", "season", "weekday", "start_hour")
 
@@ -137,10 +144,32 @@ class Payment(models.Model):
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     cash = models.FloatField(null=False, default=0.0, validators=[MinValueValidator(0)])
-    other_payment = models.OneToOneField(OtherPayment, null=True, on_delete=models.SET_NULL)
-    comment = models.CharField(null=False, blank=True, max_length=700, default='')
-    refund = models.FloatField(null=False, default=0.0, validators=[MinValueValidator(0)])
-    special_discount = models.FloatField(null=False, default=0.0, validators=[MinValueValidator(0)])
+    other_payment = models.OneToOneField(
+        OtherPayment, null=True, on_delete=models.SET_NULL
+    )
+    comment = models.CharField(null=False, blank=True, max_length=700, default="")
+    refund = models.FloatField(
+        null=False, default=0.0, validators=[MinValueValidator(0)]
+    )
+    special_discount = models.FloatField(
+        null=False, default=0.0, validators=[MinValueValidator(0)]
+    )
+
+    @property
+    def sport_pass_count(self) -> int:
+        count = 0
+        for member in self.user.member_set.filter(season=self.season).all():
+            if member.sport_pass:
+                count += 1
+        return count
+
+    @property
+    def sport_pass_amount(self) -> int:
+        amount = 0
+        for member in self.user.member_set.filter(season=self.season).all():
+            if member.sport_pass:
+                amount += member.sport_pass.amount
+        return amount
 
     @property
     def due(self) -> float:
@@ -185,7 +214,9 @@ class Payment(models.Model):
             f"{courses_count} cours: {courses_price}€",
         ]
         if discount:
-            info.append(f"Remise de {self.season.discount_percent}% sur les cours: -{discount}€")
+            info.append(
+                f"Remise de {self.season.discount_percent}% sur les cours: -{discount}€"
+            )
         if license_price:
             info.append(f"{license_count} licence(s): {license_price}€")
         if cancelled:
@@ -208,17 +239,25 @@ class Payment(models.Model):
                 paid += member.sport_pass.amount
         return paid
 
-
     @transaction.atomic
     def save(self, *args, **kwargs) -> None:
         super().save(*args, **kwargs)
-        if Member.objects.filter(user=self.user, season=self.season, is_validated=False).count() and self.paid > 0:
+        if (
+            Member.objects.filter(
+                user=self.user, season=self.season, is_validated=False
+            ).count()
+            and self.paid > 0
+        ):
             sport_pass = 0
-            for member in Member.objects.filter(user=self.user, season=self.season).all():
+            for member in Member.objects.filter(
+                user=self.user, season=self.season
+            ).all():
                 if member.sport_pass:
                     sport_pass += member.sport_pass.amount
             if sport_pass < self.paid:
-                for member in Member.objects.filter(user=self.user, season=self.season).all():
+                for member in Member.objects.filter(
+                    user=self.user, season=self.season
+                ).all():
                     member.is_validated = True
                     member.save()
 
@@ -226,7 +265,9 @@ class Payment(models.Model):
 class SportCoupon(models.Model):
     amount = models.PositiveIntegerField(null=False)
     count = models.PositiveIntegerField(null=False)
-    payment = models.OneToOneField(Payment, related_name="sport_coupon", on_delete=models.CASCADE)
+    payment = models.OneToOneField(
+        Payment, related_name="sport_coupon", on_delete=models.CASCADE
+    )
 
 
 class Ancv(models.Model):
@@ -269,7 +310,9 @@ class Check(models.Model):
             (12, "Décembre"),
         ],
     )
-    payment = models.ForeignKey(Payment, related_name="check_payment", on_delete=models.CASCADE)
+    payment = models.ForeignKey(
+        Payment, related_name="check_payment", on_delete=models.CASCADE
+    )
 
 
 class PersonModel(models.Model):
@@ -324,7 +367,7 @@ class Contact(PersonModel):
 
     contact_type = models.CharField(
         max_length=17,
-        choices= ContactEnum.choices,
+        choices=ContactEnum.choices,
     )
     objects = ContactManager()
 
@@ -344,7 +387,9 @@ class Member(PersonModel):
         max_length=500,
     )
     sport_pass = models.OneToOneField(SportPass, null=True, on_delete=models.SET_NULL)
-    cancel_refund = models.FloatField(null=False, default=0.0, validators=[MinValueValidator(0)])
+    cancel_refund = models.FloatField(
+        null=False, default=0.0, validators=[MinValueValidator(0)]
+    )
     ffd_license = models.PositiveIntegerField(
         choices=[
             (0, "Aucune"),

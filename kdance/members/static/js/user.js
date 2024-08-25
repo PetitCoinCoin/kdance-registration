@@ -162,9 +162,9 @@ function getUser() {
         let title = clone.querySelector('span');
         title.textContent = `Saison ${item.season.year}`;
         let dd = clone.querySelectorAll('dd.payment');
-        let details = 'Details:<br>- ' + item.due_detail.join('<br>- ');
+        let details = 'Details:<br />- ' + item.due_detail.join('<br />- ');
         dd[0].innerHTML = `${item.due}€ ${item.due > 0 ? buildHelper(details) : ''}`;
-        dd[1].innerHTML = `${item.paid}€`; 
+        dd[1].innerHTML = `${item.paid}€`;
         dd[2].innerHTML = `${item.refund}€`;
         // Collapsible
         let collapseBtn = clone.querySelector('button');
@@ -581,7 +581,7 @@ function buildContactsData() {
       }
     }
   }
-    
+
   if ($('#emergency-me-switch').is(':checked')) {
     contacts.push({
       first_name: $('#desc-firstname').html(),
@@ -617,7 +617,7 @@ function deleteItem() {
       let errorMessage = '';
       if (buttonId === 'delete-me-btn') {
         $('#delete-modal-title').html('Supprimer mon compte');
-        modalBody.textContent = `Etes-vous sur.e de vouloir supprimer votre compte ainsi que tous les adhérents associés ?`;
+        modalBody.textContent = 'Etes-vous sur.e de vouloir supprimer votre compte ainsi que tous les adhérents associés ?';
         url = userMeUrl;
         errorMessage = 'Une erreur est survenue, impossible de supprimer le compte pour le moment.';
       }
