@@ -393,10 +393,10 @@ class Member(PersonModel):
     ffd_license = models.PositiveIntegerField(
         choices=[
             (0, "Aucune"),
-            (19, "Licence A Loisir"),
-            (21, "Licence B Compétiteur"),
-            (38, "Licence C Compétiteur national"),
-            (50, "Licence D Compétiteur international"),
+            (24, "Licence A Loisir"),
+            (26, "Licence B Compétiteur"),
+            (43, "Licence C Compétiteur national"),
+            (55, "Licence D Compétiteur international"),
         ],
         default=0,
     )
