@@ -162,6 +162,7 @@ function getMembersPerCourse(mainValue) {
 function buildMembersInfo(data) {
   $('#data-table').bootstrapTable({
     ...COMMON_TABLE_PARAMS,
+    showExport: true,
     exportTypes: ['csv', 'xlsx', 'pdf', 'json'],
     exportOptions: {
       fileName: function () {
@@ -313,6 +314,7 @@ function buildContactsData(data) {
 function buildSportPassInfo(data) {
   $('#data-table').bootstrapTable({
     ...COMMON_TABLE_PARAMS,
+    showExport: true,
     exportTypes: ['csv', 'xlsx', 'pdf', 'json'],
     exportOptions: {
       fileName: function () {
@@ -354,6 +356,7 @@ function buildSportPassInfo(data) {
 function buildLicenseInfo(data) {
   $('#data-table').bootstrapTable({
     ...COMMON_TABLE_PARAMS,
+    showExport: true,
     exportTypes: ['csv', 'xlsx', 'pdf', 'json'],
     exportOptions: {
       fileName: function () {
