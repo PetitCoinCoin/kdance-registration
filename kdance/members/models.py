@@ -203,7 +203,7 @@ class Payment(models.Model):
                 courses_count += 1
                 courses_price += course.price
         discount = 0
-        if courses_count > self.season.discount_limit:
+        if courses_count >= self.season.discount_limit:
             discount = int(round(courses_price * self.season.discount_percent / 100))
         licenses = [member.ffd_license for member in members if member.ffd_license > 0]
         license_count = len(licenses)
