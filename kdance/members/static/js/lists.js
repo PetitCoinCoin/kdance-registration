@@ -333,6 +333,11 @@ function buildSportPassInfo(data) {
         searchable: true,
         sortable: true,
       }, {
+        field: 'email',
+        title: 'Email',
+        searchable: false,
+        sortable: false,
+      }, {
         field: 'sport_pass.amount',
         title: 'Montant (€)',
         searchable: false,
@@ -369,6 +374,11 @@ function buildLicenseInfo(data) {
         title: 'Adhérent',
         searchable: true,
         sortable: true,
+      }, {
+        field: 'email',
+        title: 'Email',
+        searchable: false,
+        sortable: false,
       }, {
         field: 'license',
         title: 'Licence FFD',

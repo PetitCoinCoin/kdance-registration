@@ -101,12 +101,48 @@ class UserBaseSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def save(self, **kwargs: User) -> User:
         profile_data = self.validated_data.pop("profile", None)
+        previous_email = ""
+        previous_phone = ""
+        previous_address = ""
+        if self.instance and self.instance.email and self.validated_data.get("email"):  # type: ignore
+            previous_email = self.instance.email  # type: ignore
+        if (
+            self.instance
+            and self.instance.profile.phone
+            and profile_data
+            and profile_data.get("phone")
+        ):  # type: ignore
+            previous_phone = self.instance.profile.phone  # type: ignore
+        if (
+            self.instance
+            and self.instance.profile.address
+            and profile_data
+            and profile_data.get("address")
+        ):  # type: ignore
+            previous_address = self.instance.profile.address  # type: ignore
         user: User = super().save(**kwargs)
         if profile_data:
             profile, _ = Profile.objects.get_or_create(user=user)
             profile.address = profile_data.get("address")
             profile.phone = profile_data.get("phone")
             profile.save()
+        for member in user.member_set.all():
+            updated = False
+            if previous_email and member.email == previous_email:
+                _logger.info("mail")
+                member.email = self.validated_data.get("email")
+                updated = True
+            if previous_phone and member.phone == previous_phone:
+                member.phone = profile_data.get("phone")
+                updated = True
+            if previous_address and member.address == previous_address:
+                _logger.info("address")
+                member.address = profile_data.get("address")
+                updated = True
+            if updated:
+                _logger.info("update")
+                member.save()
+
         return user
 
 
