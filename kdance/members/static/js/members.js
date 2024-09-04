@@ -207,9 +207,11 @@ function courseFormatter(value) {
   return value.join('<br />')
 }
 
-function actionFormatter(value, row) {
+function actionFormatter(value, row, index) {
+  let docBtn = document.querySelector(`#btn-${row.id}`);
+  const isNew = docBtn === null;
   return `
-    <button class="btn btn-outline-info btn-sm" memberId="${row.id}" type="button" data-bs-toggle="modal" data-bs-target="#member-doc-modal">
+    <button class="btn btn-outline-info btn-sm" id="btn-${row.id}" memberId="${row.id}" rowIndex="${isNew ? index : docBtn.attributes.rowIndex.value}" type="button" data-bs-toggle="modal" data-bs-target="#member-doc-modal">
       <i class="bi-heart-pulse-fill"></i>
     </button>
     <button class="btn btn-outline-info btn-sm" memberId="${row.id}" paymentId="${row.payment.id}" type="button" data-bs-toggle="modal" data-bs-target="#member-payment-modal">
@@ -438,13 +440,16 @@ function updateMember() {
     $('#member-doc-modal').on('show.bs.modal', function (event) {
       const button = event.relatedTarget;
       let memberId = button.getAttribute('memberId');
+      let rowIndex = button.getAttribute('rowIndex');
       getMember(memberId);
       $('#form-member-doc').data('memberId', memberId);
+      $('#form-member-doc').data('rowIndex', rowIndex);
     });
     $('#member-doc-modal').on('submit', '#form-member-doc', function (event) {
       event.preventDefault();
       const memberId = $(this).data('memberId');
-      patchMember(memberId, event);
+      const rowIndex = $(this).data('rowIndex');
+      patchMember(memberId, rowIndex, '#member-doc-modal');
     })
   }
   if (memberPaymentModal) {
@@ -476,7 +481,7 @@ function updateMember() {
   }
 }
 
-function patchMember(memberId, event) {
+function patchMember(memberId, rowIndex, modal) {
   $('.invalid-feedback').removeClass('d-inline');
   const memberData = {
     documents: {
@@ -485,12 +490,6 @@ function patchMember(memberId, event) {
       authorise_emergency: $('#authorise-emergency').is(':checked'),
     },
   };
-  if ($('#payment-pass-code').val() !== '') {
-    memberData.sport_pass = {
-      code: $('#payment-pass-code').val(),
-      amount: $('#payment-pass-amount').val(),
-    };
-  }
   $.ajax({
     url: membersUrl + memberId + '/',
     type: 'PATCH',
@@ -500,7 +499,12 @@ function patchMember(memberId, event) {
     data: JSON.stringify(memberData),
     dataType: 'json',
     success: () => {
-      event.currentTarget.submit();
+      $('#members-table').bootstrapTable('updateCell', {
+        index: rowIndex,
+        field: 'documents.medical_document',
+        value: $('#doc-select').val(),
+      });
+      $(modal).modal('hide');
     },
     error: (error) => {
       let errorMessage = '';

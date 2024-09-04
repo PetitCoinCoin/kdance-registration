@@ -242,24 +242,12 @@ class Payment(models.Model):
     @transaction.atomic
     def save(self, *args, **kwargs) -> None:
         super().save(*args, **kwargs)
-        if (
-            Member.objects.filter(
-                user=self.user, season=self.season, is_validated=False
-            ).count()
-            and self.paid > 0
-        ):
-            sport_pass = 0
+        if self.paid >= self.due:
             for member in Member.objects.filter(
-                user=self.user, season=self.season
+                user=self.user, season=self.season, is_validated=False
             ).all():
-                if member.sport_pass:
-                    sport_pass += member.sport_pass.amount
-            if sport_pass < self.paid:
-                for member in Member.objects.filter(
-                    user=self.user, season=self.season
-                ).all():
-                    member.is_validated = True
-                    member.save()
+                member.is_validated = True
+                member.save()
 
 
 class SportCoupon(models.Model):

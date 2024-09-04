@@ -482,15 +482,13 @@ function postOrPatchMember(url, method, event) {
         authorise_emergency: $('#authorise-emergency').is(':checked'),
       }
     };
-    if (method == "POST") {
-      let courses = [];
-      document.querySelectorAll('.course-checkbox').forEach(item => {
-        if (item.checked) {
-          courses.push(item.value);
-        }
-      });
-      data.active_courses = courses;
-    }
+    let courses = [];
+    document.querySelectorAll('.course-checkbox').forEach(item => {
+      if (item.checked) {
+        courses.push(item.value);
+      }
+    });
+    data.active_courses = courses;
     if ($('#member-pass-code').val() !== '') {
       data.sport_pass = {
         code: $('#member-pass-code').val(),
