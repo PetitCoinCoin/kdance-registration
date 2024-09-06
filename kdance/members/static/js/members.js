@@ -296,12 +296,13 @@ function getMembers(seasonId) {
             formatter: actionFormatter,
           }],
           data: data.map((m) => {
+            const solde = Number(m.payment.due - m.payment.paid + m.payment.refund);
             return {
               ...m,
               name: `${m.last_name} ${m.first_name}`,
               status: m.is_validated ? 'Validé' : 'En attente',
               courses: m.active_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`).concat(m.cancelled_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)),
-              solde: m.payment.due - m.payment.paid + m.payment.refund,
+              solde: solde % 1 === 0 ? solde : solde.toFixed(2),
               documents: m.documents ? {
                 ...m.documents,
                 authorise_photos: m.documents.authorise_photos ? 'Oui' : 'Non',
