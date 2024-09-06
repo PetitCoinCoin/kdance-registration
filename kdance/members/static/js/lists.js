@@ -388,6 +388,7 @@ function buildLicenseInfo(data) {
     data: data.map((m) => {
       return {
         member: `${m.first_name} ${m.last_name}`,
+        email: m.email,
         license: LICENSES[m.ffd_license],
       }
     })
