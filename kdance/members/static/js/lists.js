@@ -388,6 +388,7 @@ function buildLicenseInfo(data) {
     data: data.map((m) => {
       return {
         member: `${m.first_name} ${m.last_name}`,
+        email: m.email,
         license: LICENSES[m.ffd_license],
       }
     })
@@ -462,14 +463,20 @@ function idFormatter() {
 
 function totalCountFormatter(data) {
   var field = this.field
-  return data.map(row => row[field]).reduce((acc, val) => {
+  const access = (path, object) => {
+    return path.split('.').reduce((o, i) => o[i], object)
+  }
+  return data.map(row => access(field, row)).reduce((acc, val) => {
     return acc + val || 0
   }, 0)
 }
 
 function totalAmountFormatter(data) {
   var field = this.field
-  return data.map(row => row[field]).reduce((acc, val) => {
+  const access = (path, object) => {
+    return path.split('.').reduce((o, i) => o[i], object)
+  }
+  return data.map(row => access(field, row)).reduce((acc, val) => {
     return acc + val || 0
   }, 0) + '€'
 }
@@ -580,6 +587,9 @@ function getPayments() {
         data: data.map(p => {
           return {
             ...p,
+            ancv: p.ancv || {amount: 0, count: 0},
+            sport_coupon: p.sport_coupon || {amount: 0, count: 0},
+            other_payment: p.other_payment || {amount: 0, comment: ''},
             check_count: p.check_payment.length,
             check_amount: p.check_payment.reduce((acc, val) => acc + val.amount, 0),
           }

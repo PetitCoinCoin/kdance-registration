@@ -302,15 +302,6 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             )
         return courses
 
-    def validate(self, attr: dict) -> dict:
-        validated = super().validate(attr)
-        for course in validated.get("active_courses", []):
-            if course.season.id != validated["season"].id:
-                raise serializers.ValidationError(
-                    "Un cours ne correspond pas à la saison."
-                )
-        return validated
-
     @transaction.atomic
     def save(self, **kwargs: Member) -> None:
         username = kwargs.get("user")
