@@ -16,12 +16,12 @@
         </div>
       </div>
       <div id="member-success-toast" class="toast align-items-center bg-success" role="alert" aria-live="assertive"
-      aria-atomic="true">
-      <div class="d-flex">
-        <div class="toast-body fw-semibold" id="member-success-body"></div>
-        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body fw-semibold" id="member-success-body"></div>
+          <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
       </div>
-    </div>
     </div>
 
     <!-- Modal -->
@@ -181,91 +181,99 @@
       </div>
     </div>
 
-    <div class="modal fade" id="member-courses-modal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
+    <div class="modal fade" id="member-license-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h4 class="modal-title" id="member-courses-modal-title"></h4>
+            <h4 class="modal-title" id="member-license-modal-title"></h4>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body">
-            <div class="d-flex mb-3 align-items-center">
+          <form id="form-member-license" name="form-member-license">
+            <div class="modal-body">
               <label class="form-label min-w-fit me-3" for="member-courses">License FFD</label>
               <select id="member-license" class="form-select"></select>
-              <button id="member-license-update-btn" type="button" class="btn btn-info ms-3" disabled>Enregistrer</button>
             </div>
-            <hr />
-            <div class="d-flex mb-2">
-              <select id="courses-select" class="form-select me-2" multiple></select>
-              <div class="d-flex flex-column justify-content-between">
-                <button id="add-course-btn" class="btn btn-info" type="button" data-bs-toggle="modal"
-                  data-bs-target="#add-modal">
-                  <i class="bi-plus-square main-red"></i>
-                  Ajouter un cours
-                </button>
-                <button id="cancel-course-btn" class="btn btn-danger" type="button" data-bs-toggle="modal"
-                  data-bs-target="#delete-modal">
-                  <i class="bi-trash3-fill" style="color: #ffb3ba;"></i>
-                  Annuler les cours sélectionnés
-                </button>
-              </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+              <button type="submit" class="btn btn-info">Enregistrer</button>
             </div>
-            <div id="cancelled-courses-div">
-              Montant remboursé: <span></span>€
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-          </div>
+          </form>
         </div>
       </div>
     </div>
 
-    <div class="modal fade" id="delete-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="member-courses-delete-modal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h4 class="modal-title">Annuler le(s) cours d'un adhérent</h4>
-            <button type="button" class="btn-close" data-bs-toggle="modal" data-bs-target="#member-modal"
-              aria-label="Close"></button>
+            <h4 class="modal-title" id="member-courses-delete-modal-title"></h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            Êtes-vous sûr de vouloir annuler le(s) cours suivant(s) pour <span id="member-name"></span> ?
-            <ul id="course-list"></ul>
+            <div class="d-flex mb-2">
+              <select id="courses-delete-select" class="form-select me-2" multiple></select>
+            </div>
+            <div id="cancelled-courses-div">
+              Montant déjà remboursé: <span></span>€
+            </div>
             <div class="form-outline mb-4">
-              <label class="form-label " for="cancel-refund">Montant total à rembourser (toutes annulations confondues,
+              <label class="form-label " for="cancel-refund">Montant total à rembourser (montant déjà remboursé inclus,
                 en €)</label>
               <input type="number" id="cancel-refund" class="form-control" min="0" value="0" />
               <div id="invalid-cancel-refund" class="invalid-feedback"></div>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-toggle="modal"
-              data-bs-target="#member-modal">Annuler</button>
-            <button id="delete-btn" type="button" class="btn btn-danger" data-bs-toggle="modal"
-              data-bs-target="#member-modal">Confirmer</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button id="delete-btn" type="button" class="btn btn-danger" data-bs-dismiss="modal">Confirmer</button>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="modal fade" id="add-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="member-courses-add-modal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h4 class="modal-title">Ajouter des cours à un adhérent</h4>
-            <button type="button" class="btn-close" data-bs-toggle="modal" data-bs-target="#member-modal"
-              aria-label="Close"></button>
+            <h4 class="modal-title" id="member-courses-add-modal-title"></h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            Choisissez le(s) cours à ajouter à <span id="member-name"></span> :
-            <select id="add-courses-select" class="form-select" multiple></select>
+            Sélectionner le(s) cours à ajouter:
+            <select id="add-courses-select" class="form-select mt-2" multiple></select>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-toggle="modal"
-              data-bs-target="#member-modal">Annuler</button>
-            <button id="add-btn" type="button" class="btn btn-danger" data-bs-toggle="modal"
-              data-bs-target="#member-modal">Ajouter</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button id="add-btn" type="button" class="btn btn-info" data-bs-dismiss="modal">Ajouter</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="member-courses-update-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="member-courses-update-modal-title"></h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            Utiliser cette fonctionnalité pour changer de cours (niveau, dédoublement, erreur). Un cours pour un cours.
+            Pas d'annulation, ni de remboursement ici.
+            <div class="form-outline mb-4 mt-4">
+              <label class="form-label " for="course-actual-select">Cours à changer:</label>
+              <select id="course-actual-select" class="form-select"></select>
+              <div id="invalid-course-actual" class="invalid-feedback"></div>
+            </div>
+            <div class="form-outline mb-4">
+              <label class="form-label " for="course-next-select">Nouveau cours:</label>
+              <select id="course-next-select" class="form-select"></select>
+              <div id="invalid-course-next" class="invalid-feedback"></div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button id="update-btn" type="button" class="btn btn-info">Confirmer</button>
           </div>
         </div>
       </div>
@@ -304,7 +312,9 @@
                 <li><a class="dropdown-item" href="{% url 'course_mgmt' %}">Gérer les cours</a></li>
                 <li><a class="dropdown-item" href="{% url 'admin_mgmt' %}">Gérer les admins</a></li>
                 <li><a class="dropdown-item" href="{% url 'list_dl' %}">Listes et téléchargements</a></li>
-                <li><hr class="dropdown-divider"></li>
+                <li>
+                  <hr class="dropdown-divider">
+                </li>
                 <li><a class="dropdown-item" href="{% url 'super_index' %}">Admin</a></li>
               </ul>
             </div>
@@ -317,7 +327,7 @@
           Pour modifier le document médical d'un adhérent, cliquez sur
           <i class="bi-heart-pulse-fill main-blue" style="font-size: small;"></i>.<br />
           Pour mettre à jour le paiement, cliquez sur <i class="bi-currency-dollar main-blue"></i>.<br />
-          Pour ajouter / retirer des cours à un adhérent et/ou modifier sa licence, cliquez sur
+          Pour ajouter / déplacer / retirer des cours à un adhérent et/ou modifier sa licence, cliquez sur
           <i class="bi-pencil-fill main-blue" style="font-size: small"></i>.<br />
           Il est nécessaire d'annuler un cours avant de procéder à son éventuel remboursement (même partiel).
         </p>

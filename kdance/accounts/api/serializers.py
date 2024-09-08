@@ -108,17 +108,17 @@ class UserBaseSerializer(serializers.ModelSerializer):
             previous_email = self.instance.email  # type: ignore
         if (
             self.instance
-            and self.instance.profile.phone
+            and self.instance.profile.phone  # type: ignore[union-attr]
             and profile_data
             and profile_data.get("phone")
-        ):  # type: ignore
+        ):
             previous_phone = self.instance.profile.phone  # type: ignore
         if (
             self.instance
-            and self.instance.profile.address
+            and self.instance.profile.address  # type: ignore[union-attr]
             and profile_data
             and profile_data.get("address")
-        ):  # type: ignore
+        ):
             previous_address = self.instance.profile.address  # type: ignore
         user: User = super().save(**kwargs)
         if profile_data:
