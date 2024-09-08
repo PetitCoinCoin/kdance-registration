@@ -295,7 +295,20 @@
       {% if user.is_authenticated and user.is_superuser %}
       <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb" class="border-bottom">
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="{% url 'super_index' %}">Admin</a></li>
+          <li class="breadcrumb-item">
+            <div class="dropdown">
+              <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Admin
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'course_mgmt' %}">Gérer les cours</a></li>
+                <li><a class="dropdown-item" href="{% url 'admin_mgmt' %}">Gérer les admins</a></li>
+                <li><a class="dropdown-item" href="{% url 'list_dl' %}">Listes et téléchargements</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{% url 'super_index' %}">Admin</a></li>
+              </ul>
+            </div>
+          </li>
           <li class="breadcrumb-item active" aria-current="page">Gestion des adhérents</li>
         </ol>
       </nav>
