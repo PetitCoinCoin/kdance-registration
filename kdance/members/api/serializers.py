@@ -249,6 +249,16 @@ class PaymentSerializer(WritableNestedModelSerializer, serializers.ModelSerializ
             Check(payment=payment, **check_payment).save()
 
 
+class PaymentShortSerializer(PaymentSerializer):
+    class Meta:
+        model = Payment
+        fields = (
+            "paid",
+            "due",
+            "refund",
+        )
+
+
 class SportPassSerializer(serializers.ModelSerializer):
     class Meta:
         model = SportPass
@@ -334,6 +344,23 @@ class MemberRetrieveSerializer(MemberSerializer):
     active_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
     cancelled_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
     season = SeasonSerializer()
+
+
+class MemberRetrieveShortSerializer(MemberRetrieveSerializer):
+    payment = PaymentShortSerializer(required=False, read_only=True)
+
+    class Meta:
+        model = Member
+        fields = (
+            "id",
+            "first_name",
+            "last_name",
+            "active_courses",
+            "cancelled_courses",
+            "is_validated",
+            "documents",
+            "payment",
+        )
 
 
 class MemberCoursesActionsEnum(Enum):
