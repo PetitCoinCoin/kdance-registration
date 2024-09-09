@@ -6,6 +6,7 @@ $(document).ready(() => {
   mainSelect.addEventListener('change', () =>
     onMainChange(mainSelect.value)
   );
+  breadcrumbDropdownOnHover();
 });
 
 
