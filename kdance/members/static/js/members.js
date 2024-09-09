@@ -9,6 +9,7 @@ $(document).ready(() => {
   seasonSelect.addEventListener('change', () =>
     onSeasonChange(seasonSelect.value)
   );
+  breadcrumbDropdownOnHover();
 });
 
 function populateMonths(itemId) {
@@ -170,7 +171,7 @@ function actionFormatter(value, row, index) {
 
 function getMembers(seasonId) {
   $.ajax({
-    url: membersUrl + `?season=${seasonId}`,
+    url: membersUrl + `?season=${seasonId}&without_details=true`,
     type: 'GET',
     success: (data) => {
       // Bootstrap table not initialised
@@ -257,6 +258,7 @@ function getMembers(seasonId) {
         // Already initialised
       } else {
         $('#members-table').bootstrapTable('load', data.map((m) => {
+          const solde = Number(m.payment.due - m.payment.paid + m.payment.refund);
           return {
             ...m,
             name: `${m.last_name} ${m.first_name}`,

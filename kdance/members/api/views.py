@@ -14,6 +14,7 @@ from members.api.serializers import (
     MemberCoursesActionsEnum,
     MemberCoursesSerializer,
     MemberRetrieveSerializer,
+    MemberRetrieveShortSerializer,
     MemberSerializer,
     PaymentSerializer,
     SeasonSerializer,
@@ -151,6 +152,11 @@ class MemberViewSet(
 
     def get_serializer_class(self):
         if self.request.method.lower() == "get":
+            if self.request.query_params.get("without_details", "").lower() in [
+                "true",
+                "1",
+            ]:
+                return MemberRetrieveShortSerializer
             return MemberRetrieveSerializer
         return MemberSerializer
 
@@ -175,7 +181,11 @@ class MemberViewSet(
                 queryset = queryset.filter(ffd_license__gt=0)
             else:
                 queryset = queryset.filter(ffd_license=0)
-        return queryset.order_by("-season__year", "last_name", "first_name")
+        return (
+            queryset.select_related("documents", "season", "user")
+            .prefetch_related("active_courses", "cancelled_courses")
+            .order_by("-season__year", "last_name", "first_name")
+        )
 
     def retrieve(self, request: Request, *a, **k) -> Response:
         instance = self.get_object()

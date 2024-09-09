@@ -3,6 +3,7 @@ $(document).ready(() => {
   handleEmails();
   getUsersAdmins();
   updateUserAdmin();
+  breadcrumbDropdownOnHover();
 });
 
 function displayToast() {

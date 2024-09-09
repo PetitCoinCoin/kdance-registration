@@ -8,9 +8,10 @@ $(document).ready(() => {
   copyCourseFromSeason();
   deleteItem();
   const seasonSelect = document.querySelector('#season-select');
-  seasonSelect.addEventListener('change', () => 
+  seasonSelect.addEventListener('change', () =>
     onSeasonChange(seasonSelect.value)
   );
+  breadcrumbDropdownOnHover();
 });
 
 function populateWeekdays() {
@@ -173,7 +174,7 @@ function getPreviousSeason(seasonId) {
     if (option.value !== seasonId) {
       copySelect.append($('<option>', { value: option.value, text: option.innerHTML }));
     }
-  }  
+  }
 }
 
 function actionFormatter(value, row) {
