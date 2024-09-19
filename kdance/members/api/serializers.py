@@ -253,6 +253,7 @@ class PaymentShortSerializer(PaymentSerializer):
     class Meta:
         model = Payment
         fields = (
+            "id",
             "paid",
             "due",
             "refund",
