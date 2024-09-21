@@ -71,7 +71,9 @@ function getCourses(seasonId) {
     success: (data) => {
       $('#menu-2-select').append($('<option>', { value: '0', text: 'Tous les cours', selected: true }));
       for (let i = 0; i < data.length; i++) {
-        $('#menu-2-select').append($('<option>', { value: data[i].id, text: data[i].name }));
+        const startHour = daita[i].start_hour.split(':');
+        const label = `${daita[i].name}, ${WEEKDAY[daita[i].weekday]} ${startHour[0]}h${startHour[1]}`;
+        $('#menu-2-select').append($('<option>', { value: data[i].id, text: label }));
       }
     },
     error: (error) => {
