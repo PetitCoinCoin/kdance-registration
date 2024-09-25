@@ -484,6 +484,8 @@
               class="main-green fst-italic">Valider les inscriptions</span>.
           </p>
           <p class="fst-italic">Pour en savoir un peu plus sur ce nouvel outil, <a href="/about">cliquez ici</a>.</p>
+          <!-- TODO: Moduler selon la gestion des inscriptions -->
+          <p>Les inscriptions sont terminées pour cette année. <strong>Vous ne pouvez plus ajouter d'adhérent.</strong></p>
         </div>
         <div class="row">
           <div class="accordion" id="member-accordion">
@@ -553,8 +555,9 @@
           <i class="bi-plus-square"></i>
           Ajouter un adhérent d'une saison précédente
         </button>
+        <!-- TODO: Réactiver proprement pour mettre en place le mécanisme de blocage. -->
         <button class="btn btn-info mb-1" type="button" data-bs-toggle="modal" data-bs-target="#member-modal"
-          id="add-member-btn">
+          id="add-member-btn" disabled>
           <i class="bi-plus-square"></i>
           Ajouter un nouvel adhérent
         </button>
