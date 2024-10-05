@@ -257,6 +257,7 @@ class PaymentShortSerializer(PaymentSerializer):
             "paid",
             "due",
             "refund",
+            "comment",
         )
 
 

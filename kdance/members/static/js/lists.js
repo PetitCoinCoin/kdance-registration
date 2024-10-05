@@ -40,6 +40,8 @@ function populateSecondSelect(previousValue) {
   $('#menu-2-select').attr('hidden', false);
   switch (previousValue) {
     case '1':
+    case '6':
+    case '7':
       getCourses($('#season-select').val());
       break
     case '3':
@@ -90,6 +92,8 @@ function searchData() {
       case '1':
       case '4':
       case '5':
+      case '6':
+      case '7':
         getMembersPerCourse(mainValue);
         break
       case '2':
@@ -125,6 +129,12 @@ function getMembersPerCourse(mainValue) {
       url = `${membersUrl}?season=${$('#season-select').val()}&${filter}=true`;
       break
     case '0':
+      if (mainValue === '6' || mainValue === '7') {
+        const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('list-error-toast'));
+        $('#list-error-body').text('Veuillez sélectionner un cours.');
+        toast.show();
+        return
+      }
       url = `${membersUrl}?season=${$('#season-select').val()}`;
       break
     default:
@@ -149,6 +159,12 @@ function getMembersPerCourse(mainValue) {
         case '5':
           buildLicenseInfo(data);
           break
+        case '6':
+          buildContactInfo(data);
+          break
+        case '7':
+          buildEmergencyInfo(data);
+          break
         default:
           return
       }
@@ -170,7 +186,7 @@ function buildMembersInfo(data) {
     exportOptions: {
       fileName: function () {
         const suffix = $('#menu-2-select').val() === '0' ? 'tous' : $('#menu-2-select option:selected').text();
-        return `adherents_${$('#season-select option:selected').text()}_${suffix}`
+        return `adherents_${$('#season-select option:selected').text().substring(0,9)}_${suffix}`
       }
     },
     columns: [
@@ -298,6 +314,109 @@ function buildMembersInfo(data) {
   });
 }
 
+function buildContactInfo(data) {
+  $('#data-table').bootstrapTable({
+    ...COMMON_TABLE_PARAMS,
+    showExport: true,
+    exportTypes: ['csv'],
+    exportOptions: {
+      fileName: function () {
+        const suffix = $('#menu-2-select').val() === '0' ? 'tous' : $('#menu-2-select option:selected').text();
+        return `contacts_${$('#season-select option:selected').text().substring(0,9)}_${suffix}`
+      }
+    },
+    columns: [
+      {
+        field: 'last_name',
+        title: 'Last Name',
+      }, {
+        field: 'first_name',
+        title: 'First Name',
+      }, {
+        field: 'phone',
+        title: 'Phone',
+      }, {
+        field: 'email',
+        title: 'Email',
+      }, {
+        field: 'phone_2',
+        title: 'Phone',
+      }, {
+        field: 'email_2',
+        title: 'Email',
+      }, {
+        field: 'courses',
+        title: 'Cours',
+        formatter: function(value) {
+          return value.join('<br />')
+        },
+      }],
+    data: data.map(m => {
+      const contacts = buildContactsData(m.contacts);
+      return {
+        ...m,
+        phone_2: m.phone === contacts['phone-responsible-1'] ? undefined : contacts['phone-responsible-1'],
+        email_2: m.email === contacts['email-responsible-1'] ? undefined : contacts['email-responsible-1'],
+        courses: m.active_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`).concat(m.cancelled_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)),
+      }
+    })
+  });
+}
+
+function buildEmergencyInfo(data) {
+  $('#data-table').bootstrapTable({
+    ...COMMON_TABLE_PARAMS,
+    showExport: true,
+    exportTypes: ['csv', 'xlsx', 'pdf', 'json'],
+    exportOptions: {
+      fileName: function () {
+        const suffix = $('#menu-2-select').val() === '0' ? 'tous' : $('#menu-2-select option:selected').text();
+        return `urgences_${$('#season-select option:selected').text().substring(0,9)}_${suffix}`
+      }
+    },
+    columns: [
+      {
+        field: 'name',
+        title: 'Adhérent',
+      }, {
+        field: 'name-responsible-1',
+        title: 'Responsable légal 1',
+      }, {
+        field: 'phone-responsible-1',
+        title: 'Tél 1',
+      }, {
+        field: 'name-responsible-2',
+        title: 'Responsable légal 2',
+      }, {
+        field: 'phone-responsible-2',
+        title: 'Tél 2',
+      }, {
+        field: 'name-emergency-1',
+        title: 'Contact urgence 1',
+      }, {
+        field: 'phone-emergency-1',
+        title: 'Tél urgence 1',
+      }, {
+        field: 'name-emergency-2',
+        title: 'Contact urgence 2',
+      }, {
+        field: 'phone-emergency-2',
+        title: 'Tél urgence 2',
+      }, {
+        field: 'authorise_emergency',
+        title: 'Autorisation parentale',
+      }],
+    data: data.map(m => {
+      return {
+        ...m,
+        name: `${m.last_name} ${m.first_name}`,
+        authorise_emergency: m.documents.authorise_emergency ? 'Oui': 'Non',
+        ...buildContactsData(m.contacts),
+      }
+    })
+  });
+}
+
 function buildContactsData(data) {
   let contacts = {};
   Object.keys(CONTACT_MAPPING).forEach(key => {
@@ -307,7 +426,7 @@ function buildContactsData(data) {
       contacts[`name-${key}-${i+1}`] = i < subContacts.length ? `${subContacts[i].first_name} ${subContacts[i].last_name}` : undefined;
       contacts[`phone-${key}-${i+1}`] = i < subContacts.length ? subContacts[i].phone : undefined;
       if (key === 'responsible') {
-        contacts[`email-${key}-${i+1}`] = i < subContacts.length ? subContacts[i].phone : undefined;
+        contacts[`email-${key}-${i+1}`] = i < subContacts.length ? subContacts[i].email : undefined;
       }
     }
   });
@@ -321,7 +440,7 @@ function buildSportPassInfo(data) {
     exportTypes: ['csv', 'xlsx', 'pdf', 'json'],
     exportOptions: {
       fileName: function () {
-        return `pass-sport_${$('#season-select option:selected').text()}`
+        return `pass-sport_${$('#season-select option:selected').text().substring(0,9)}`
       }
     },
     columns: [
@@ -346,16 +465,30 @@ function buildSportPassInfo(data) {
         searchable: false,
         sortable: false,
       }, {
-        field: 'status',
-        title: 'Statut',
-        searchable: true,
-        sortable: true,
-  }],
+        field: 'birthday',
+        title: 'Date de naissance',
+      }, {
+        field: 'address',
+        title: 'Adresse',
+      }, {
+        field: 'name-responsible-1',
+        title: 'Responsable légal',
+      }, {
+        field: 'phone-responsible-1',
+        title: 'Téléphone responsable',
+      }, {
+        field: 'email-responsible-1',
+        title: 'Email responsable',
+      },
+    ],
     data: data.filter(m => m.sport_pass !== null).map((m) => {
       return {
         ...m,
-        status: m.is_validated ? 'Validé' : 'En attente',
-        member: `${m.first_name} ${m.last_name}`
+        member: `${m.first_name} ${m.last_name}`,
+        email: m.email,
+        birthday:(new Date(m.birthday)).toLocaleDateString('fr-FR'),
+        address: m.address,
+        ...buildContactsData(m.contacts),
       }
     })
   });
@@ -368,7 +501,7 @@ function buildLicenseInfo(data) {
     exportTypes: ['csv', 'xlsx', 'pdf', 'json'],
     exportOptions: {
       fileName: function () {
-        return `licences_${$('#season-select option:selected').text()}`
+        return `licences_${$('#season-select option:selected').text().substring(0,9)}`
       }
     },
     columns: [
@@ -380,19 +513,36 @@ function buildLicenseInfo(data) {
       }, {
         field: 'email',
         title: 'Email',
-        searchable: false,
-        sortable: false,
       }, {
         field: 'license',
         title: 'Licence FFD',
         searchable: true,
         sortable: true,
-      }],
+      }, {
+        field: 'birthday',
+        title: 'Date de naissance',
+      }, {
+        field: 'address',
+        title: 'Adresse',
+      }, {
+        field: 'name-responsible-1',
+        title: 'Responsable légal',
+      }, {
+        field: 'phone-responsible-1',
+        title: 'Téléphone responsable',
+      }, {
+        field: 'email-responsible-1',
+        title: 'Email responsable',
+      },
+    ],
     data: data.map((m) => {
       return {
         member: `${m.first_name} ${m.last_name}`,
         email: m.email,
+        birthday: (new Date(m.birthday)).toLocaleDateString('fr-FR'),
+        address: m.address,
         license: LICENSES[m.ffd_license],
+        ...buildContactsData(m.contacts),
       }
     })
   });
@@ -417,7 +567,7 @@ function getChecksPerMonth() {
         exportOptions: {
           fileName: function () {
             const suffix = $('#menu-2-select').val() === '0' ? 'tous' : $('#menu-2-select option:selected').text();
-            return `checks_${$('#season-select option:selected').text()}_${suffix}`
+            return `checks_${$('#season-select option:selected').text().substring(0,9)}_${suffix}`
           }
         },
         columns: [
@@ -497,7 +647,7 @@ function getPayments() {
         exportTypes: ['csv', 'xlsx', 'pdf', 'json'],
         exportOptions: {
           fileName: function () {
-            return `paiements_${$('#season-select option:selected').text()}`
+            return `paiements_${$('#season-select option:selected').substring(0,9).text()}`
           }
         },
         columns: [
