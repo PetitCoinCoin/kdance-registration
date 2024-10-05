@@ -465,16 +465,30 @@ function buildSportPassInfo(data) {
         searchable: false,
         sortable: false,
       }, {
-        field: 'status',
-        title: 'Statut',
-        searchable: true,
-        sortable: true,
-  }],
+        field: 'birthday',
+        title: 'Date de naissance',
+      }, {
+        field: 'address',
+        title: 'Adresse',
+      }, {
+        field: 'name-responsible-1',
+        title: 'Responsable légal',
+      }, {
+        field: 'phone-responsible-1',
+        title: 'Téléphone responsable',
+      }, {
+        field: 'email-responsible-1',
+        title: 'Email responsable',
+      },
+    ],
     data: data.filter(m => m.sport_pass !== null).map((m) => {
       return {
         ...m,
-        status: m.is_validated ? 'Validé' : 'En attente',
-        member: `${m.first_name} ${m.last_name}`
+        member: `${m.first_name} ${m.last_name}`,
+        email: m.email,
+        birthday:(new Date(m.birthday)).toLocaleDateString('fr-FR'),
+        address: m.address,
+        ...buildContactsData(m.contacts),
       }
     })
   });
@@ -499,19 +513,36 @@ function buildLicenseInfo(data) {
       }, {
         field: 'email',
         title: 'Email',
-        searchable: false,
-        sortable: false,
       }, {
         field: 'license',
         title: 'Licence FFD',
         searchable: true,
         sortable: true,
-      }],
+      }, {
+        field: 'birthday',
+        title: 'Date de naissance',
+      }, {
+        field: 'address',
+        title: 'Adresse',
+      }, {
+        field: 'name-responsible-1',
+        title: 'Responsable légal',
+      }, {
+        field: 'phone-responsible-1',
+        title: 'Téléphone responsable',
+      }, {
+        field: 'email-responsible-1',
+        title: 'Email responsable',
+      },
+    ],
     data: data.map((m) => {
       return {
         member: `${m.first_name} ${m.last_name}`,
         email: m.email,
+        birthday: (new Date(m.birthday)).toLocaleDateString('fr-FR'),
+        address: m.address,
         license: LICENSES[m.ffd_license],
+        ...buildContactsData(m.contacts),
       }
     })
   });
