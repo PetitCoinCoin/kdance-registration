@@ -42,6 +42,8 @@ const LIST_MAIN_MAPPING = {
   '3': 'Les chèques par mois',
   '4': 'La liste des Pass Sport',
   '5': 'La liste des licenciés',
+  '6': 'Les contacts par cours',
+  '7': 'Les contacts d\'urgence par cours',
 }
 
 const COMMON_TABLE_PARAMS = {
