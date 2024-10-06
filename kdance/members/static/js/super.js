@@ -57,7 +57,7 @@ function getMembersPerCourse(courseId) {
       type: 'GET',
       success: (data) => {
         $('#data-table').bootstrapTable('destroy');
-				buildEmergencyInfo(data);
+				buildEmergencyInfo(data, courseId);
         $('input[type=search]').attr('placeholder', 'Rechercher');
         $('#total-count').text(data.length);
       },
@@ -68,7 +68,7 @@ function getMembersPerCourse(courseId) {
     });
   }
 
-function buildEmergencyInfo(data) {
+function buildEmergencyInfo(data, courseId) {
 	$('#data-table').bootstrapTable({
 		...COMMON_TABLE_PARAMS,
 		showExport: true,
@@ -114,7 +114,7 @@ function buildEmergencyInfo(data) {
 		data: data.map(m => {
 			return {
 				...m,
-				name: `${m.last_name} ${m.first_name}`,
+				name: `${m.last_name} ${m.first_name}${m.cancelled_courses.map(c => c.id).indexOf(courseId) >= 0 ? ' (Annulé)' : ''}`,
 				authorise_emergency: m.documents.authorise_emergency ? 'Oui': 'Non',
 				...buildContactsData(m.contacts),
 			}
