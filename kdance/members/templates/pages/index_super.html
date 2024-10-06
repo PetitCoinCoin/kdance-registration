@@ -1,5 +1,7 @@
 {% extends 'layouts/base.html' %}
 
+{% load static %}
+
 {% block content %}
 
 <main>
@@ -21,6 +23,20 @@
             téléchargements</button>
         </div>
       </div>
+      {% elif user.is_authenticated and is_teacher %}
+      <div class="container mt-3">
+        <div class="d-flex mb-3">
+          <select id="season-select" class="form-select max-w-300 me-2"></select>
+          <select id="course-select" class="form-select"></select>
+        </div>
+        <div class="border-top">
+          <table id="data-table"></table>
+        </div>
+        <div class="d-flex mt-3">
+          <dt class="me-2">Nombre total:</dt>
+          <dd id="total-count">0</dd>
+        </div>
+      </div>
       {% else %}
       <div class="text-center">
         <h4 class="display-4 mb-5">Oh oh, vous n'avez rien à faire là !</h4>
@@ -28,6 +44,14 @@
       {% endif %}
     </div>
   </section>
+  {% if user.is_authenticated and not user.is_superuser and is_teacher %}
+  <script type="text/javascript">
+    const coursesUrl = "{% url 'api-courses-list' %}";
+    const seasonsUrl = "{% url 'api-seasons-list' %}";
+    const membersUrl = "{% url 'api-members-list' %}";
+  </script>
+  <script src="{% static 'js/super.js' %}"></script>
+  {% endif %}
 </main>
 
 {% endblock content %}

@@ -8,7 +8,7 @@ from secrets import token_urlsafe
 from typing import Any
 
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.utils import timezone
@@ -311,6 +311,43 @@ class UserAdminActionSerializer(serializers.Serializer):
             except User.DoesNotExist:
                 details["not_found"].append(email)
             except Exception:
+                details["other"].append(email)
+            else:
+                details["processed"].append(email)
+        return details
+
+
+class UserTeacherActionSerializer(serializers.Serializer):
+    emails = serializers.ListField(child=serializers.CharField())
+
+    def __init__(self, *, is_teacher: bool, **kwargs: Any) -> None:
+        self._is_teacher = is_teacher
+        super().__init__(**kwargs)
+
+    def validate_emails(self, emails: list[str]) -> list:
+        return [email.lower() for email in emails]
+
+    def save(self, **k_) -> dict:
+        emails = self.validated_data.get("emails", [])
+        details: dict[str, list[str]] = {
+            "processed": [],
+            "not_found": [],
+            "other": [],
+        }
+        for email in emails:
+            try:
+                user = User.objects.get(email=email)
+                teacher_group = Group.objects.get(name=settings.TEACHER_GROUP_NAME)
+                if self._is_teacher:
+                    user.groups.add(teacher_group)
+                else:
+                    user.groups.remove(teacher_group)
+            except User.DoesNotExist:
+                details["not_found"].append(email)
+            except Group.DoesNotExist:
+                details["other"].append("Ce groupe n'existe pas.")
+            except Exception:
+                _logger.exception(email)
                 details["other"].append(email)
             else:
                 details["processed"].append(email)

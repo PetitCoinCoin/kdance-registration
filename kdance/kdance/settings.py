@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
+
 import os
 
 from pathlib import Path
@@ -18,7 +19,7 @@ from dotenv import load_dotenv
 
 
 load_dotenv()
-pymysql.version_info = (1, 4, 6, 'final', 0)
+pymysql.version_info = (1, 4, 6, "final", 0)
 pymysql.install_as_MySQLdb()
 
 # Build paths inside the project like this: BASE_DIR / "subdir".
@@ -95,8 +96,8 @@ WSGI_APPLICATION = "kdance.wsgi.application"
 
 # Database
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-DATABASES = {    
-   "default": {        
+DATABASES = {
+    "default": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": os.getenv("DB_NAME"),
         "USER": os.getenv("DB_USER"),
@@ -132,6 +133,7 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+TEACHER_GROUP_NAME = "Teacher"
 SUPERUSER_EMAIL = os.getenv("SUPERUSER_EMAIL")
 SUPERUSER_ADDRESS = os.getenv("SUPERUSER_ADDRESS")
 SUPERUSER_PHONE = os.getenv("SUPERUSER_PHONE")
@@ -149,14 +151,12 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = "static/"
-STATICFILES_DIRS = (
-  os.path.join(BASE_DIR, os.getenv("STATICFILES_DIRS", "")),
-)
+STATICFILES_DIRS = (os.path.join(BASE_DIR, os.getenv("STATICFILES_DIRS", "")),)
 STATIC_ROOT = os.getenv("STATIC_ROOT")
 
 # Other
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'accounts.api.permissions.SuperUserPermission',
+    "DEFAULT_PERMISSION_CLASSES": [
+        "accounts.api.permissions.SuperUserPermission",
     ]
 }
