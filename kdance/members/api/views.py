@@ -21,6 +21,7 @@ from members.api.serializers import (
     TeacherSerializer,
 )
 
+from django.conf import settings
 from django.db.models import Q
 from rest_framework import status
 from rest_framework.decorators import action
@@ -196,7 +197,12 @@ class MemberViewSet(
 
     def list(self, request: Request, *a, **k) -> Response:
         queryset = self.filter_queryset(self.get_queryset())
-        if not request.user.is_superuser:
+        if (
+            not request.user.is_superuser
+            and not request.user.groups.filter(
+                name=settings.TEACHER_GROUP_NAME
+            ).exists()
+        ):
             queryset = queryset.filter(user__id=request.user.pk)
         page = self.paginate_queryset(queryset)
         if page is not None:

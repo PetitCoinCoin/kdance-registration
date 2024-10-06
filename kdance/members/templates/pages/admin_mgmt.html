@@ -92,13 +92,20 @@
         </ol>
       </nav>
       <div class="container mt-3">
-        <button id="add-admin-btn" class="btn btn-outline-info" type="button" data-bs-toggle="modal"
+        <button id="add-admin-btn" class="btn btn-outline-info mb-2" type="button" data-bs-toggle="modal"
           data-bs-target="#admin-modal">
           <i class="bi-plus-square main-red"></i>
           Ajouter des admins
         </button>
         <table id="admins-table"></table>
         <div id="message-error-admin" class="p-3 mt-2 bg-danger-subtle text-danger-emphasis d-none"></div>
+        <button id="add-admin-teacher-btn" class="btn btn-outline-info mb-2 mt-4" type="button" data-bs-toggle="modal"
+          data-bs-target="#admin-modal">
+          <i class="bi-plus-square main-red"></i>
+          Ajouter des droits aux professeurs
+        </button>
+        <table id="teachers-table"></table>
+        <div id="message-error-admin-teacher" class="p-3 mt-2 bg-danger-subtle text-danger-emphasis d-none"></div>
       </div>
       {% else %}
       <div class="text-center">
@@ -128,6 +135,7 @@
   <script type="text/javascript">
     const usersUrl = "{% url 'api-users-list' %}";
     const usersAdminActionUrl = "{% url 'api-users-admin' %}";
+    const usersTeacherActionUrl = "{% url 'api-users-teacher' %}";
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
   </script>
   <script src="{% static 'js/admins.js' %}"></script>

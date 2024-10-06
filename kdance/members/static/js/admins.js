@@ -2,6 +2,7 @@ $(document).ready(() => {
   displayToast();
   handleEmails();
   getUsersAdmins();
+  getUsersTeachers();
   updateUserAdmin();
   breadcrumbDropdownOnHover();
 });
@@ -35,8 +36,12 @@ function handleEmails() {
   });
 }
 
-function actionFormatter(value, row) {
-  return `<button class="btn btn-outline-warning btn-sm" userEmail="${row.email}" userName="${row.first_name} ${row.last_name}" type="button" data-bs-toggle="modal" data-bs-target="#confirm-deactivate-modal"><i class="bi-person-fill-lock"></i></button>`;
+function actionAdminFormatter(value, row) {
+  return `<button class="btn btn-outline-warning btn-sm" item="admin" userEmail="${row.email}" userName="${row.first_name} ${row.last_name}" type="button" data-bs-toggle="modal" data-bs-target="#confirm-deactivate-modal"><i class="bi-person-fill-lock"></i></button>`;
+}
+
+function actionTeacherFormatter(value, row) {
+  return `<button class="btn btn-outline-warning btn-sm" item="teacher" userEmail="${row.email}" userName="${row.first_name} ${row.last_name}" type="button" data-bs-toggle="modal" data-bs-target="#confirm-deactivate-modal"><i class="bi-person-fill-lock"></i></button>`;
 }
 
 function getUsersAdmins() {
@@ -48,9 +53,7 @@ function getUsersAdmins() {
       // Bootstrap table not initialised
       if (document.querySelector('#admins-table').className === '') {
         $('#admins-table').bootstrapTable({
-          ...COMMON_TABLE_PARAMS,
-          showFullscreen: false,
-          showColumns: false,
+          locale: 'fr-FR',
           columns: [{
             field: 'last_name',
             title: 'Nom de famille',
@@ -76,7 +79,7 @@ function getUsersAdmins() {
             title: 'Retirer des admins',
             align: 'center',
             clickToSelect: false,
-            formatter: actionFormatter,
+            formatter: actionAdminFormatter,
           }],
           data: data
         });
@@ -95,18 +98,81 @@ function getUsersAdmins() {
   });
 }
 
+function getUsersTeachers() {
+  $('#message-error-admin-teacher').addClass('d-none');
+  $.ajax({
+    url: usersUrl + '?teacher=true',
+    type: 'GET',
+    success: (data) => {
+      // Bootstrap table not initialised
+      if (document.querySelector('#teachers-table').className === '') {
+        $('#teachers-table').bootstrapTable({
+          locale: 'fr-FR',
+          columns: [{
+            field: 'last_name',
+            title: 'Nom de famille',
+            searchable: true,
+            sortable: true,
+          }, {
+            field: 'first_name',
+            title: 'Prénom',
+            searchable: true,
+            sortable: true,
+          }, {
+            field: 'email',
+            title: 'Email',
+            searchable: true,
+            sortable: false,
+          }, {
+            field: 'profile.phone',
+            title: 'Téléphone',
+            searchable: false,
+            sortable: false,
+          }, {
+            field: 'operate',
+            title: 'Retirer les droits du professeur',
+            align: 'center',
+            clickToSelect: false,
+            formatter: actionTeacherFormatter,
+          }],
+          data: data
+        });
+        $('input[type=search]').attr('placeholder', 'Rechercher');
+        // Already initialised
+      } else {
+        $('#teachers-table').bootstrapTable('load', data);
+      }
+    },
+    error: (error) => {
+      if (!error.responseJSON) {
+        $('#message-error-modal').text(DEFAULT_ERROR_MESSAGE);
+        $('#message-error-admin-teacher').removeClass('d-none');
+      }
+    }
+  });
+}
+
 function updateUserAdmin() {
   const adminModal = document.getElementById('admin-modal');
   const deleteModal = document.getElementById('confirm-deactivate-modal');
   if (adminModal) {
     adminModal.addEventListener('show.bs.modal', event => {
       $('#message-error-modal').addClass('d-none');
+      const button = event.relatedTarget;
+      if (button.getAttribute('id') === 'add-admin-btn') {
+        $('.modal-title').html('Ajouter des nouveaux admins');
+        $('#form-admin').data('item', 'admin');
+      } else {
+        $('.modal-title').html('Ajouter des droits à un professeur');
+        $('#form-admin').data('item', 'teacher');
+      }
     });
     $('#admin-modal').on('submit', '#form-admin', function(event) {
       event.preventDefault();
       const action = 'activate';
+      const item = $(this).data('item');
       const data = Object.values($('#admin-modal input')).map(i => i.value).filter(e => e !== undefined && e !== "");
-      putUser(action, data);
+      putUser(item, action, data);
     })
   }
   if (deleteModal) {
@@ -115,22 +181,30 @@ function updateUserAdmin() {
       const email = button.getAttribute('userEmail');
       const name = button.getAttribute('userName');
       const modalBody = deleteModal.querySelector('.modal-body');
-      $('#delete-modal-title').html('Supprimer un professeur');
-      modalBody.textContent = `Etes-vous sur.e de vouloir supprimer ${name} de la liste des admins ?`;
+      const item = button.getAttribute('item');
+      if (item === 'admin') {
+        $('.modal-title').html('Supprimer un admin');
+        modalBody.textContent = `Etes-vous sur.e de vouloir supprimer ${name} de la liste des admins ?`;
+      } else {
+        $('.modal-title').html('Retirer les droits d\'un professeur');
+        modalBody.textContent = `Etes-vous sur.e de vouloir retirer les droits de ${name} en tant que professeur ?`;
+      }
       $(document).on('click', '#delete-admin-btn', function(){
         const action = 'deactivate';
         const data = [email];
-        putUser(action, data);
+        putUser(item, action, data);
       });
     });
   }
 }
 
-function putUser(action, data) {
+function putUser(item, action, data) {
     $('#message-error-admin').addClass('d-none');
+    $('#message-error-admin-teacher').addClass('d-none');
     $('.invalid-feedback').removeClass('d-inline');
+    const url = item === 'admin' ? usersAdminActionUrl : usersTeacherActionUrl;
     $.ajax({
-      url: usersAdminActionUrl + action + '/',
+      url: url + action + '/',
       type: 'PUT',
       contentType: 'application/json',
       headers: { 'X-CSRFToken': csrftoken },

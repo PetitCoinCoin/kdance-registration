@@ -23,24 +23,65 @@ urlpatterns = [
     path("pwd_reset/", password_reset_view, name="pwd_reset"),
     path("pwd_new/", password_new_view, name="pwd_new"),
     path("api/", include(router.urls)),
-    path("api/user/me/", UserMeApiViewSet.as_view(actions={
-        "get": "retrieve",
-        "patch": "partial_update",
-        "delete": "destroy"
-    }), name="api-user-me"),
-    path("api/user/me/password/", UserMeApiViewSet.as_view(actions={
-        "put": "password",
-    }), name="api-user-me-password"),
-    path("api/user/me/validate/", UserMeApiViewSet.as_view(actions={
-        "put": "validate",
-    }), name="api-user-me-validate"),
-    path("api/users/admin/<str:action>/", UsersApiViewSet.as_view(actions={
-        "put": "admin",
-    }), name="api-users-admin"),
-    path("api/password/reset/", PasswordApiViewSet.as_view(actions={
-        "post": "reset",
-    }), name="api-password-reset"),
-    path("api/password/new/", PasswordApiViewSet.as_view(actions={
-        "post": "new",
-    }), name="api-password-new"),
+    path(
+        "api/user/me/",
+        UserMeApiViewSet.as_view(
+            actions={"get": "retrieve", "patch": "partial_update", "delete": "destroy"}
+        ),
+        name="api-user-me",
+    ),
+    path(
+        "api/user/me/password/",
+        UserMeApiViewSet.as_view(
+            actions={
+                "put": "password",
+            }
+        ),
+        name="api-user-me-password",
+    ),
+    path(
+        "api/user/me/validate/",
+        UserMeApiViewSet.as_view(
+            actions={
+                "put": "validate",
+            }
+        ),
+        name="api-user-me-validate",
+    ),
+    path(
+        "api/users/admin/<str:action>/",
+        UsersApiViewSet.as_view(
+            actions={
+                "put": "admin",
+            }
+        ),
+        name="api-users-admin",
+    ),
+    path(
+        "api/users/teacher/<str:action>/",
+        UsersApiViewSet.as_view(
+            actions={
+                "put": "teacher",
+            }
+        ),
+        name="api-users-teacher",
+    ),
+    path(
+        "api/password/reset/",
+        PasswordApiViewSet.as_view(
+            actions={
+                "post": "reset",
+            }
+        ),
+        name="api-password-reset",
+    ),
+    path(
+        "api/password/new/",
+        PasswordApiViewSet.as_view(
+            actions={
+                "post": "new",
+            }
+        ),
+        name="api-password-new",
+    ),
 ]

@@ -42,7 +42,7 @@ function populateSecondSelect(previousValue) {
     case '1':
     case '6':
     case '7':
-      getCourses($('#season-select').val());
+      getCourses($('#season-select').val(), previousValue);
       break
     case '3':
       $('#menu-2-select').empty();
@@ -66,12 +66,12 @@ function onMainChange(mainValue) {
   }
 }
 
-function getCourses(seasonId) {
+function getCourses(seasonId, mainValue) {
   $.ajax({
     url: coursesUrl + `?season=${seasonId}`,
     type: 'GET',
     success: (data) => {
-      $('#menu-2-select').append($('<option>', { value: '0', text: 'Tous les cours', selected: true }));
+      $('#menu-2-select').append($('<option>', { value: '0', text: mainValue === '6' || mainValue === '7' ? '-' : 'Tous les cours', selected: true }));
       for (let i = 0; i < data.length; i++) {
         const startHour = data[i].start_hour.split(':');
         const label = `${data[i].name}, ${WEEKDAY[data[i].weekday]} ${startHour[0]}h${startHour[1]}`;
@@ -163,7 +163,7 @@ function getMembersPerCourse(mainValue) {
           buildContactInfo(data);
           break
         case '7':
-          buildEmergencyInfo(data);
+          buildEmergencyInfo(data, subValue);
           break
         default:
           return
@@ -363,7 +363,7 @@ function buildContactInfo(data) {
   });
 }
 
-function buildEmergencyInfo(data) {
+function buildEmergencyInfo(data, courseId) {
   $('#data-table').bootstrapTable({
     ...COMMON_TABLE_PARAMS,
     showExport: true,
@@ -409,7 +409,7 @@ function buildEmergencyInfo(data) {
     data: data.map(m => {
       return {
         ...m,
-        name: `${m.last_name} ${m.first_name}`,
+				name: `${m.last_name} ${m.first_name}${m.cancelled_courses.map(c => c.id.toString()).indexOf(courseId) >= 0 ? ' (Annulé)' : ''}`,
         authorise_emergency: m.documents.authorise_emergency ? 'Oui': 'Non',
         ...buildContactsData(m.contacts),
       }

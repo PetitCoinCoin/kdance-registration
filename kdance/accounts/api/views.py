@@ -26,6 +26,7 @@ from accounts.api.serializers import (
     UserNewPwdSerializer,
     UserResetPwdSerializer,
     UserSerializer,
+    UserTeacherActionSerializer,
 )
 
 
@@ -38,17 +39,26 @@ class UsersApiViewSet(
     def get_queryset(self):
         queryset = User.objects.prefetch_related("profile").all()
         admin = self.request.query_params.get("admin")
+        teacher = self.request.query_params.get("teacher")
         if admin:
             queryset = queryset.filter(
                 is_superuser=(admin.lower() in ["true", "1", "y"])
             )
+        if teacher and teacher.lower() in ["true", "1", "y"]:
+            queryset = queryset.filter(groups__name=settings.TEACHER_GROUP_NAME)
         return queryset.order_by("last_name")
 
-    def get_serializer_class(self) -> type[UserBaseSerializer|UserAdminActionSerializer]:
+    def get_serializer_class(
+        self,
+    ) -> type[
+        UserBaseSerializer | UserAdminActionSerializer | UserTeacherActionSerializer
+    ]:
         if self.request.method and self.request.method.lower() == "post":
             return UserCreateSerializer
         if self.request.method and self.request.method.lower() == "put":
-            return UserAdminActionSerializer
+            if self.request.path and "admin" in self.request.path.lower():
+                return UserAdminActionSerializer
+            return UserTeacherActionSerializer
         return UserSerializer
 
     def create(self, request, *args, **kwargs) -> Response:
@@ -73,7 +83,9 @@ class UsersApiViewSet(
     def admin(self, request: Request, action: str) -> Response:
         if action not in ("activate", "deactivate"):
             return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = self.get_serializer(data=request.data, is_admin=action == "activate")
+        serializer = self.get_serializer(
+            data=request.data, is_admin=action == "activate"
+        )
         serializer.is_valid(raise_exception=True)
         details = serializer.save()
         if not details["processed"]:
@@ -81,7 +93,28 @@ class UsersApiViewSet(
             if not details["other"]:
                 return Response(status=status.HTTP_400_BAD_REQUEST, data=details)
             else:
-                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=details)
+                return Response(
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=details
+                )
+        return Response(data=details)
+
+    @action(detail=False, methods=["put"])
+    def teacher(self, request: Request, action: str) -> Response:
+        if action not in ("activate", "deactivate"):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(
+            data=request.data, is_teacher=action == "activate"
+        )
+        serializer.is_valid(raise_exception=True)
+        details = serializer.save()
+        if not details["processed"]:
+            # only emails not found
+            if not details["other"]:
+                return Response(status=status.HTTP_400_BAD_REQUEST, data=details)
+            else:
+                return Response(
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=details
+                )
         return Response(data=details)
 
 
@@ -106,7 +139,7 @@ class UserMeApiViewSet(
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
+        partial = kwargs.pop("partial", False)
         instance = self.get_object()
         if request.data.get("username", "").lower() == instance.username.lower():
             request.data.pop("username")
@@ -138,7 +171,9 @@ class UserMeApiViewSet(
 class PasswordApiViewSet(GenericViewSet):
     http_method_names = ["post"]
 
-    def get_serializer_class(self) -> type[UserResetPwdSerializer|UserNewPwdSerializer]:
+    def get_serializer_class(
+        self,
+    ) -> type[UserResetPwdSerializer | UserNewPwdSerializer]:
         if self.request.path and "reset" in self.request.path.lower():
             return UserResetPwdSerializer
         return UserNewPwdSerializer
@@ -157,7 +192,9 @@ class PasswordApiViewSet(GenericViewSet):
         serializer.save()
         user = User.objects.get(email=serializer.validated_data.get("email"))
         update_session_auth_hash(request, user)
-        auth_user = authenticate(username=user.username, password=request.data.get("password"))
+        auth_user = authenticate(
+            username=user.username, password=request.data.get("password")
+        )
         if auth_user is not None:
             login(request, user)
         return Response(status=status.HTTP_200_OK)
