@@ -123,7 +123,7 @@ function getMembersPerCourse(mainValue) {
           filter = 'with_license';
           break
         default:
-          console.log('This should not happen.');
+          console.log('This should not happen');
           return
       }
       url = `${membersUrl}?season=${$('#season-select').val()}&${filter}=true`;
@@ -151,7 +151,7 @@ function getMembersPerCourse(mainValue) {
           break
         case '2':
         case '3':
-          console.log('This should not happen.');
+          console.log('This should not happen');
           return
         case '4':
           buildSportPassInfo(data);
