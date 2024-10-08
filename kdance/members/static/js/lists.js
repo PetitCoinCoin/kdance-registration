@@ -314,55 +314,6 @@ function buildMembersInfo(data) {
   });
 }
 
-function buildContactInfo(data) {
-  $('#data-table').bootstrapTable({
-    ...COMMON_TABLE_PARAMS,
-    showExport: true,
-    exportTypes: ['csv'],
-    exportOptions: {
-      fileName: function () {
-        const suffix = $('#menu-2-select').val() === '0' ? 'tous' : $('#menu-2-select option:selected').text();
-        return `contacts_${$('#season-select option:selected').text().substring(0,9)}_${suffix}`
-      }
-    },
-    columns: [
-      {
-        field: 'last_name',
-        title: 'Last Name',
-      }, {
-        field: 'first_name',
-        title: 'First Name',
-      }, {
-        field: 'phone',
-        title: 'Phone',
-      }, {
-        field: 'email',
-        title: 'Email',
-      }, {
-        field: 'phone_2',
-        title: 'Phone',
-      }, {
-        field: 'email_2',
-        title: 'Email',
-      }, {
-        field: 'courses',
-        title: 'Cours',
-        formatter: function(value) {
-          return value.join('<br />')
-        },
-      }],
-    data: data.map(m => {
-      const contacts = buildContactsData(m.contacts);
-      return {
-        ...m,
-        phone_2: m.phone === contacts['phone-responsible-1'] ? undefined : contacts['phone-responsible-1'],
-        email_2: m.email === contacts['email-responsible-1'] ? undefined : contacts['email-responsible-1'],
-        courses: m.active_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`).concat(m.cancelled_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)),
-      }
-    })
-  });
-}
-
 function buildEmergencyInfo(data, courseId) {
   $('#data-table').bootstrapTable({
     ...COMMON_TABLE_PARAMS,
@@ -431,6 +382,64 @@ function buildContactsData(data) {
     }
   });
   return contacts
+}
+
+function buildContactInfo(data) {
+  $('#data-table').bootstrapTable({
+    ...COMMON_TABLE_PARAMS,
+    showExport: true,
+    exportTypes: ['csv'],
+    exportOptions: {
+      fileName: function () {
+        const suffix = $('#menu-2-select').val() === '0' ? 'tous' : $('#menu-2-select option:selected').text();
+        return `contacts_${$('#season-select option:selected').text().substring(0,9)}_${suffix}`
+      }
+    },
+    columns: [
+      {
+        field: 'last_name',
+        title: 'Last Name',
+      }, {
+        field: 'first_name',
+        title: 'First Name',
+      }, {
+        field: 'suffix',
+        title: 'Name Suffix',
+      }, {
+        field: 'phone',
+        title: 'Phone',
+      }, {
+        field: 'email',
+        title: 'Email',
+      }, {
+        field: 'courses',
+        title: 'Cours',
+        formatter: function(value) {
+          return value.join('<br />')
+        },
+      }],
+    data: data.map(m => {
+      return {
+        ...m,
+        suffix: '',
+        courses: m.active_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`).concat(m.cancelled_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)),
+      }
+    }).concat(data.map(m => buildResponsibleContactData(m.contacts, m.first_name, m.last_name)).flat())
+  });
+}
+
+function buildResponsibleContactData(data, memberFirstname, memberLastname) {
+  return data.filter(c => c.contact_type === 'responsible').map(c => {
+    // Technically, we could have 3 contacts per type. But this is higly unusual
+    return {
+      first_name: c.first_name,
+      last_name: c.last_name,
+      suffix: `(${memberFirstname} ${memberLastname})`,
+      email: c.email,
+      phone: c.phone,
+      courses: [],
+    }
+  });
 }
 
 function buildSportPassInfo(data) {
