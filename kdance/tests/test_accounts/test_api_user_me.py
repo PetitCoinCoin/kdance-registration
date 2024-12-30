@@ -1,4 +1,5 @@
 """Tests related to UserMe API view."""
+
 import pytest
 
 from copy import deepcopy
@@ -15,7 +16,7 @@ from tests.data_tests import SUPERTESTUSER, SUPERTESTUSER_EMAIL
 
 @pytest.mark.django_db
 class TestUserMeView(AuthTestCase):
-    view_url = reverse('api-user-me')
+    view_url = reverse("api-user-me")
     view_function = UserMeApiViewSet
 
     _TEST_DATA = {
@@ -28,12 +29,14 @@ class TestUserMeView(AuthTestCase):
         },
     }
 
-    @parameterized.expand([
-        ("get", 200, 200),
-        ("post", 405, 405),
-        ("put", 405, 405),
-        ("patch", 200, 200),
-    ])
+    @parameterized.expand(
+        [
+            ("get", 200, 200),
+            ("post", 405, 405),
+            ("put", 405, 405),
+            ("patch", 200, 200),
+        ]
+    )
     def test_permissions(self, method, user_status, superuser_status):
         assert self.users_have_permission(
             method=method,
@@ -41,9 +44,15 @@ class TestUserMeView(AuthTestCase):
             superuser_status=superuser_status,
         )
 
-    @parameterized.expand([
-        "get", "post", "put", "patch", "delete",
-    ])
+    @parameterized.expand(
+        [
+            "get",
+            "post",
+            "put",
+            "patch",
+            "delete",
+        ]
+    )
     def test_authentication_mandatory(self, method):
         assert self.anonymous_has_permission(method, 403)
 
@@ -58,23 +67,42 @@ class TestUserMeView(AuthTestCase):
 
     def test_patch(self):
         with AuthenticatedAction(self.client, self.testuser):
-            response = self.client.patch(self.view_url, data=self._TEST_DATA, content_type="application/json")
+            response = self.client.patch(
+                self.view_url, data=self._TEST_DATA, content_type="application/json"
+            )
             assert response.status_code == 200, response
             self.testuser.refresh_from_db()
             assert self.testuser.first_name == self._TEST_DATA["first_name"]
             assert self.testuser.profile.phone == self._TEST_DATA["profile"]["phone"]
 
-    @parameterized.expand([
-        ("", None, None, "Ce champ ne peut être vide."),
-        (SUPERTESTUSER, None, None, "Cet identifiant est déjà pris."),
-        ("SUPER_testuser", None, None, "Cet identifiant est déjà pris."),
-        (None, "", None, "Ce champ ne peut être vide."),
-        (None, SUPERTESTUSER_EMAIL, None, "Un utilisateur est déjà associé à cet email."),
-        (None, "TESTSUPER@kdance.COM", None, "Un utilisateur est déjà associé à cet email."),
-        (None, "plop.com", None, "Cette adresse email ne semble pas avoir un format valide."),
-        (None, None, "+336", "Saisissez une valeur valide."),
-        (None, None, "", "Ce champ ne peut être vide."),
-    ])
+    @parameterized.expand(
+        [
+            ("", None, None, "Ce champ ne peut être vide."),
+            (SUPERTESTUSER, None, None, "Cet identifiant est déjà pris."),
+            ("SUPER_testuser", None, None, "Cet identifiant est déjà pris."),
+            (None, "", None, "Ce champ ne peut être vide."),
+            (
+                None,
+                SUPERTESTUSER_EMAIL,
+                None,
+                "Un utilisateur est déjà associé à cet email.",
+            ),
+            (
+                None,
+                "TESTSUPER@kdance.COM",
+                None,
+                "Un utilisateur est déjà associé à cet email.",
+            ),
+            (
+                None,
+                "plop.com",
+                None,
+                "Cette adresse email ne semble pas avoir un format valide.",
+            ),
+            (None, None, "+336", "Saisissez une valeur valide."),
+            (None, None, "", "Ce champ ne peut être vide."),
+        ]
+    )
     def test_patch_payload_error(self, username, email, phone, message):
         data = deepcopy(self._TEST_DATA)
         if username is not None:
@@ -84,7 +112,9 @@ class TestUserMeView(AuthTestCase):
         if phone is not None:
             data["profile"]["phone"] = phone
         with AuthenticatedAction(self.client, self.testuser):
-            response = self.client.patch(self.view_url, data=data, content_type="application/json")
+            response = self.client.patch(
+                self.view_url, data=data, content_type="application/json"
+            )
             assert response.status_code == 400
             if username is not None:
                 assert message in response.json()["username"]
@@ -111,7 +141,7 @@ class TestUserMeView(AuthTestCase):
 
 @pytest.mark.django_db
 class TestUserMePasswordView(AuthTestCase):
-    view_url = reverse('api-user-me-password')
+    view_url = reverse("api-user-me-password")
     view_function = UserMeApiViewSet
 
     _tmp_user: User | None = None
@@ -119,18 +149,22 @@ class TestUserMePasswordView(AuthTestCase):
 
     @pytest.fixture(autouse=True)
     def set_tmp_user(self):
-        tmp_user, _ = User.objects.get_or_create(username="tmpuser", email="tmp@mail.fr")
+        tmp_user, _ = User.objects.get_or_create(
+            username="tmpuser", email="tmp@mail.fr"
+        )
         tmp_user.set_password(self._PASSWORD)
         tmp_user.save()
         self._tmp_user = tmp_user
 
-    @parameterized.expand([
-        ("get", 405, 405),
-        ("post", 405, 405),
-        ("put", 400, 400),
-        ("patch", 405, 405),
-        ("delete", 405, 405),
-    ])
+    @parameterized.expand(
+        [
+            ("get", 405, 405),
+            ("post", 405, 405),
+            ("put", 400, 400),
+            ("patch", 405, 405),
+            ("delete", 405, 405),
+        ]
+    )
     def test_permissions(self, method, user_status, superuser_status):
         assert self.users_have_permission(
             method=method,
@@ -138,9 +172,15 @@ class TestUserMePasswordView(AuthTestCase):
             superuser_status=superuser_status,
         )
 
-    @parameterized.expand([
-        "get", "post", "put", "patch", "delete",
-    ])
+    @parameterized.expand(
+        [
+            "get",
+            "post",
+            "put",
+            "patch",
+            "delete",
+        ]
+    )
     def test_authentication_mandatory(self, method):
         assert self.anonymous_has_permission(method, 403)
 
@@ -148,17 +188,32 @@ class TestUserMePasswordView(AuthTestCase):
         with AuthenticatedAction(self.client, self._tmp_user):
             response = self.client.put(
                 self.view_url,
-                data={"old_password": self._PASSWORD, "new_password": "SuperM0tdePass3Auss1"},
+                data={
+                    "old_password": self._PASSWORD,
+                    "new_password": "SuperM0tdePass3Auss1",
+                },
                 content_type="application/json",
             )
             assert response.status_code == 204, response
 
-    @parameterized.expand([
-        ("Oupsy", "SuperM0tdePass3Auss1", "old_password", "Mot de passe actuel invalide."),
-        (None, "tr0c0ur7", "new_password", "Votre mot de passe doit contenir au moins 12 caractères."),
-        ("", "SuperM0tdePass3Auss1", "old_password", "Ce champ ne peut être vide."),
-        (None, "", "new_password", "Ce champ ne peut être vide."),
-    ])
+    @parameterized.expand(
+        [
+            (
+                "Oupsy",
+                "SuperM0tdePass3Auss1",
+                "old_password",
+                "Mot de passe actuel invalide.",
+            ),
+            (
+                None,
+                "tr0c0ur7",
+                "new_password",
+                "Votre mot de passe doit contenir au moins 12 caractères.",
+            ),
+            ("", "SuperM0tdePass3Auss1", "old_password", "Ce champ ne peut être vide."),
+            (None, "", "new_password", "Ce champ ne peut être vide."),
+        ]
+    )
     def test_put_payload_error(self, old_pwd, new_pwd, key, message):
         old_pwd = old_pwd if old_pwd is not None else self._PASSWORD
         with AuthenticatedAction(self.client, self._tmp_user):

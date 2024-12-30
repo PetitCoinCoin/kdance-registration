@@ -1,4 +1,5 @@
 """Tests related to members views."""
+
 from typing import Callable
 
 from django.urls import reverse
@@ -18,17 +19,17 @@ from tests.authentication import AuthTestCase
 
 LOGIN_REDIRECT_PREFIX = "/login/?next="
 
+
 class MembersViewsTestCase(AuthTestCase):
     """Tests all non API views from members app."""
+
     __test__ = False
 
     view_url: str
     view_function: Callable
     ADMIN_ONLY: bool
 
-    @parameterized.expand([
-        "get", "post", "put", "patch", "delete"
-    ])
+    @parameterized.expand(["get", "post", "put", "patch", "delete"])
     def test_permissions(self, method):
         user_status = 405 if method != "get" else 403 if self.ADMIN_ONLY else 200
         superuser_status = 405 if method != "get" else 200
@@ -90,9 +91,7 @@ class TestAboutView(AuthTestCase):
     view_url = reverse("about")
     view_function = about
 
-    @parameterized.expand([
-        "get", "post", "put", "patch", "delete"
-    ])
+    @parameterized.expand(["get", "post", "put", "patch", "delete"])
     def test_permissions(self, method):
         status = 405 if method != "get" else 200
         assert self.users_have_permission(

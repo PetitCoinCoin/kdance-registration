@@ -1,4 +1,5 @@
 """Utilities to test as an authenticated user."""
+
 import logging
 
 from typing import Any
@@ -38,7 +39,9 @@ class AuthTestCase(TestCase):
     def setUpTestData(cls):
         cls.testuser = User.objects.create(username=TESTUSER, email=TESTUSER_EMAIL)
         Profile(user=cls.testuser, address="Ici", phone="0123456789").save()
-        cls.super_testuser = User.objects.create_superuser(username=SUPERTESTUSER, email=SUPERTESTUSER_EMAIL)
+        cls.super_testuser = User.objects.create_superuser(
+            username=SUPERTESTUSER, email=SUPERTESTUSER_EMAIL
+        )
         Profile(user=cls.super_testuser, address="Là", phone="0123456789").save()
         cls.client = APIClient()
 
@@ -75,11 +78,7 @@ class AuthTestCase(TestCase):
         return True
 
     def anonymous_has_permission(
-        self,
-        method: str,
-        status: int,
-        urls: list[str] | str | None = None,
-        **kwargs
+        self, method: str, status: int, urls: list[str] | str | None = None, **kwargs
     ) -> bool:
         if urls is None:
             assert self.view_url is not None
