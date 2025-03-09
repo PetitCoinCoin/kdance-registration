@@ -55,6 +55,7 @@ function getSeason(season) {
       $('#season-current').prop('checked', data.is_current);
       $('#season-discount-percent').val(data.discount_percent);
       $('#season-discount-limit').val(data.discount_limit);
+      $('#season-pass-sport-amount').val(data.pass_sport_amount);
     },
     error: (error) => {
       showToast('Impossible de récupérer les informations de la saison.');
@@ -99,6 +100,9 @@ function postOrPatchSeason(url, method) {
     }
     if ($('#season-discount-limit').val() !== '') {
       data['discount_limit'] = $('#season-discount-limit').val();
+    }
+    if ($('#season-pass-sport-amount').val() !== '') {
+      data['pass_sport_amount'] = $('#season-pass-sport-amount').val();
     }
     $.ajax({
       url: url,

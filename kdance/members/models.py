@@ -35,6 +35,10 @@ class Season(models.Model):
         default=2,
         blank=False,
     )
+    pass_sport_amount = models.PositiveIntegerField(
+        default=50,
+        blank=False,
+    )
 
     @transaction.atomic
     def save(self, *args, **kwargs) -> None:
@@ -265,8 +269,11 @@ class Ancv(models.Model):
 
 
 class SportPass(models.Model):
-    amount = models.PositiveIntegerField(null=False, default=50)
     code = models.CharField(null=False, blank=False, max_length=50)
+
+    @property
+    def amount(self) -> int:
+        return self.member.season.pass_sport_amount
 
 
 class Check(models.Model):

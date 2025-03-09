@@ -129,6 +129,7 @@ class TestSeasonApiView(AuthTestCase):
             )
             assert response.status_code == 201, response
             assert response.json()["year"] == year
+            assert response.json()["pass_sport_amount"] == 50  # default
             assert (
                 response.json()["is_current"] is is_current
                 if is_current is not None

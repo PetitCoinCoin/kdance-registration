@@ -25,10 +25,10 @@ def login_view(request: HttpRequest) -> HttpResponse:
                 request.session.set_expiry(0)
             return redirect(
                 "super_index"
-                if user.is_superuser
+                if user.is_superuser  # type: ignore[attr-defined]
                 or request.user.groups.filter(name=settings.TEACHER_GROUP_NAME).exists()
                 else "index"
-            )  # type: ignore[attr-defined]
+            )
         else:
             message = (
                 "Utilisateur et/ou mot de passe incorrect(s). La connexion a échoué."

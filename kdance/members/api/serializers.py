@@ -36,6 +36,7 @@ class SeasonSerializer(serializers.ModelSerializer):
             "is_current",
             "discount_percent",
             "discount_limit",
+            "pass_sport_amount",
         )
 
     @staticmethod
