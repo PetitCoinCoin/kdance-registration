@@ -228,6 +228,8 @@ class MemberViewSet(
         return Response(serializer.data)
 
     def create(self, request: Request, *a, **k) -> Response:
+        if not GeneralSettings.get_solo().allow_new_member:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(user=self.request.user)

@@ -484,8 +484,9 @@
               class="main-green fst-italic">Valider les inscriptions</span>.
           </p>
           <p class="fst-italic">Pour en savoir un peu plus sur ce nouvel outil, <a href="/about">cliquez ici</a>.</p>
-          <!-- TODO: Moduler selon la gestion des inscriptions -->
-          <p>Les inscriptions sont terminées pour cette année. <strong>Vous ne pouvez plus ajouter d'adhérent.</strong></p>
+          {% if not allow_new_member %}
+            <p>Les inscriptions sont terminées pour cette année. <strong>Vous ne pouvez plus ajouter d'adhérent.</strong></p>
+          {% endif %}
         </div>
         <div class="row">
           <div class="accordion" id="member-accordion">
@@ -551,19 +552,18 @@
 
       <template id="member-btn-template">
         <button class="btn btn-info mb-1" type="button" data-bs-toggle="modal" data-bs-target="#copy-member-modal"
-          id="copy-member-btn">
+          id="copy-member-btn" {% if not allow_new_member %} disabled {% endif %}>
           <i class="bi-plus-square"></i>
           Ajouter un adhérent d'une saison précédente
         </button>
-        <!-- TODO: Réactiver proprement pour mettre en place le mécanisme de blocage. -->
         <button class="btn btn-info mb-1" type="button" data-bs-toggle="modal" data-bs-target="#member-modal"
-          id="add-member-btn" disabled>
+          id="add-member-btn" {% if not allow_new_member %} disabled {% endif %}>
           <i class="bi-plus-square"></i>
           Ajouter un nouvel adhérent
         </button>
 
         <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#validate-modal"
-          id="validate-members-btn">
+          id="validate-members-btn" {% if not allow_new_member %} disabled {% endif %}>
           <i class="bi-file-earmark-check-fill"></i>
           Valider les inscriptions
         </button>
@@ -641,6 +641,7 @@
     const coursesUrl = "{% url 'api-courses-list' %}";
     const membersUrl = "{% url 'api-members-list' %}";
     const seasonsUrl = "{% url 'api-seasons-list' %}";
+    const settingsUrl = "{% url 'api-settings-detail' %}";
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
   </script>
   <script src="{% static 'js/user.js' %}"></script>

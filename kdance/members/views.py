@@ -5,6 +5,8 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 
+from members.models import GeneralSettings
+
 
 def _is_teacher(request: HttpRequest) -> bool:
     return request.user.groups.filter(name=settings.TEACHER_GROUP_NAME).exists()
@@ -16,7 +18,11 @@ def index(request: HttpRequest) -> HttpResponse:
     return render(
         request,
         "pages/index.html",
-        context={"user": request.user, "is_teacher": _is_teacher(request)},
+        context={
+            "user": request.user,
+            "is_teacher": _is_teacher(request),
+            "allow_new_member": GeneralSettings.get_solo().allow_new_member,
+        },
     )
 
 
