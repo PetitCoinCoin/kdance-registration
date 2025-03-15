@@ -73,6 +73,18 @@ def admin_mgmt(request: HttpRequest) -> HttpResponse:
 
 @require_http_methods(["GET"])
 @login_required()
+def site_mgmt(request: HttpRequest) -> HttpResponse:
+    if request.user.is_superuser:
+        return render(
+            request,
+            "pages/site_mgmt.html",
+            context={"user": request.user, "is_teacher": _is_teacher(request)},
+        )
+    raise PermissionDenied
+
+
+@require_http_methods(["GET"])
+@login_required()
 def list_dl(request: HttpRequest) -> HttpResponse:
     if request.user.is_superuser:
         return render(

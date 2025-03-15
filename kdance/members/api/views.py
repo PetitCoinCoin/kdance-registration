@@ -1,6 +1,7 @@
 from members.models import (
     Check,
     Course,
+    GeneralSettings,
     Member,
     Payment,
     Season,
@@ -11,6 +12,7 @@ from members.api.serializers import (
     CourseCopySeasonSerializer,
     CourseRetrieveSerializer,
     CourseSerializer,
+    GeneralSettingsSerializer,
     MemberCoursesActionsEnum,
     MemberCoursesSerializer,
     MemberRetrieveSerializer,
@@ -36,6 +38,19 @@ from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework import serializers
 from rest_framework.viewsets import GenericViewSet
+
+
+class GeneralSettingsViewSet(
+    RetrieveModelMixin,
+    UpdateModelMixin,
+    GenericViewSet,
+):
+    queryset = GeneralSettings.objects.all()
+    serializer_class = GeneralSettingsSerializer
+    http_method_names = ["get", "put"]
+
+    def get_object(self) -> GeneralSettings:
+        return GeneralSettings.get_solo()
 
 
 class SeasonViewSet(

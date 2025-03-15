@@ -14,8 +14,20 @@ from django.db import models, transaction
 from django.db.models.signals import post_delete
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
+from solo.models import SingletonModel
 
 _logger = logging.getLogger(__name__)
+
+
+class GeneralSettings(SingletonModel):
+    allow_signup = models.BooleanField(
+        null=False,
+        default=True,
+    )
+    allow_new_member = models.BooleanField(
+        null=False,
+        default=True,
+    )
 
 
 class Season(models.Model):

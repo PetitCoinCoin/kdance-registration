@@ -15,6 +15,7 @@ from members.models import (
     Contact,
     Course,
     Documents,
+    GeneralSettings,
     Member,
     OtherPayment,
     Payment,
@@ -25,6 +26,12 @@ from members.models import (
 )
 
 _logger = logging.getLogger(__name__)
+
+
+class GeneralSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GeneralSettings
+        fields = ("allow_signup", "allow_new_member")
 
 
 class SeasonSerializer(serializers.ModelSerializer):

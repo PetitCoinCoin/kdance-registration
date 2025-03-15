@@ -9,7 +9,7 @@
     <div class="container">
       <div>
         <h1 class="display-4 mb-5 text-center">Création d'un compte K'Dance</h1>
-        <p><strong>Le titulaire du compte doit être un adulte responsable.</strong></p>
+        <h4>Le titulaire du compte doit être un adulte responsable.</h4>
       </div>
       <form id="form-signup" name="form-signup" class="min-w-500 d-flex flex-column" method="post">
         {% csrf_token %}
@@ -85,6 +85,7 @@
   </section>
   <script type="text/javascript">
     const usersUrl = "{% url 'api-users-list' %}"
+    const settingsUrl = "{% url 'api-settings-detail' %}";
   </script>
   <script src="{% static 'js/signup.js' %}"></script>
 </main>

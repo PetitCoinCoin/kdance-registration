@@ -28,6 +28,7 @@ from accounts.api.serializers import (
     UserSerializer,
     UserTeacherActionSerializer,
 )
+from members.models import GeneralSettings
 
 
 class UsersApiViewSet(
@@ -62,6 +63,8 @@ class UsersApiViewSet(
         return UserSerializer
 
     def create(self, request, *args, **kwargs) -> Response:
+        if not GeneralSettings.get_solo().allow_signup:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
         response = super().create(request, *args, **kwargs)
         username = request.data.get("username")
         password = request.data.get("password")

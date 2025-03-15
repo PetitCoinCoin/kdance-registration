@@ -1,6 +1,7 @@
 $(document).ready(() => {
   activatePopovers();
   togglePasswords();
+  getGeneralSettings();
   postSignup();
 });
 
@@ -13,6 +14,26 @@ function confirmPassword() {
 function activatePopovers() {
   const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
   [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
+}
+
+function getGeneralSettings() {
+  $('#message-error-signup').addClass('d-none');
+  $.ajax({
+    url: settingsUrl,
+    type: 'GET',
+    success: (data) => {
+      if (! data.allow_signup) {
+        $('#btn-signup').prop('disabled', true);
+        $(':input').prop('disabled', true);
+        $('#message-error-signup').text('Les inscriptions sur le site ne sont pas autorisées pour le moment. Merci de revenir plus tard ou de contacter K\'Dance directement.');
+        $('#message-error-signup').removeClass('d-none');
+      }
+    },
+    error: (error) => {
+      console.log(error);
+      $('#message-error-signup').removeClass('d-none');
+    }
+  });
 }
 
 function postSignup() {
