@@ -31,59 +31,6 @@
 
     <!-- Modal -->
     {% csrf_token %}
-    <div class="modal fade" id="edit-me-modal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title">Modifier mes informations</h4>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <form id="form-me" name="form-me">
-            <div class="modal-body">
-              <div class="row">
-                <div class="col-6">
-                  <div class="form-outline mb-4">
-                    <label class="form-label required" for="edit-me-firstname">Prénom</label>
-                    <input type="text" id="edit-me-firstname" class="form-control" required />
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="form-outline mb-4">
-                    <label class="form-label required" for="edit-me-lastname">Nom de famille</label>
-                    <input type="text" id="edit-me-lastname" class="form-control" required />
-                  </div>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-6">
-                  <div class="form-outline mb-4">
-                    <label class="form-label required" for="edit-me-phone">Téléphone</label>
-                    <input type="text" id="edit-me-phone" class="form-control" maxlength="10" required />
-                    <div id="invalid-edit-me-phone" class="invalid-feedback"></div>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="form-outline mb-4">
-                    <label class="form-label required" for="edit-me-email">Email</label>
-                    <input type="text" id="edit-me-email" class="form-control" required />
-                    <div id="invalid-edit-me-email" class="invalid-feedback"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="form-outline mb-4">
-                <label class="form-label required" for="edit-me-address">Adresse</label>
-                <textarea class="form-control" id="edit-me-address" rows="3" required></textarea>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-              <button type="submit" class="btn btn-info">Enregistrer</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
     <div class="modal fade" id="member-modal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-xl">
         <div class="modal-content">
@@ -456,7 +403,7 @@
           <div class="col-1">
             <span class="d-inline-block" tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus"
               data-bs-content="Modifier mes infos" data-bs-placement="left">
-              <button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#edit-me-modal">
+              <button class="btn btn-outline-info" type="button" onclick="window.location='/user_edit'">
                 <i class="bi-pencil-fill"></i>
               </button>
             </span>
