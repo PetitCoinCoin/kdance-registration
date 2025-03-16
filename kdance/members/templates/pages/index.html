@@ -278,7 +278,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h4 class="modal-title" id="delete-modal-title"></h4>
+            <h4 class="modal-title" id="delete-modal-title">Supprimer un adhérent</h4>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body"></div>
@@ -363,8 +363,7 @@
             </span>
             <span class="d-inline-block" tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus"
               data-bs-content="Supprimer mon compte" data-bs-placement="left">
-              <button id="delete-me-btn" class="btn btn-outline-danger" type="button" data-bs-toggle="modal"
-                data-bs-target="#delete-modal">
+              <button id="delete-me-btn" class="btn btn-outline-danger" type="button" onclick="window.location='/user_delete'">
                 <i class="bi-trash3-fill"></i>
               </button>
             </span>

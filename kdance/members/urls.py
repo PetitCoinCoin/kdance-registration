@@ -19,6 +19,7 @@ from members.views import (
     member_mgmt,
     site_mgmt,
     super_index,
+    user_delete,
     user_edit,
     user_edit_pwd,
 )
@@ -54,6 +55,7 @@ urlpatterns = [
     path("", index, name="index"),
     path("user_edit", user_edit, name="user_edit"),
     path("user_edit_pwd", user_edit_pwd, name="user_edit_pwd"),
+    path("user_delete", user_delete, name="user_delete"),
     path("about", about, name="about"),
     path("super", super_index, name="super_index"),
     path("super/admin_mgmt/", admin_mgmt, name="admin_mgmt"),

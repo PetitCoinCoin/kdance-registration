@@ -54,6 +54,19 @@ def user_edit_pwd(request: HttpRequest) -> HttpResponse:
 
 @require_http_methods(["GET"])
 @login_required()
+def user_delete(request: HttpRequest) -> HttpResponse:
+    return render(
+        request,
+        "pages/user_delete.html",
+        context={
+            "user": request.user,
+            "is_teacher": _is_teacher(request),
+        },
+    )
+
+
+@require_http_methods(["GET"])
+@login_required()
 def super_index(request: HttpRequest) -> HttpResponse:
     if request.user.is_superuser or _is_teacher(request):
         return render(

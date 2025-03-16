@@ -5,7 +5,7 @@ $(document).ready(() => {
   getUser();
   getCourses();
   createUpdateMember();
-  deleteItem();
+  deleteMember();
   initContacts();
   handleContacts();
   handleSwitches();
@@ -549,30 +549,17 @@ function buildContactsData() {
   return contacts
 }
 
-function deleteItem() {
+function deleteMember() {
   const deleteModal = document.getElementById('delete-modal');
   if (deleteModal) {
     deleteModal.addEventListener('show.bs.modal', event => {
       const button = event.relatedTarget;
-      const buttonId = button.getAttribute('id');
-      const buttonClass = button.getAttribute('class');
       const modalBody = deleteModal.querySelector('.modal-body');
-      let url = '';
-      let errorMessage = '';
-      if (buttonId === 'delete-me-btn') {
-        $('#delete-modal-title').html('Supprimer mon compte');
-        modalBody.textContent = 'Etes-vous sur.e de vouloir supprimer votre compte ainsi que tous les adhérents associés ?';
-        url = userMeUrl;
-        errorMessage = 'Une erreur est survenue, impossible de supprimer le compte pour le moment.';
-      }
-      else if (buttonClass.includes('m-delete-btn')) {
-        $('#delete-modal-title').html('Supprimer un adhérent');
-        const memberId = button.getAttribute('data-bs-mid');
-        const member = button.getAttribute('data-bs-mname');
-        modalBody.textContent = `Etes-vous sur.e de vouloir supprimer ${member} pour cette saison ?`;
-        url = membersUrl + memberId + '/';
-        errorMessage = 'Une erreur est survenue, impossible de supprimer cet adhérent pour le moment.';
-      }
+      $('#delete-modal-title').html('Supprimer un adhérent');
+      const memberId = button.getAttribute('data-bs-mid');
+      const member = button.getAttribute('data-bs-mname');
+      modalBody.textContent = `Etes-vous sur.e de vouloir supprimer ${member} pour cette saison ?`;
+      const url = membersUrl + memberId + '/';
       $(document).on("click", "#delete-btn", function () {
         $.ajax({
           url: url,
@@ -583,6 +570,7 @@ function deleteItem() {
             location.reload();
           },
           error: (error) => {
+            const errorMessage = 'Une erreur est survenue, impossible de supprimer cet adhérent pour le moment.';
             showToast(errorMessage);
             console.log(error);
           }
