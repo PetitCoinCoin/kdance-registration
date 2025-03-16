@@ -274,58 +274,6 @@
       </div>
     </div>
 
-    <div class="modal fade" id="edit-pwd-modal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title">Changer mon mot de passe</h4>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <form id="form-pwd" name="form-pwd">
-            <div class="modal-body">
-              <div class="form-group mb-4">
-                <label class="form-label required" for="password-old">Ancien mot de passe</label>
-                <div class="input-group">
-                  <input type="password" id="password-old" class="form-control" required />
-                  <span class="input-group-text">
-                    <i class="bi bi-eye" id="toggle-password-old"></i>
-                  </span>
-                </div>
-                <div id="invalid-pwd-old" class="invalid-feedback"></div>
-              </div>
-              <div class="form-group mb-4">
-                <label class="form-label required" for="password">Nouveau mot de passe</label>
-                <div class="input-group">
-                  <input type="password" id="password" class="form-control" required />
-                  <span class="input-group-text">
-                    <i class="bi bi-eye" id="toggle-password"></i>
-                  </span>
-                </div>
-                <div id="invalid-pwd" class="invalid-feedback"></div>
-              </div>
-              <div class="form-group mb-4">
-                <label class="form-label required" for="password-confirmation">Confirmation du mot de passe</label>
-                <div class="input-group">
-                  <input type="password" id="password-confirmation" class="form-control" required />
-                  <span class="input-group-text">
-                    <i class="bi bi-eye" id="toggle-password-confirmation"></i>
-                  </span>
-                </div>
-                <div id="invalid-pwd-confirmation" class="invalid-feedback">Le mot de passe ne correspond pas !</div>
-              </div>
-              <div id="message-error-edit-pwd" class="p-3 mb-2 bg-danger-subtle text-danger-emphasis d-none">
-                Une erreur est survenue. Veuillez ré-essayer plus tard ou contacter K'Dance.
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-              <button type="submit" class="btn btn-info">Modifier</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
     <div class="modal fade" id="delete-modal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -409,8 +357,7 @@
             </span>
             <span class="d-inline-block" tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus"
               data-bs-content="Modifier mon mot de passe" data-bs-placement="left">
-              <button class="btn btn-outline-warning" type="button" data-bs-toggle="modal"
-                data-bs-target="#edit-pwd-modal">
+              <button class="btn btn-outline-warning" type="button" onclick="window.location='/user_edit_pwd'">
                 <i class="bi-lock-fill"></i>
               </button>
             </span>

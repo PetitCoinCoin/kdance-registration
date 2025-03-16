@@ -14,12 +14,13 @@ from members.views import (
     about,
     admin_mgmt,
     course_mgmt,
-    user_edit,
     index,
     list_dl,
     member_mgmt,
     site_mgmt,
     super_index,
+    user_edit,
+    user_edit_pwd,
 )
 
 
@@ -52,6 +53,7 @@ singleton_router.register(r"settings", GeneralSettingsViewSet, "api-settings")
 urlpatterns = [
     path("", index, name="index"),
     path("user_edit", user_edit, name="user_edit"),
+    path("user_edit_pwd", user_edit_pwd, name="user_edit_pwd"),
     path("about", about, name="about"),
     path("super", super_index, name="super_index"),
     path("super/admin_mgmt/", admin_mgmt, name="admin_mgmt"),
