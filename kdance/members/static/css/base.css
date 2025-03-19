@@ -37,8 +37,10 @@ footer {
   height: 10vh;
 }
 
-.min-w-500 {
-  min-width: 500px;
+@media (min-width: 540px) {
+  .min-w-500 {
+    min-width: 500px;
+  }
 }
 
 .min-w-200 {
