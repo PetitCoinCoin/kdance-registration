@@ -3,7 +3,7 @@
 <header class="header-global">
   <nav id="navbar-main" aria-label="Primary navigation" class="d-flex">
     <a href="/">
-      <img src="{% static 'img/logo-kdance.png' %}" height="100" alt="K'Dance Logo">
+      <img src="{% static 'img/logo-kdance.png' %}" alt="K'Dance Logo">
     </a>
     <div class="d-flex">
       {% if user.is_superuser or is_teacher%}

@@ -33,6 +33,10 @@ footer {
   margin-right: 20px;
 }
 
+#navbar-main img {
+  height: 10vh;
+}
+
 .min-w-500 {
   min-width: 500px;
 }

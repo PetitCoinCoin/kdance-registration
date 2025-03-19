@@ -9,18 +9,18 @@
     <div class="container">
       <div>
         <h1 class="display-4 mb-5 text-center">Création d'un compte K'Dance</h1>
-        <h4>Le titulaire du compte doit être un adulte responsable.</h4>
+        <h4 class="mb-4">Le titulaire du compte doit être un adulte responsable.</h4>
       </div>
-      <form id="form-signup" name="form-signup" class="min-w-500 d-flex flex-column" method="post">
+      <form id="form-signup" name="form-signup" class="d-flex flex-column" method="post">
         {% csrf_token %}
         <div class="row">
-          <div class="col-6">
+          <div class="col-12 col-sm-6">
             <div class="form-outline mb-4">
               <label class="form-label required" for="firstname">Prénom</label>
               <input type="text" id="firstname" class="form-control" required />
             </div>
           </div>
-          <div class="col-6">
+          <div class="col-12 col-sm-6">
             <div class="form-outline mb-4">
               <label class="form-label required" for="lastname">Nom de famille</label>
               <input type="text" id="lastname" class="form-control" required />
@@ -28,14 +28,14 @@
           </div>
         </div>
         <div class="row">
-          <div class="col-6">
+          <div class="col-12 col-sm-6">
             <div class="form-outline mb-4">
               <label class="form-label required" for="phone">Téléphone</label>
               <input type="text" id="phone" class="form-control" maxlength="10" required />
               <div id="invalid-phone" class="invalid-feedback"></div>
             </div>
           </div>
-          <div class="col-6">
+          <div class="col-12 col-sm-6">
             <div class="form-outline mb-4">
               <label class="form-label required" for="email">Email</label>
               <input type="text" id="email" class="form-control" required />
@@ -48,7 +48,7 @@
           <textarea class="form-control" id="address" rows="3" required></textarea>
         </div>
         <div class="row">
-          <div class="col-6">
+          <div class="col-12 col-sm-6">
             <div class="form-group mb-4">
               <label class="form-label required" for="password">Mot de passe</label>
               <span tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-content="Minimum 12 caractères<br />Au moins une minuscule<br />Au moins une majuscule<br />Au moins un chiffre" data-bs-placement="right" data-bs-html="true">
@@ -63,7 +63,7 @@
               <div id="invalid-pwd" class="invalid-feedback"></div>
             </div>
           </div>
-          <div class="col-6">
+          <div class="col-12 col-sm-6">
             <div class="form-group mb-4">
               <label class="form-label required" for="password-confirmation">Confirmation du mot de passe</label>
               <div class="input-group">
