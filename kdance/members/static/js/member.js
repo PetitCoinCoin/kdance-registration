@@ -1,7 +1,6 @@
 $(document).ready(() => {
   getMember();
   activatePopovers();
-  populateLicense();
   createUpdateMember();
   initContacts();
   handleContacts();
@@ -30,13 +29,6 @@ function handleSwitches() {
   passSwitch.addEventListener('change', () => {
     $('#pass-div').attr('hidden', !$('#pass-switch').is(':checked'));
   });
-}
-
-function populateLicense() {
-  for (let [key, value] of Object.entries(LICENSES)) {
-    const label = key === '0' ? value : `${value} (${key}€)`;
-    $('#member-license').append($('<option>', { value: key, text: label, selected: key == '0' }));
-  }
 }
 
 function getAge(birthday) {

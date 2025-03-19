@@ -5,7 +5,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 
-from members.models import GeneralSettings
+from members.models import GeneralSettings, Season
 
 
 def _is_teacher(request: HttpRequest) -> bool:
@@ -73,6 +73,7 @@ def member(request: HttpRequest) -> HttpResponse:
         "pages/member.html",
         context={
             "user": request.user,
+            "season": Season.objects.get(is_current=True),
             "is_teacher": _is_teacher(request),
         },
     )
