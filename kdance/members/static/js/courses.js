@@ -56,6 +56,10 @@ function getSeason(season) {
       $('#season-discount-percent').val(data.discount_percent);
       $('#season-discount-limit').val(data.discount_limit);
       $('#season-pass-sport-amount').val(data.pass_sport_amount);
+      $('#season-ffd-a-amount').val(data.ffd_a_amount);
+      $('#season-ffd-b-amount').val(data.ffd_b_amount);
+      $('#season-ffd-c-amount').val(data.ffd_c_amount);
+      $('#season-ffd-d-amount').val(data.ffd_d_amount);
     },
     error: (error) => {
       showToast('Impossible de récupérer les informations de la saison.');
@@ -94,6 +98,10 @@ function postOrPatchSeason(url, method) {
     const data = {
       year: $('#season-year').val(),
       is_current: $('#season-current').is(':checked'),
+      ffd_a_amount: $('#season-ffd-a-amount').val(),
+      ffd_b_amount: $('#season-ffd-b-amount').val(),
+      ffd_c_amount: $('#season-ffd-c-amount').val(),
+      ffd_d_amount: $('#season-ffd-d-amount').val(),
     };
     if ($('#season-discount-percent').val() !== '') {
       data['discount_percent'] = $('#season-discount-percent').val();

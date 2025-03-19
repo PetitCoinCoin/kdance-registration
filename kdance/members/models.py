@@ -51,6 +51,18 @@ class Season(models.Model):
         default=50,
         blank=False,
     )
+    ffd_a_amount = models.PositiveIntegerField(
+        blank=False, verbose_name="Licence A Loisir price"
+    )
+    ffd_b_amount = models.PositiveIntegerField(
+        blank=False, verbose_name="Licence B Compétiteur price"
+    )
+    ffd_c_amount = models.PositiveIntegerField(
+        blank=False, verbose_name="Licence C Compétiteur national price"
+    )
+    ffd_d_amount = models.PositiveIntegerField(
+        blank=False, verbose_name="Licence D Compétiteur international price"
+    )
 
     @transaction.atomic
     def save(self, *args, **kwargs) -> None:
@@ -397,16 +409,7 @@ class Member(PersonModel):
     cancel_refund = models.FloatField(
         null=False, default=0.0, validators=[MinValueValidator(0)]
     )
-    ffd_license = models.PositiveIntegerField(
-        choices=[
-            (0, "Aucune"),
-            (24, "Licence A Loisir"),
-            (26, "Licence B Compétiteur"),
-            (43, "Licence C Compétiteur national"),
-            (55, "Licence D Compétiteur international"),
-        ],
-        default=0,
-    )
+    ffd_license = models.PositiveIntegerField(default=0)
     is_validated = models.BooleanField(default=False, null=False)
 
     class Meta:

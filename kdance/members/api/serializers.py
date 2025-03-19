@@ -44,6 +44,10 @@ class SeasonSerializer(serializers.ModelSerializer):
             "discount_percent",
             "discount_limit",
             "pass_sport_amount",
+            "ffd_a_amount",
+            "ffd_b_amount",
+            "ffd_c_amount",
+            "ffd_d_amount",
         )
 
     @staticmethod
