@@ -17,13 +17,13 @@
         <form id="form-me" name="form-me">
           {% csrf_token %}
           <div class="row">
-            <div class="col-6">
+            <div class="col-12 col-sm-6">
               <div class="form-outline mb-4">
                 <label class="form-label required" for="edit-me-firstname">Prénom</label>
                 <input type="text" id="edit-me-firstname" class="form-control" required />
               </div>
             </div>
-            <div class="col-6">
+            <div class="col-12 col-sm-6">
               <div class="form-outline mb-4">
                 <label class="form-label required" for="edit-me-lastname">Nom de famille</label>
                 <input type="text" id="edit-me-lastname" class="form-control" required />
@@ -31,14 +31,14 @@
             </div>
           </div>
           <div class="row">
-            <div class="col-6">
+            <div class="col-12 col-sm-6">
               <div class="form-outline mb-4">
                 <label class="form-label required" for="edit-me-phone">Téléphone</label>
                 <input type="text" id="edit-me-phone" class="form-control" maxlength="10" required />
                 <div id="invalid-edit-me-phone" class="invalid-feedback"></div>
               </div>
             </div>
-            <div class="col-6">
+            <div class="col-12 col-sm-6">
               <div class="form-outline mb-4">
                 <label class="form-label required" for="edit-me-email">Email</label>
                 <input type="text" id="edit-me-email" class="form-control" required />
