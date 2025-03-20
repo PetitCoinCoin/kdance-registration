@@ -109,21 +109,18 @@
       {% if user.is_authenticated %}
       <div class="container">
         <div class="row mb-3">
-          <div class="col-2">
-            <img id="desc-picture" src="" class="img-thumbnail" alt="thumbs">
-          </div>
-          <div class="col">
+          <div class="col-10 col-sm">
             <dl class="row">
-              <dt class="col-sm-5">Email:</dt>
-              <dd id="desc-email" class="col-sm-7"></dd>
-              <dt class="col-sm-5">Prénom:</dt>
-              <dd id="desc-firstname" class="col-sm-7"></dd>
-              <dt class="col-sm-5">Nom:</dt>
-              <dd id="desc-lastname" class="col-sm-7"></dd>
-              <dt class="col-sm-5">Téléphone:</dt>
-              <dd id="desc-phone" class="col-sm-7"></dd>
-              <dt class="col-sm-5">Adresse:</dt>
-              <dd id="desc-address" class="col-sm-7"></dd>
+              <dt class="col-sm-3">Email:</dt>
+              <dd id="desc-email" class="col-sm-9"></dd>
+              <dt class="col-sm-3">Prénom:</dt>
+              <dd id="desc-firstname" class="col-sm-9"></dd>
+              <dt class="col-sm-3">Nom:</dt>
+              <dd id="desc-lastname" class="col-sm-9"></dd>
+              <dt class="col-sm-3">Téléphone:</dt>
+              <dd id="desc-phone" class="col-sm-9"></dd>
+              <dt class="col-sm-3">Adresse:</dt>
+              <dd id="desc-address" class="col-sm-9"></dd>
             </dl>
           </div>
           <div class="col-1">
@@ -175,8 +172,8 @@
           </h2>
           <div class="accordion-collapse collapse show template-data">
             <div class="accordion-body">
-              <div class="d-flex justify-content-between mb-3">
-                <div>
+              <div class="row mb-3">
+                <div class="col-12 col-sm-8">
                   <dl class="d-flex mb-0">
                     <dt class="me-2">Total dû:</dt>
                     <dd class="payment">€</dd>
@@ -190,7 +187,7 @@
                     <dd class="payment">€</dd>
                   </dl>
                 </div>
-                <div class="season-btn-div d-flex flex-column"></div>
+                <div class="season-btn-div d-flex flex-column col-12 col-sm-4"></div>
               </div>
             </div>
           </div>
