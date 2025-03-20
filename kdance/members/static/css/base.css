@@ -125,3 +125,15 @@ a {
   text-align: justify;
   max-width: 1000px;
 }
+
+#course-header {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+}
+
+@media (min-width: 540px) {
+  #course-header {
+    flex-direction: row !important;
+  }
+}
