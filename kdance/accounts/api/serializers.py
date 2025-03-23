@@ -211,7 +211,7 @@ class UserCreateSerializer(UserBaseSerializer):
             sent = mail.send()
             if not sent:
                 _logger.warning(
-                    "Echec de l'envoi du mail de créataion de compte pour %s", username
+                    "Echec de l'envoi du mail de création de compte pour %s", username
                 )
 
     @classmethod

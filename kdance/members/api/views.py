@@ -234,6 +234,7 @@ class MemberViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save(user=self.request.user)
         headers = self.get_success_headers(serializer.data)
+        serializer.send_email(self.request.user.username)
         return Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )

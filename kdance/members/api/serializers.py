@@ -1,9 +1,12 @@
 import logging
 
+from contextlib import suppress
 from enum import Enum
 from typing import Any
 
+from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.db.utils import IntegrityError
 from drf_writable_nested.serializers import WritableNestedModelSerializer
@@ -352,6 +355,68 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             for key, value in documents.items():
                 setattr(doc, key, value)
             doc.save()
+
+    def send_email(self, username: str) -> None:
+        with suppress(User.DoesNotExist):
+            user: User = User.objects.get(username=username)
+            _logger.info("Envoi d'un email de création d'adhérent")
+            mail = EmailMultiAlternatives(
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[user.email, self.validated_data["email"]],
+                reply_to=[settings.DEFAULT_FROM_EMAIL],
+                subject=f"Inscription d'un adhérent K'Dance pour la saison {self.validated_data['season']}",
+                body=self.__build_text(),
+            )
+            _logger.debug(f"Envoi vers {mail.to}")
+            mail.attach_alternative(self.__build_html(), "text/html")
+            sent = mail.send()
+            if not sent:
+                _logger.warning(
+                    "Echec de l'envoi du mail d'inscription d'adhérent pour %s",
+                    username,
+                )
+
+    def __build_text(self) -> str:
+        course_message = "Vous n'avez cependant pas choisi de cours pour le moment."
+        if self.validated_data["active_courses"]:
+            course_message = f"""
+Cours choisi(s):
+{chr(10).join([c.name for c in self.validated_data["active_courses"]])}
+Notez que l'inscription ne sera validée qu'après réception du paiement.
+"""
+        message = f"""
+Bonjour
+
+Vous venez d'inscrire {self.validated_data["first_name"]} {self.validated_data["last_name"]} pour la saison {self.validated_data["season"].year}.
+{course_message}
+
+Bonne journée et à bientôt
+Tech K'Dance
+"""
+        return message
+
+    def __build_html(self) -> str:
+        course_message = "Vous n'avez cependant pas choisi de cours pour le moment."
+        if self.validated_data["active_courses"]:
+            course_message = f"""
+</p>
+<p>
+    Cours choisi(s):
+    {"<br>".join([c.name for c in self.validated_data["active_courses"]])}
+    Notez que l'inscription ne sera validée qu'après réception du paiement.
+"""
+        message = f"""
+<p>Bonjour</p>
+<p>
+  Vous venez d'inscrire {self.validated_data["first_name"]} {self.validated_data["last_name"]} pour la saison {self.validated_data["season"].year}.
+  {course_message}
+</p>
+<p>
+  Bonne journée et à bientôt<br />
+  Tech K'Dance
+</p>
+"""
+        return message
 
 
 class MemberRetrieveSerializer(MemberSerializer):
