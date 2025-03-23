@@ -45,7 +45,24 @@
         </div>
         <div class="form-outline mb-4">
           <label class="form-label required" for="address">Adresse</label>
-          <textarea class="form-control" id="address" rows="3" required></textarea>
+          <textarea class="form-control" id="address" rows="2" required></textarea>
+          <div id="invalid-address" class="invalid-feedback"></div>
+        </div>
+        <div class="row">
+          <div class="col-12 col-sm-4">
+            <div class="form-outline mb-4">
+              <label class="form-label required" for="postal-code">Code postal</label>
+              <input type="text" id="postal-code" class="form-control" maxlength="5" required />
+              <div id="invalid-postal-code" class="invalid-feedback"></div>
+            </div>
+          </div>
+          <div class="col-12 col-sm-8">
+            <div class="form-outline mb-4">
+              <label class="form-label required" for="city">Ville</label>
+              <input type="text" id="city" class="form-control" required />
+              <div id="invalid-city" class="invalid-feedback"></div>
+            </div>
+          </div>
         </div>
         <div class="row">
           <div class="col-12 col-sm-6">

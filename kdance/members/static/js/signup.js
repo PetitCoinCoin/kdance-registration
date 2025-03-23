@@ -49,6 +49,8 @@ function postSignup() {
         phone: $('#phone').val(),
         email: $('#email').val().toLowerCase(),
         address: $('#address').val(),
+        postal_code: $('#postal-code').val(),
+        city: $('#city').val(),
         password: $('#password').val(),
       }
       $.ajax({
@@ -72,6 +74,18 @@ function postSignup() {
           if (error.responseJSON.phone) {
             $('#invalid-phone').html(error.responseJSON.phone[0]);
             $('#invalid-phone').addClass('d-inline');
+          }
+          if (error.responseJSON.address) {
+            $('#invalid-address').html(error.responseJSON.address[0]);
+            $('#invalid-address').addClass('d-inline');
+          }
+          if (error.responseJSON.postal_code) {
+            $('#invalid-postal-code').html(error.responseJSON.postal_code[0]);
+            $('#invalid-postal-code').addClass('d-inline');
+          }
+          if (error.responseJSON.city) {
+            $('#invalid-city').html(error.responseJSON.city[0]);
+            $('#invalid-city').addClass('d-inline');
           }
           if (error.responseJSON.email) {
             $('#invalid-email').html(error.responseJSON.email[0]);
