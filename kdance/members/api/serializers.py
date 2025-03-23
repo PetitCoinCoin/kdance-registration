@@ -307,6 +307,8 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             "last_name",
             "birthday",
             "address",
+            "postal_code",
+            "city",
             "email",
             "phone",
             "season",

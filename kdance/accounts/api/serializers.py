@@ -35,7 +35,7 @@ class EmailNotSentException(Exception):
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ("address", "phone")
+        fields = ("address", "postal_code", "city", "phone")
 
     @staticmethod
     def validate_phone(phone: str) -> str:
@@ -115,34 +115,39 @@ class UserBaseSerializer(serializers.ModelSerializer):
             previous_phone = self.instance.profile.phone  # type: ignore
         if (
             self.instance
-            and self.instance.profile.address  # type: ignore[union-attr]
+            and self.instance.profile.full_address  # type: ignore[union-attr]
             and profile_data
-            and profile_data.get("address")
+            and (
+                profile_data.get("address")
+                or profile_data.get("postal_code")
+                or profile_data.get("city")
+            )
         ):
-            previous_address = self.instance.profile.address  # type: ignore
+            previous_address = self.instance.profile.full_address  # type: ignore
         user: User = super().save(**kwargs)
         if profile_data:
             profile, _ = Profile.objects.get_or_create(user=user)
             profile.address = profile_data.get("address")
+            profile.postal_code = profile_data.get("postal_code")
+            profile.city = profile_data.get("city")
             profile.phone = profile_data.get("phone")
             profile.save()
         for member in user.member_set.all():
             updated = False
             if previous_email and member.email == previous_email:
-                _logger.info("mail")
                 member.email = self.validated_data.get("email")
                 updated = True
             if previous_phone and member.phone == previous_phone:
                 member.phone = profile_data.get("phone")
                 updated = True
-            if previous_address and member.address == previous_address:
-                _logger.info("address")
+            if previous_address and member.full_address == previous_address:
                 member.address = profile_data.get("address")
+                member.postal_code = profile_data.get("postal_code")
+                member.city = profile_data.get("city")
                 updated = True
             if updated:
-                _logger.info("update")
+                _logger.debug("update")
                 member.save()
-
         return user
 
 

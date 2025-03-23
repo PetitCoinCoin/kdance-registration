@@ -405,6 +405,16 @@ class Member(PersonModel):
         blank=False,
         max_length=500,
     )
+    postal_code = models.CharField(
+        null=False,
+        blank=False,
+        max_length=5,
+    )
+    city = models.CharField(
+        null=False,
+        blank=False,
+        max_length=40,
+    )
     sport_pass = models.OneToOneField(SportPass, null=True, on_delete=models.SET_NULL)
     cancel_refund = models.FloatField(
         null=False, default=0.0, validators=[MinValueValidator(0)]
@@ -422,6 +432,10 @@ class Member(PersonModel):
     @property
     def courses(self) -> list:
         return list(self.active_courses.all()) + list(self.cancelled_courses.all())
+
+    @property
+    def full_address(self) -> str:
+        return f"{self.address}, {self.postal_code} {self.city}"
 
 
 @receiver(post_delete, sender=Member)
