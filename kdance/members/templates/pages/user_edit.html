@@ -48,7 +48,24 @@
           </div>
           <div class="form-outline mb-4">
             <label class="form-label required" for="edit-me-address">Adresse</label>
-            <textarea class="form-control" id="edit-me-address" rows="3" required></textarea>
+            <textarea class="form-control" id="edit-me-address" rows="2" required></textarea>
+            <div id="invalid-edit-me-address" class="invalid-feedback"></div>
+          </div>
+          <div class="row">
+            <div class="col-12 col-sm-4">
+              <div class="form-outline mb-4">
+                <label class="form-label required" for="edit-me-postal-code">Code postal</label>
+                <input type="text" id="edit-me-postal-code" class="form-control" maxlength="5" required />
+                <div id="invalid-edit-me-postal-code" class="invalid-feedback"></div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-8">
+              <div class="form-outline mb-4">
+                <label class="form-label required" for="edit-me-city">Ville</label>
+                <input type="text" id="edit-me-city" class="form-control" required />
+                <div id="invalid-edit-me-city" class="invalid-feedback"></div>
+              </div>
+            </div>
           </div>
           <button type="button" class="btn btn-secondary" onclick="window.location='/'">Annuler</button>
           <button type="submit" class="btn btn-info">Enregistrer</button>
