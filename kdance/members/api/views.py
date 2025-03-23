@@ -252,10 +252,16 @@ class MemberViewSet(
         serializer.save(user=user)
 
     def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
+        instance: Member = self.get_object()
         if not request.user.is_superuser and instance.user != request.user:
             return Response(status=status.HTTP_403_FORBIDDEN)
+        email = instance.email
+        name = f"{instance.first_name} {instance.last_name}"
+        season = instance.season.year
         self.perform_destroy(instance)
+        MemberRetrieveSerializer.send_email(
+            self.request.user.username, email, season, name
+        )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(

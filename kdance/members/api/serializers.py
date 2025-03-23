@@ -364,7 +364,7 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[user.email, self.validated_data["email"]],
                 reply_to=[settings.DEFAULT_FROM_EMAIL],
-                subject=f"Inscription d'un adhérent K'Dance pour la saison {self.validated_data['season']}",
+                subject=f"Inscription d'un adhérent K'Dance pour la saison {self.validated_data['season'].year}",
                 body=self.__build_text(),
             )
             _logger.debug(f"Envoi vers {mail.to}")
@@ -423,6 +423,55 @@ class MemberRetrieveSerializer(MemberSerializer):
     active_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
     cancelled_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
     season = SeasonSerializer()
+
+    @classmethod
+    def send_email(cls, username: str, email: str, season: str, name: str) -> None:
+        with suppress(User.DoesNotExist):
+            user: User = User.objects.get(username=username)
+            _logger.info("Envoi d'un email de suppression d'adhérent")
+            mail = EmailMultiAlternatives(
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[user.email, email],
+                reply_to=[settings.DEFAULT_FROM_EMAIL],
+                subject=f"Suppression d'un adhérent K'Dance pour la saison {season}",
+                body=cls.__build_text(name, season),
+            )
+            _logger.debug(f"Envoi vers {mail.to}")
+            mail.attach_alternative(cls.__build_html(name, season), "text/html")
+            sent = mail.send()
+            if not sent:
+                _logger.warning(
+                    "Echec de l'envoi du mail de suppression d'adhérent pour %s",
+                    username,
+                )
+
+    @staticmethod
+    def __build_text(name: str, season: str) -> str:
+        message = f"""
+Bonjour
+
+L'adhérent {name} a été supprimé pour la saison {season}.
+Si c'est une erreur, vous pouvez toujours refaire l'inscription ou contacter l'équipe K'Dance.
+
+Bonne journée et à bientôt
+Tech K'Dance
+"""
+        return message
+
+    @staticmethod
+    def __build_html(name: str, season: str) -> str:
+        message = f"""
+<p>Bonjour</p>
+<p>
+  L'adhérent {name} a été supprimé pour la saison {season}.
+  Si c'est une erreur, vous pouvez toujours refaire l'inscription ou contacter l'équipe K'Dance.
+</p>
+<p>
+  Bonne journée et à bientôt<br />
+  Tech K'Dance
+</p>
+"""
+        return message
 
 
 class MemberRetrieveShortSerializer(MemberRetrieveSerializer):
