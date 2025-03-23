@@ -80,6 +80,7 @@ class UsersApiViewSet(
         if instance.username == settings.SUPERUSER_EMAIL:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         self.perform_destroy(instance)
+        UserSerializer.send_email(self.request.user.username)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=["put"])

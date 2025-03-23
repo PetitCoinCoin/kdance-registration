@@ -214,8 +214,8 @@ class UserCreateSerializer(UserBaseSerializer):
                     "Echec de l'envoi du mail de création de compte pour %s", username
                 )
 
-    @classmethod
-    def __build_text(cls, username: str) -> str:
+    @staticmethod
+    def __build_text(username: str) -> str:
         message = f"""
 Bonjour
 
@@ -228,8 +228,8 @@ Tech K'Dance
 """
         return message
 
-    @classmethod
-    def __build_html(cls, username: str) -> str:
+    @staticmethod
+    def __build_html(username: str) -> str:
         message = f"""
 <p>Bonjour</p>
 <p>
@@ -279,6 +279,53 @@ class UserSerializer(UserBaseSerializer):
                 user.payment = Payment.objects.filter(user=user).all()
                 user.members = Member.objects.filter(user=user).all()
         super().__init__(*args, **kwargs)
+
+    @classmethod
+    def send_email(cls, username: str) -> None:
+        with suppress(User.DoesNotExist):
+            user: User = User.objects.get(username=username)
+            _logger.info("Envoi d'un email de suppression de compte")
+            _logger.debug(f"Envoi vers {user.email}")
+            mail = EmailMultiAlternatives(
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[user.email],
+                reply_to=[settings.DEFAULT_FROM_EMAIL],
+                subject="Suppression de votre compte K'Dance",
+                body=cls.__build_text(username),
+            )
+            mail.attach_alternative(cls.__build_html(username), "text/html")
+            sent = mail.send()
+            if not sent:
+                _logger.warning(
+                    "Echec de l'envoi du mail de suppression de compte pour %s",
+                    username,
+                )
+
+    @staticmethod
+    def __build_text(username: str) -> str:
+        message = f"""
+Bonjour
+
+Votre compte K'Dance associé à l'adresse {username} a bien été supprimé.
+
+Bonne journée et à bientôt
+Tech K'Dance
+"""
+        return message
+
+    @staticmethod
+    def __build_html(username: str) -> str:
+        message = f"""
+<p>Bonjour</p>
+<p>
+  Votre compte K'Dance associé à l'adresse {username} a bien été supprimé.
+</p>
+<p>
+  Bonne journée et à bientôt<br />
+  Tech K'Dance
+</p>
+"""
+        return message
 
 
 class UserAdminActionSerializer(serializers.Serializer):
