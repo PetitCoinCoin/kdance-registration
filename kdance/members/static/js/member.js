@@ -238,19 +238,17 @@ function postOrPatchMember(url, method, event) {
       dataType: 'json',
       success: () => {
         window.location.replace('/');
-        // event.currentTarget.submit();
       },
       error: (error) => {
         if (!error.responseJSON) {
           showToast('Une erreur est survenue lors de l\'enregistrement du membre.');
-          console.log(error);
         } else {
-          const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('user-error-toast'));
+          const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('member-error-toast'));
           let message = 'Certaines informations sont manquantes ou erronées. Veuillez vérifier les différents champs.';
           if (error.responseJSON.contacts) {
             message += ' Il y a notamment un souci au niveau des contacts.';
           }
-          $('#user-error-body').text(message);
+          $('#member-error-body').text(message);
           toast.show();
         }
         if (error.responseJSON && error.responseJSON.first_name) {
