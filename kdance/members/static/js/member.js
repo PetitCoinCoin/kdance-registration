@@ -24,6 +24,8 @@ function handleSwitches() {
     $('#member-email').val(isMe ? document.querySelector('#form-member').getAttribute('data-bs-email') : '');
     $('#member-phone').val(isMe ? document.querySelector('#form-member').getAttribute('data-bs-phone') : '');
     $('#member-address').val(isMe ? document.querySelector('#form-member').getAttribute('data-bs-address') : '');
+    $('#member-postal-code').val(isMe ? document.querySelector('#form-member').getAttribute('data-bs-postal-code') : '');
+    $('#member-city').val(isMe ? document.querySelector('#form-member').getAttribute('data-bs-city') : '');
   });
   const passSwitch = document.querySelector('#pass-switch');
   passSwitch.addEventListener('change', () => {
@@ -135,6 +137,8 @@ function getMember() {
         $('#member-email').val(data.email);
         $('#member-phone').val(data.phone);
         $('#member-address').val(data.address);
+        $('#member-postal-code').val(data.postal_code);
+        $('#member-city').val(data.city);
         $('#member-birthday').val(data.birthday);
         $('#authorise-photos').prop('checked', isEdition ? data.documents.authorise_photos : true);
         $('#authorise-emergency').prop('checked', isEdition ? data.documents.authorise_emergency : true);
@@ -206,6 +210,8 @@ function postOrPatchMember(url, method, event) {
       email: $('#member-email').val(),
       phone: $('#member-phone').val(),
       address: $('#member-address').val(),
+      postal_code: $('#member-postal-code').val(),
+      city: $('#member-city').val(),
       birthday: $('#member-birthday').val(),
       season: $('#member-season').val(),
       ffd_license: $('#member-license').val(),
@@ -266,6 +272,14 @@ function postOrPatchMember(url, method, event) {
         if (error.responseJSON && error.responseJSON.address) {
           $('#invalid-member-address').html(error.responseJSON.address[0]);
           $('#invalid-member-address').addClass('d-inline');
+        }
+        if (error.responseJSON && error.responseJSON.postal_code) {
+          $('#invalid-member-postal-code').html(error.responseJSON.postal_code[0]);
+          $('#invalid-member-postal-code').addClass('d-inline');
+        }
+        if (error.responseJSON && error.responseJSON.city) {
+          $('#invalid-member-city').html(error.responseJSON.city[0]);
+          $('#invalid-member-city').addClass('d-inline');
         }
         if (error.responseJSON && error.responseJSON.email) {
           $('#invalid-member-email').html(error.responseJSON.email[0]);
