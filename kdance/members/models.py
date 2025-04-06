@@ -11,7 +11,7 @@ from django.core.validators import (
     RegexValidator,
 )
 from django.db import models, transaction
-from django.db.models.signals import post_delete, post_save
+from django.db.models.signals import post_delete
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
 from solo.models import SingletonModel
@@ -115,15 +115,11 @@ class CourseManager(models.Manager):
                 _logger.info("Cours non copié")
 
     def manage_waiting_lists(self):
+        if not GeneralSettings.get_solo().allow_new_member:
+            return
         current_season = Season.objects.get(is_current=True)
         for course in self.filter(season__id=current_season.id):
-            if course.members_waiting.count() and not course.is_complete:
-                member = course.members_waiting.order_by("created").first()
-                with transaction.atomic:
-                    member.active_courses.add(course)
-                    member.waiting_courses.remove(course)
-                    member.save()
-                    # TODO: send email
+            course.update_queue()
 
 
 class Course(models.Model):
@@ -161,6 +157,25 @@ class Course(models.Model):
     @property
     def is_complete(self) -> bool:
         return self.members.count() >= self.capacity
+
+    @property
+    def waiting(self) -> int:
+        return self.members_waiting.count()
+
+    @transaction.atomic
+    def save(self, *args, **kwargs) -> None:
+        is_edit = self.pk is not None
+        super().save(*args, **kwargs)
+        if is_edit and GeneralSettings.get_solo().allow_new_member:
+            self.update_queue()
+
+    def update_queue(self) -> None:
+        if self.members_waiting.count() and not self.is_complete:
+            member = self.members_waiting.order_by("created").first()
+            member.active_courses.add(self)
+            member.waiting_courses.remove(self)
+            member.save()
+            # TODO: send email
 
 
 class MedicEnum(Enum):
@@ -460,10 +475,4 @@ class Member(PersonModel):
 def post_delete_member(sender, instance, *args, **kwargs):
     if instance.documents:
         instance.documents.delete()
-
-
-@receiver(post_save, sender=Member)
-def post_save_member(sender, instance, *args, **kwargs):
-    if not GeneralSettings.get_solo().allow_new_member:
-        return
     Course.objects.manage_waiting_lists()

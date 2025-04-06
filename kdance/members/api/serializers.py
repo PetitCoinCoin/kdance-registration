@@ -98,6 +98,9 @@ class CourseSerializer(serializers.ModelSerializer):
             "weekday",
             "start_hour",
             "end_hour",
+            "capacity",
+            "is_complete",
+            "waiting",
         )
 
 
@@ -319,6 +322,7 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             "season",
             "active_courses",
             "cancelled_courses",
+            "waiting_courses",
             "ffd_license",
             "is_validated",
             "documents",
@@ -339,10 +343,10 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
     def validate(self, attr: dict) -> dict:
         validated = super().validate(attr)
         validated["waiting_courses"] = [
-            course for course in validated["active_course"] if course.is_complete
+            course for course in validated["active_courses"] if course.is_complete
         ]
-        validated["active_course"] = [
-            course for course in validated["active_course"] if not course.is_complete
+        validated["active_courses"] = [
+            course for course in validated["active_courses"] if not course.is_complete
         ]
         return validated
 
@@ -352,6 +356,9 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
         self.validated_data["user"] = User.objects.get(username=username)
         contacts = self.validated_data.pop("contacts", None)
         documents = self.validated_data.pop("documents", None) if self.partial else None
+        active_courses = self.validated_data.pop("active_courses", [])
+        waiting_courses = self.validated_data.pop("waiting_courses", [])
+        cancelled_courses = self.validated_data.pop("cancelled_courses", [])
         try:
             member = super().save()
         except IntegrityError:
@@ -372,6 +379,31 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             for key, value in documents.items():
                 setattr(doc, key, value)
             doc.save()
+        active_to_remove = [
+            c for c in member.active_courses.all() if c not in active_courses
+        ]
+        active_to_add = [
+            c for c in active_courses if c not in member.active_courses.all()
+        ]
+        for course in active_to_add:
+            member.active_courses.add(course)
+        for course in active_to_remove:
+            member.active_courses.remove(course)
+        waiting_to_remove = [
+            c for c in member.waiting_courses.all() if c not in waiting_courses
+        ]
+        waiting_to_add = [
+            c for c in waiting_courses if c not in member.waiting_courses.all()
+        ]
+        for course in waiting_to_add:
+            member.waiting_courses.add(course)
+        for course in waiting_to_remove:
+            member.waiting_courses.remove(course)
+        if cancelled_courses:
+            member.cancelled_courses.clear()
+            for course in cancelled_courses:
+                member.cancelled_courses.add(course)
+        Course.objects.manage_waiting_lists()
 
     def send_email(self, username: str) -> None:
         with suppress(User.DoesNotExist):
@@ -395,16 +427,18 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
 
     def __build_text(self) -> str:
         course_message = "Vous n'avez cependant pas de cours pour le moment."
-        if self.validated_data["active_courses"]:
+        if self.data["active_courses"]:
+            active_courses = Course.objects.filter(id__in=self.data["active_courses"])
             course_message = f"""
 Cours choisi(s):
-{chr(10).join([c.name for c in self.validated_data["active_courses"]])}
+{chr(10).join([c.name for c in active_courses])}
 Notez que l'inscription ne sera validée qu'après réception du paiement.
 """
-        if self.validated_data["waiting_courses"]:
+        if self.data["waiting_courses"]:
+            waiting_courses = Course.objects.filter(id__in=self.data["waiting_courses"])
             course_message += f"""
 Cours en liste d'attente:
-{chr(10).join([c.name for c in self.validated_data["waiting_courses"]])}
+{chr(10).join([c.name for c in waiting_courses])}
 Nous reviendrons vers vous si une place se libère ou si le cours est dédoublé.
 """
         message = f"""
@@ -420,20 +454,22 @@ Tech K'Dance
 
     def __build_html(self) -> str:
         course_message = "Vous n'avez cependant pas de cours pour le moment."
-        if self.validated_data["active_courses"]:
+        if self.data["active_courses"]:
+            active_courses = Course.objects.filter(id__in=self.data["active_courses"])
             course_message = f"""
 </p>
 <p>
     Cours en liste d'attente:
-    {"<br>".join([c.name for c in self.validated_data["active_courses"]])}
+    {"<br>".join([c.name for c in active_courses])}
     Notez que l'inscription ne sera validée qu'après réception du paiement.
 """
-        if self.validated_data["waiting_courses"]:
+        if self.data["waiting_courses"]:
+            waiting_courses = Course.objects.filter(id__in=self.data["waiting_courses"])
             course_message += f"""
 </p>
 <p>
     Cours choisi(s):
-    {"<br>".join([c.name for c in self.validated_data["waiting_courses"]])}
+    {"<br>".join([c.name for c in waiting_courses])}
 Nous reviendrons vers vous si une place se libère ou si le cours est dédoublé.
 """
         message = f"""
