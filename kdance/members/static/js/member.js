@@ -148,7 +148,13 @@ function getMember() {
         $('#pass-div').attr('hidden', !withPass);
         $('#pass-switch').prop('checked', withPass);
         document.querySelectorAll('.course-checkbox').forEach(item => {
-          item.checked = data.active_courses.map(c => c.id.toString()).indexOf(item.value) > -1;
+          isActive = data.active_courses.map(c => c.id.toString()).indexOf(item.value) > -1;
+          isWaiting = data.waiting_courses.map(c => c.id.toString()).indexOf(item.value) > -1;
+          item.checked = isActive || isWaiting;
+          if (isWaiting) {
+            label = $(`label[for="${item.id}"]`)[0]
+            label.innerHTML += ' <strong>(sur liste d\'attente)</strong>';
+          }
         });
         $('#member-license').val(isEdition ? data.ffd_license : 0);
         if (isEdition && data.is_validated) {

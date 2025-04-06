@@ -122,7 +122,7 @@ function getUser() {
         let title = clone.querySelector('span');
         title.textContent = `Saison ${item.season.year}`;
         let dd = clone.querySelectorAll('dd.payment');
-        let details = 'Details:<br />- ' + item.due_detail.join('<br />- ');
+        let details = 'Details:<br />- ' + item.due_detail.join('<br />- ') + '<br />Ne tient pas compte d\'éventuels cours en liste d\'attente';
         dd[0].innerHTML = `${item.due}€ ${item.due > 0 ? buildHelper(details) : ''}`;
         dd[1].innerHTML = `${item.paid}€`;
         dd[2].innerHTML = `${item.refund}€`;
@@ -175,6 +175,13 @@ function getUser() {
               liItem.className = 'list-group-item';
               const startHour = course.start_hour.split(':');
               liItem.textContent = `${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
+              memberInfos.appendChild(liItem);
+            })
+            member.waiting_courses.map((course) => {
+              let liItem = document.createElement('li');
+              liItem.className = 'list-group-item fst-italic';
+              const startHour = course.start_hour.split(':');
+              liItem.textContent = `Sur liste d'attente: ${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
               memberInfos.appendChild(liItem);
             })
             member.cancelled_courses.map((course) => {

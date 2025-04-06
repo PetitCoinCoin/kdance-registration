@@ -244,7 +244,13 @@ function getMembers(seasonId) {
               ...m,
               name: `${m.last_name} ${m.first_name}`,
               status: m.is_validated ? 'Validé' : 'En attente',
-              courses: m.active_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`).concat(m.cancelled_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)),
+              courses: m.active_courses.map(
+                (c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`
+              ).concat(m.waiting_courses.map(
+                (c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Liste d'attente)`)
+              ).concat(m.cancelled_courses.map(
+                (c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)
+              ),
               solde: solde % 1 === 0 ? solde : solde.toFixed(2),
               documents: m.documents ? {
                 ...m.documents,
@@ -263,7 +269,13 @@ function getMembers(seasonId) {
             ...m,
             name: `${m.last_name} ${m.first_name}`,
             status: m.is_validated ? 'Validé' : 'En attente',
-            courses: m.active_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`).concat(m.cancelled_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)),
+            courses: m.active_courses.map(
+              (c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`
+            ).concat(m.waiting_courses.map(
+              (c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Liste d'attente)`)
+            ).concat(m.cancelled_courses.map(
+              (c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)
+            ),
             solde: solde % 1 === 0 ? solde : solde.toFixed(2),
             documents: m.documents ? {
               ...m.documents,
