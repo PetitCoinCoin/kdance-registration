@@ -113,7 +113,11 @@ def member_mgmt(request: HttpRequest) -> HttpResponse:
         return render(
             request,
             "pages/member_mgmt.html",
-            context={"user": request.user, "is_teacher": _is_teacher(request)},
+            context={
+                "user": request.user,
+                "season": Season.objects.get(is_current=True),
+                "is_teacher": _is_teacher(request),
+            },
         )
     raise PermissionDenied
 
@@ -149,7 +153,11 @@ def list_dl(request: HttpRequest) -> HttpResponse:
         return render(
             request,
             "pages/list_dl.html",
-            context={"user": request.user, "is_teacher": _is_teacher(request)},
+            context={
+                "user": request.user,
+                "season": Season.objects.get(is_current=True),
+                "is_teacher": _is_teacher(request),
+            },
         )
     raise PermissionDenied
 

@@ -91,6 +91,10 @@
     const membersUrl = "{% url 'api-members-list' %}";
     const checksUrl = "{% url 'api-checks-list' %}";
     const paymentsUrl = "{% url 'api-payments-list' %}";
+    const ffdA = "{{ season.ffd_a_amount }}";
+    const ffdB = "{{ season.ffd_b_amount }}";
+    const ffdC = "{{ season.ffd_c_amount }}";
+    const ffdD = "{{ season.ffd_d_amount }}";
   </script>
   <script src="{% static 'js/lists.js' %}"></script>
 </main>

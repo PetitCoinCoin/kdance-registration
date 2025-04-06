@@ -556,11 +556,28 @@ function buildLicenseInfo(data) {
         email: m.email,
         birthday: (new Date(m.birthday)).toLocaleDateString('fr-FR'),
         address: m.address,
-        license: LICENSES[m.ffd_license],
+        license: getLicenseLabel(m.ffd_license),
         ...buildContactsData(m.contacts),
       }
     })
   });
+}
+
+function getLicenseLabel(value) {
+  switch (value.toString()) {
+    case "0":
+      return 'Aucune'
+    case ffdA:
+      return 'Licence A Loisir'
+    case ffdB:
+      return 'Licence B Compétiteur'
+    case ffdC:
+      return 'Licence C Compétiteur national'
+    case ffdD:
+      return 'Licence D Compétiteur international'
+    default:
+      return 'Inconnu'
+  }
 }
 
 function getChecksPerMonth() {

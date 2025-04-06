@@ -19,13 +19,6 @@ function populateMonths(itemId) {
   }
 }
 
-function populateLicense() {
-  for (let [key, value] of Object.entries(LICENSES)) {
-    const label = key === '0' ? value : `${value} (${key}€)`;
-    $('#member-license').append($('<option>', { value: key, text: label, selected: key == '0' }));
-  }
-}
-
 function displayPayments() {
   const cashSwitch = document.querySelector('#cash-switch');
   cashSwitch.addEventListener('change', () => {
@@ -458,7 +451,6 @@ function updateMember() {
   }
   if (memberLicenseModal) {
     $('#member-license-modal').on('show.bs.modal', function (event) {
-      populateLicense();
       const button = event.relatedTarget;
       let memberId = button.getAttribute('memberId');
       let initValue = button.getAttribute('initValue');
@@ -483,6 +475,7 @@ function updateMember() {
         dataType: 'json',
         success: () => {
           const newFfd = $('#member-license').val();
+          console.log(initValue, newFfd)
           $('#members-table').bootstrapTable('updateCell', {
             index: rowIndex,
             field: 'solde',

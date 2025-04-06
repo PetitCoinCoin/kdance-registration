@@ -343,10 +343,14 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
     def validate(self, attr: dict) -> dict:
         validated = super().validate(attr)
         validated["waiting_courses"] = [
-            course for course in validated["active_courses"] if course.is_complete
+            course
+            for course in validated.get("active_courses", [])
+            if course.is_complete
         ]
         validated["active_courses"] = [
-            course for course in validated["active_courses"] if not course.is_complete
+            course
+            for course in validated.get("active_courses", [])
+            if not course.is_complete
         ]
         return validated
 
@@ -551,6 +555,7 @@ class MemberRetrieveShortSerializer(MemberRetrieveSerializer):
             "id",
             "first_name",
             "last_name",
+            "ffd_license",
             "active_courses",
             "cancelled_courses",
             "waiting_courses",

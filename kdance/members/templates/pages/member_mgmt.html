@@ -191,7 +191,13 @@
           <form id="form-member-license" name="form-member-license">
             <div class="modal-body">
               <label class="form-label min-w-fit me-3" for="member-courses">License FFD</label>
-              <select id="member-license" class="form-select"></select>
+              <select id="member-license" class="form-select">
+                <option value="0" selected>Aucune</option>
+                <option value="{{season.ffd_a_amount}}">Licence A Loisir ({{season.ffd_a_amount}}€)</option>
+                <option value="{{season.ffd_b_amount}}">Licence B Compétiteur ({{season.ffd_b_amount}}€)</option>
+                <option value="{{season.ffd_c_amount}}">Licence C Compétiteur national ({{season.ffd_c_amount}}€)</option>
+                <option value="{{season.ffd_d_amount}}">Licence D Compétiteur international ({{season.ffd_d_amount}}€)</option>
+              </select>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
