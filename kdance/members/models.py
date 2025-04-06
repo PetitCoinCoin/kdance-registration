@@ -11,7 +11,7 @@ from django.core.validators import (
     RegexValidator,
 )
 from django.db import models, transaction
-from django.db.models.signals import post_delete
+from django.db.models.signals import post_delete, post_save
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
 from solo.models import SingletonModel
@@ -114,6 +114,17 @@ class CourseManager(models.Manager):
             except IntegrityError:
                 _logger.info("Cours non copié")
 
+    def manage_waiting_lists(self):
+        current_season = Season.objects.get(is_current=True)
+        for course in self.filter(season__id=current_season.id):
+            if course.members_waiting.count() and not course.is_complete:
+                member = course.members_waiting.order_by("created").first()
+                with transaction.atomic:
+                    member.active_courses.add(course)
+                    member.waiting_courses.remove(course)
+                    member.save()
+                    # TODO: send email
+
 
 class Course(models.Model):
     name = models.CharField(
@@ -137,6 +148,7 @@ class Course(models.Model):
     )
     start_hour = models.TimeField()
     end_hour = models.TimeField()
+    capacity = models.PositiveIntegerField(null=False, default=12)
 
     objects = CourseManager()
 
@@ -145,6 +157,10 @@ class Course(models.Model):
 
     class Meta:
         unique_together = ("name", "season", "weekday", "start_hour")
+
+    @property
+    def is_complete(self) -> bool:
+        return self.members.count() >= self.capacity
 
 
 class MedicEnum(Enum):
@@ -395,6 +411,7 @@ class Member(PersonModel):
     created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     active_courses = models.ManyToManyField(Course, related_name="members")
+    waiting_courses = models.ManyToManyField(Course, related_name="members_waiting")
     cancelled_courses = models.ManyToManyField(Course, related_name="members_cancelled")
     contacts = models.ManyToManyField(Contact)
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
@@ -421,6 +438,7 @@ class Member(PersonModel):
     )
     ffd_license = models.PositiveIntegerField(default=0)
     is_validated = models.BooleanField(default=False, null=False)
+    created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ("first_name", "last_name", "user", "season")
@@ -439,6 +457,13 @@ class Member(PersonModel):
 
 
 @receiver(post_delete, sender=Member)
-def post_delete_documents(sender, instance, *args, **kwargs):
+def post_delete_member(sender, instance, *args, **kwargs):
     if instance.documents:
         instance.documents.delete()
+
+
+@receiver(post_save, sender=Member)
+def post_save_member(sender, instance, *args, **kwargs):
+    if not GeneralSettings.get_solo().allow_new_member:
+        return
+    Course.objects.manage_waiting_lists()

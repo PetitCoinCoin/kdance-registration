@@ -297,6 +297,11 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
         queryset=Course.objects.all(),
         default=list,
     )
+    waiting_courses = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Course.objects.all(),
+        default=list,
+    )
 
     class Meta:
         model = Member
@@ -330,6 +335,16 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
                 "Vous devez sélectionner au moins un cours."
             )
         return courses
+
+    def validate(self, attr: dict) -> dict:
+        validated = super().validate(attr)
+        validated["waiting_courses"] = [
+            course for course in validated["active_course"] if course.is_complete
+        ]
+        validated["active_course"] = [
+            course for course in validated["active_course"] if not course.is_complete
+        ]
+        return validated
 
     @transaction.atomic
     def save(self, **kwargs: Member) -> None:
@@ -379,12 +394,18 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
                 )
 
     def __build_text(self) -> str:
-        course_message = "Vous n'avez cependant pas choisi de cours pour le moment."
+        course_message = "Vous n'avez cependant pas de cours pour le moment."
         if self.validated_data["active_courses"]:
             course_message = f"""
 Cours choisi(s):
 {chr(10).join([c.name for c in self.validated_data["active_courses"]])}
 Notez que l'inscription ne sera validée qu'après réception du paiement.
+"""
+        if self.validated_data["waiting_courses"]:
+            course_message += f"""
+Cours en liste d'attente:
+{chr(10).join([c.name for c in self.validated_data["waiting_courses"]])}
+Nous reviendrons vers vous si une place se libère ou si le cours est dédoublé.
 """
         message = f"""
 Bonjour
@@ -398,14 +419,22 @@ Tech K'Dance
         return message
 
     def __build_html(self) -> str:
-        course_message = "Vous n'avez cependant pas choisi de cours pour le moment."
+        course_message = "Vous n'avez cependant pas de cours pour le moment."
         if self.validated_data["active_courses"]:
             course_message = f"""
 </p>
 <p>
-    Cours choisi(s):
+    Cours en liste d'attente:
     {"<br>".join([c.name for c in self.validated_data["active_courses"]])}
     Notez que l'inscription ne sera validée qu'après réception du paiement.
+"""
+        if self.validated_data["waiting_courses"]:
+            course_message += f"""
+</p>
+<p>
+    Cours choisi(s):
+    {"<br>".join([c.name for c in self.validated_data["waiting_courses"]])}
+Nous reviendrons vers vous si une place se libère ou si le cours est dédoublé.
 """
         message = f"""
 <p>Bonjour</p>
@@ -424,6 +453,7 @@ Tech K'Dance
 class MemberRetrieveSerializer(MemberSerializer):
     active_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
     cancelled_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
+    waiting_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
     season = SeasonSerializer()
 
     @classmethod
@@ -487,6 +517,7 @@ class MemberRetrieveShortSerializer(MemberRetrieveSerializer):
             "last_name",
             "active_courses",
             "cancelled_courses",
+            "waiting_courses",
             "is_validated",
             "documents",
             "payment",
