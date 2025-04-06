@@ -607,10 +607,19 @@ class MemberCoursesSerializer(serializers.Serializer):
 
     def save(self, **kwargs: Any) -> None:
         if self._action == MemberCoursesActionsEnum.ADD:
-            self._member.active_courses.add(*self.validated_data.get("courses", []))
-            self._member.cancelled_courses.remove(
-                *self.validated_data.get("courses", [])
-            )
+            active_courses = [
+                course
+                for course in self.validated_data.get("courses", [])
+                if not course.is_complete
+            ]
+            waiting_courses = [
+                course
+                for course in self.validated_data.get("courses", [])
+                if course.is_complete
+            ]
+            self._member.active_courses.add(*active_courses)
+            self._member.waiting_courses.add(*waiting_courses)
+            self._member.cancelled_courses.remove(*active_courses, *waiting_courses)
             self._member.save()
         elif self._action == MemberCoursesActionsEnum.REMOVE:
             self._member.cancelled_courses.add(*self.validated_data.get("courses", []))

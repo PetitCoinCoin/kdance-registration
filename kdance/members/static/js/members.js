@@ -362,6 +362,9 @@ function getMember(memberId) {
         if (data.active_courses.map(c => c.id.toString()).indexOf(opt.value) > -1) {
           opt.label = `(Inscrit(e)) ${opt.label}`;
           opt.disabled = true;
+        } else if (data.waiting_courses.map(c => c.id.toString()).indexOf(opt.value) > -1) {
+          opt.label = `(Sur liste d'attente) ${opt.label}`;
+          opt.disabled = true;
         } else if (data.cancelled_courses.map(c => c.id.toString()).indexOf(opt.value) > -1) {
           opt.label = `(Annulé) ${opt.label}`;
           opt.disabled = true;
@@ -396,6 +399,9 @@ function getMember(memberId) {
       document.querySelectorAll("#course-next-select option").forEach(opt => {
         if (data.active_courses.map(c => c.id.toString()).indexOf(opt.value) > -1) {
           opt.label = `(Inscrit(e)) ${opt.label}`;
+          opt.disabled = true;
+        } else if (data.waiting_courses.map(c => c.id.toString()).indexOf(opt.value) > -1) {
+          opt.label = `(Sur liste d'attente) ${opt.label}`;
           opt.disabled = true;
         } else if (data.cancelled_courses.map(c => c.id.toString()).indexOf(opt.value) > -1) {
           opt.label = `(Annulé) ${opt.label}`;
@@ -797,7 +803,6 @@ function patchPayment(memberId, paymentId, event) {
 }
 
 function patchMemberCoursesActions(memberId, action) {
-  console.log("patch")
   let data = {
     courses: action === "add" ? $('#add-courses-select').val() : $('#courses-delete-select').val(),
   };

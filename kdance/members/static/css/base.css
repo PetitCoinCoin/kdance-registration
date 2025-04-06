@@ -59,6 +59,10 @@ footer {
   max-width: 500px;
 }
 
+.h-300 {
+  height: 300px;
+}
+
 /*** Forms ***/
 .required:after {
   content: " *";
