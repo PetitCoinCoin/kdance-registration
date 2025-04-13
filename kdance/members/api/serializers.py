@@ -622,7 +622,11 @@ class MemberCoursesSerializer(serializers.Serializer):
             self._member.cancelled_courses.remove(*active_courses, *waiting_courses)
             self._member.save()
         elif self._action == MemberCoursesActionsEnum.REMOVE:
-            self._member.cancelled_courses.add(*self.validated_data.get("courses", []))
-            self._member.active_courses.remove(*self.validated_data.get("courses", []))
+            for course in self.validated_data.get("courses", []):
+                if self._member.waiting_courses.filter(pk=course.pk):
+                    self._member.waiting_courses.remove(course)
+                else:
+                    self._member.cancelled_courses.add(course)
+                    self._member.active_courses.remove(course)
             self._member.cancel_refund = self.validated_data.get("cancel_refund")
             self._member.save()

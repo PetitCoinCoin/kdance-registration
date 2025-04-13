@@ -378,6 +378,11 @@ function getMember(memberId) {
         const label = `${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
         $('#courses-delete-select').append($('<option>', { value: course.id, text: label }));
       });
+      data.waiting_courses.map((course) => {
+        const startHour = course.start_hour.split(':');
+        const label = `(Sur liste d'attente) ${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
+        $('#courses-delete-select').append($('<option>', { value: course.id, text: label }));
+      });
       data.cancelled_courses.map((course) => {
         const startHour = course.start_hour.split(':');
         const label = `(Annulé) ${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
