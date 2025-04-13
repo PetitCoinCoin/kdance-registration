@@ -444,12 +444,12 @@ Cours en liste d'attente:
 Nous reviendrons vers vous si une place se libère ou si le cours est dédoublé.
 """
         message = f"""
-Bonjour
+Bonjour,
 
 Vous venez d'inscrire {self.validated_data["first_name"]} {self.validated_data["last_name"]} pour la saison {self.validated_data["season"].year}.
 {course_message}
 
-Bonne journée et à bientôt
+Bonne journée et à bientôt,
 Tech K'Dance
 """
         return message
@@ -475,13 +475,13 @@ Tech K'Dance
 Nous reviendrons vers vous si une place se libère ou si le cours est dédoublé.
 """
         message = f"""
-<p>Bonjour</p>
+<p>Bonjour,</p>
 <p>
   Vous venez d'inscrire {self.validated_data["first_name"]} {self.validated_data["last_name"]} pour la saison {self.validated_data["season"].year}.
   {course_message}
 </p>
 <p>
-  Bonne journée et à bientôt<br />
+  Bonne journée et à bientôt,<br />
   Tech K'Dance
 </p>
 """
@@ -518,12 +518,12 @@ class MemberRetrieveSerializer(MemberSerializer):
     @staticmethod
     def __build_text(name: str, season: str) -> str:
         message = f"""
-Bonjour
+Bonjour,
 
 L'adhérent {name} a été supprimé pour la saison {season}.
 Si c'est une erreur, vous pouvez toujours refaire l'inscription ou contacter l'équipe K'Dance.
 
-Bonne journée et à bientôt
+Bonne journée et à bientôt,
 Tech K'Dance
 """
         return message
@@ -531,13 +531,13 @@ Tech K'Dance
     @staticmethod
     def __build_html(name: str, season: str) -> str:
         message = f"""
-<p>Bonjour</p>
+<p>Bonjour,</p>
 <p>
   L'adhérent {name} a été supprimé pour la saison {season}.
   Si c'est une erreur, vous pouvez toujours refaire l'inscription ou contacter l'équipe K'Dance.
 </p>
 <p>
-  Bonne journée et à bientôt<br />
+  Bonne journée et à bientôt,<br />
   Tech K'Dance
 </p>
 """

@@ -222,13 +222,13 @@ class UserCreateSerializer(UserBaseSerializer):
     @staticmethod
     def __build_text(username: str) -> str:
         message = f"""
-Bonjour
+Bonjour,
 
 Vous venez de créer votre compte K'Dance! Utilisez votre email ({username}) comme identifiant pour vous connecter.
 Vous pouvez désormais ajouter et gérer les adhérents de votre famille pour chaque nouvelle saison.
 N'oubliez pas d'utiliser également cet espace pour mettre à jour vos coordonnées en cas de changement.
 
-Bonne journée et à bientôt
+Bonne journée et à bientôt,
 Tech K'Dance
 """
         return message
@@ -236,7 +236,7 @@ Tech K'Dance
     @staticmethod
     def __build_html(username: str) -> str:
         message = f"""
-<p>Bonjour</p>
+<p>Bonjour,</p>
 <p>
   Vous venez de créer votre compte K'Dance! Utilisez votre email ({username}) comme identifiant pour vous connecter.
   Vous pouvez désormais ajouter et gérer les adhérents de votre famille pour chaque nouvelle saison.
@@ -245,7 +245,7 @@ Tech K'Dance
   N'oubliez pas d'utiliser également cet espace pour mettre à jour vos coordonnées en cas de changement.
 </p>
 <p>
-  Bonne journée et à bientôt<br />
+  Bonne journée et à bientôt,<br />
   Tech K'Dance
 </p>
 """
@@ -309,11 +309,11 @@ class UserSerializer(UserBaseSerializer):
     @staticmethod
     def __build_text(username: str) -> str:
         message = f"""
-Bonjour
+Bonjour,
 
 Votre compte K'Dance associé à l'adresse {username} a bien été supprimé.
 
-Bonne journée et à bientôt
+Bonne journée et à bientôt,
 Tech K'Dance
 """
         return message
@@ -321,12 +321,12 @@ Tech K'Dance
     @staticmethod
     def __build_html(username: str) -> str:
         message = f"""
-<p>Bonjour</p>
+<p>Bonjour,</p>
 <p>
   Votre compte K'Dance associé à l'adresse {username} a bien été supprimé.
 </p>
 <p>
-  Bonne journée et à bientôt<br />
+  Bonne journée et à bientôt,<br />
   Tech K'Dance
 </p>
 """
@@ -476,7 +476,7 @@ class UserResetPwdSerializer(serializers.Serializer):
     @classmethod
     def __build_text(cls, url: str) -> str:
         message = f"""
-Bonjour
+Bonjour,
 
 Vous venez de faire une demande de réinitialisation de mot de passe pour votre compte K'Dance ?
 Veuillez cliquer sur le lien suivant, ou le copier-coller dans votre navigateur: {url}
@@ -484,7 +484,7 @@ Ce lien restera valide 30 minutes.
 
 Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email, votre mot de passe restera inchangé.
 
-Bonne journée et à bientôt
+Bonne journée et à bientôt,
 Tech K'Dance
 """
         return message
@@ -492,7 +492,7 @@ Tech K'Dance
     @classmethod
     def __build_html(cls, url: str) -> str:
         message = f"""
-<p>Bonjour</p>
+<p>Bonjour,</p>
 <p>
   Vous venez de faire une demande de réinitialisation de mot de passe pour votre compte K'Dance ?
   Veuillez cliquer sur le lien suivant, qui restera valide pendant 30 minutes:
@@ -503,7 +503,7 @@ Tech K'Dance
 <p>Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email, votre mot de passe restera
   inchangé.</p>
 <p>
-  Bonne journée et à bientôt<br />
+  Bonne journée et à bientôt,<br />
   Tech K'Dance
 </p>
 """
