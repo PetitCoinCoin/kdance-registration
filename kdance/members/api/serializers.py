@@ -297,13 +297,11 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
     )
     cancelled_courses = serializers.PrimaryKeyRelatedField(
         many=True,
-        queryset=Course.objects.all(),
-        default=list,
+        read_only=True,
     )
     waiting_courses = serializers.PrimaryKeyRelatedField(
         many=True,
-        queryset=Course.objects.all(),
-        default=list,
+        read_only=True,
     )
 
     class Meta:
