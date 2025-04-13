@@ -4,26 +4,19 @@ html {
 }
 
 body {
-  min-height: 100%;
-  display: grid;
-  grid-gap: 10px;
-  grid-template-areas:
-    "header"
-    "main"
-    "footer";
-  grid-template-rows: 70px 1fr 50px;
-}
+  display: flex;
+  flex-direction: column;
 
-header {
-  grid-area: header;
+  min-height: 100vh;
 }
 
 main {
-  grid-area: main;
+  flex-grow: 1;
 }
 
 footer {
-  grid-area: footer;
+  flex-basis: 80px;
+  align-content: end;
 }
 
 #navbar-main {
