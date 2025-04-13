@@ -1,12 +1,9 @@
 import logging
 
-from contextlib import suppress
 from enum import Enum
 from typing import Any
 
-from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.db.utils import IntegrityError
 from drf_writable_nested.serializers import WritableNestedModelSerializer
@@ -353,7 +350,7 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
         return validated
 
     @transaction.atomic
-    def save(self, **kwargs: Member) -> None:
+    def save(self, **kwargs: Member) -> Member:
         username = kwargs.get("user")
         self.validated_data["user"] = User.objects.get(username=username)
         contacts = self.validated_data.pop("contacts", None)
@@ -406,86 +403,7 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             for course in cancelled_courses:
                 member.cancelled_courses.add(course)
         Course.objects.manage_waiting_lists()
-
-    def send_email(self, username: str) -> None:
-        with suppress(User.DoesNotExist):
-            user: User = User.objects.get(username=username)
-            _logger.info("Envoi d'un email de création d'adhérent")
-            mail = EmailMultiAlternatives(
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[user.email, self.validated_data["email"]],
-                reply_to=[settings.DEFAULT_FROM_EMAIL],
-                subject=f"Inscription d'un adhérent K'Dance pour la saison {self.validated_data['season'].year}",
-                body=self.__build_text(),
-            )
-            _logger.debug(f"Envoi vers {mail.to}")
-            mail.attach_alternative(self.__build_html(), "text/html")
-            sent = mail.send()
-            if not sent:
-                _logger.warning(
-                    "Echec de l'envoi du mail d'inscription d'adhérent pour %s",
-                    username,
-                )
-
-    def __build_text(self) -> str:
-        course_message = "Vous n'avez cependant pas de cours pour le moment."
-        if self.data["active_courses"]:
-            active_courses = Course.objects.filter(id__in=self.data["active_courses"])
-            course_message = f"""
-Cours choisi(s):
-{chr(10).join([c.name for c in active_courses])}
-Notez que l'inscription ne sera validée qu'après réception du paiement.
-"""
-        if self.data["waiting_courses"]:
-            waiting_courses = Course.objects.filter(id__in=self.data["waiting_courses"])
-            course_message += f"""
-Cours en liste d'attente:
-{chr(10).join([c.name for c in waiting_courses])}
-Nous reviendrons vers vous si une place se libère ou si le cours est dédoublé.
-"""
-        message = f"""
-Bonjour,
-
-Vous venez d'inscrire {self.validated_data["first_name"]} {self.validated_data["last_name"]} pour la saison {self.validated_data["season"].year}.
-{course_message}
-
-Bonne journée et à bientôt,
-Tech K'Dance
-"""
-        return message
-
-    def __build_html(self) -> str:
-        course_message = "Vous n'avez cependant pas de cours pour le moment."
-        if self.data["active_courses"]:
-            active_courses = Course.objects.filter(id__in=self.data["active_courses"])
-            course_message = f"""
-</p>
-<p>
-    Cours en liste d'attente:
-    {"<br>".join([c.name for c in active_courses])}
-    Notez que l'inscription ne sera validée qu'après réception du paiement.
-"""
-        if self.data["waiting_courses"]:
-            waiting_courses = Course.objects.filter(id__in=self.data["waiting_courses"])
-            course_message += f"""
-</p>
-<p>
-    Cours choisi(s):
-    {"<br>".join([c.name for c in waiting_courses])}
-Nous reviendrons vers vous si une place se libère ou si le cours est dédoublé.
-"""
-        message = f"""
-<p>Bonjour,</p>
-<p>
-  Vous venez d'inscrire {self.validated_data["first_name"]} {self.validated_data["last_name"]} pour la saison {self.validated_data["season"].year}.
-  {course_message}
-</p>
-<p>
-  Bonne journée et à bientôt,<br />
-  Tech K'Dance
-</p>
-"""
-        return message
+        return member
 
 
 class MemberRetrieveSerializer(MemberSerializer):
@@ -493,55 +411,6 @@ class MemberRetrieveSerializer(MemberSerializer):
     cancelled_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
     waiting_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
     season = SeasonSerializer()
-
-    @classmethod
-    def send_email(cls, username: str, email: str, season: str, name: str) -> None:
-        with suppress(User.DoesNotExist):
-            user: User = User.objects.get(username=username)
-            _logger.info("Envoi d'un email de suppression d'adhérent")
-            mail = EmailMultiAlternatives(
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[user.email, email],
-                reply_to=[settings.DEFAULT_FROM_EMAIL],
-                subject=f"Suppression d'un adhérent K'Dance pour la saison {season}",
-                body=cls.__build_text(name, season),
-            )
-            _logger.debug(f"Envoi vers {mail.to}")
-            mail.attach_alternative(cls.__build_html(name, season), "text/html")
-            sent = mail.send()
-            if not sent:
-                _logger.warning(
-                    "Echec de l'envoi du mail de suppression d'adhérent pour %s",
-                    username,
-                )
-
-    @staticmethod
-    def __build_text(name: str, season: str) -> str:
-        message = f"""
-Bonjour,
-
-L'adhérent {name} a été supprimé pour la saison {season}.
-Si c'est une erreur, vous pouvez toujours refaire l'inscription ou contacter l'équipe K'Dance.
-
-Bonne journée et à bientôt,
-Tech K'Dance
-"""
-        return message
-
-    @staticmethod
-    def __build_html(name: str, season: str) -> str:
-        message = f"""
-<p>Bonjour,</p>
-<p>
-  L'adhérent {name} a été supprimé pour la saison {season}.
-  Si c'est une erreur, vous pouvez toujours refaire l'inscription ou contacter l'équipe K'Dance.
-</p>
-<p>
-  Bonne journée et à bientôt,<br />
-  Tech K'Dance
-</p>
-"""
-        return message
 
 
 class MemberRetrieveShortSerializer(MemberRetrieveSerializer):

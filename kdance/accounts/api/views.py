@@ -28,6 +28,7 @@ from accounts.api.serializers import (
     UserSerializer,
     UserTeacherActionSerializer,
 )
+from members.emails import EmailEnum, EmailSender
 from members.models import GeneralSettings
 
 
@@ -72,7 +73,11 @@ class UsersApiViewSet(
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
-        UserCreateSerializer.send_email(username)
+        email_sender = EmailSender(EmailEnum.CREATE_USER)
+        email_sender.send_email(
+            emails=[username],
+            username=username,
+        )
         return response
 
     def destroy(self, request, *args, **kwargs):
@@ -80,7 +85,11 @@ class UsersApiViewSet(
         if instance.username == settings.SUPERUSER_EMAIL:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         self.perform_destroy(instance)
-        UserSerializer.send_email(self.request.user.username)
+        email_sender = EmailSender(EmailEnum.DELETE_USER)
+        email_sender.send_email(
+            emails=[self.request.user.username],
+            username=self.request.user.username,
+        )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=["put"])

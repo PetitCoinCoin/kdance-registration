@@ -1,3 +1,4 @@
+from members.emails import EmailEnum, EmailSender
 from members.models import (
     Check,
     Course,
@@ -232,9 +233,16 @@ class MemberViewSet(
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(user=self.request.user)
+        member = serializer.save(user=self.request.user)
         headers = self.get_success_headers(serializer.data)
-        serializer.send_email(self.request.user.username)
+        email_sender = EmailSender(EmailEnum.CREATE_MEMBER)
+        email_sender.send_email(
+            emails=[request.user.username, member.email],
+            full_name=f"{member.first_name} {member.last_name}",
+            season_year=member.season.year,
+            active_courses=member.active_courses.all(),
+            waiting_courses=member.waiting_courses.all(),
+        )
         return Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
@@ -259,8 +267,11 @@ class MemberViewSet(
         name = f"{instance.first_name} {instance.last_name}"
         season = instance.season.year
         self.perform_destroy(instance)
-        MemberRetrieveSerializer.send_email(
-            self.request.user.username, email, season, name
+        email_sender = EmailSender(EmailEnum.DELETE_MEMBER)
+        email_sender.send_email(
+            emails=[request.user.username, email],
+            full_name=name,
+            season_year=season,
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
 

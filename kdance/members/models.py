@@ -2,9 +2,9 @@ import logging
 
 from enum import Enum
 
+from members.emails import EmailEnum, EmailSender
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.mail import EmailMultiAlternatives
 from django.core.validators import (
     EmailValidator,
     MaxValueValidator,
@@ -172,11 +172,18 @@ class Course(models.Model):
 
     def update_queue(self) -> None:
         if self.members_waiting.count() and not self.is_complete:
-            member = self.members_waiting.order_by("created").first()
+            member: Member = self.members_waiting.order_by("created").first()  # type: ignore
             member.active_courses.add(self)
             member.waiting_courses.remove(self)
             member.save()
-            member.send_email_active(self)
+            email_sender = EmailSender(EmailEnum.WAITING_TO_ACTIVE_COURSE)
+            email_sender.send_email(
+                emails=[member.email, member.user.username],
+                full_name=f"{member.first_name} {member.last_name}",
+                course_name=self.name,
+                weekday=self.get_weekday_display(),
+                start_hour=self.start_hour.strftime("%Hh%M"),
+            )
 
 
 class MedicEnum(Enum):
@@ -470,50 +477,6 @@ class Member(PersonModel):
     @property
     def full_address(self) -> str:
         return f"{self.address}, {self.postal_code} {self.city}"
-
-    def send_email_active(self, course) -> None:
-        _logger.info("Envoi d'un email de sortie de liste d'attente")
-        mail = EmailMultiAlternatives(
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[self.email, self.user.email],
-            reply_to=[settings.DEFAULT_FROM_EMAIL],
-            subject=f"Vous avez obtenu une place pour le cours {course.name}!",
-            body=self.__build_text(course),
-        )
-        _logger.debug(f"Envoi vers {mail.to}")
-        mail.attach_alternative(self.__build_html(course), "text/html")
-        sent = mail.send()
-        if not sent:
-            _logger.warning(
-                "Echec de l'envoi du mailde sortie de liste d'attente pour %s",
-                self.email,
-            )
-
-    def __build_text(self, course: Course) -> str:
-        message = f"""
-Bonjour,
-
-Une place s'est libérée, et {self.first_name} {self.last_name} a pu être inscrit(e) au cours {course.name} du {course.get_weekday_display()} à {course.start_hour.strftime("%Hh%M")}.
-L'inscription ne sera finalisée qu'à réception du paiement et des éventuels documents restants. Connectez vous à votre compte (https://adherents.association-kdance.fr/) pour un statut détaillé.
-
-Bonne journée et à bientôt,
-Tech K'Dance
-"""
-        return message
-
-    def __build_html(self, course: Course) -> str:
-        message = f"""
-<p>Bonjour,</p>
-<p>
-  Une place s'est libérée, et {self.first_name} {self.last_name} a pu être inscrit(e) au cours {course.name} du {course.get_weekday_display()} à {course.start_hour.strftime("%Hh%M")}.<br />
-  L'inscription ne sera finalisée qu'à réception du paiement et des éventuels documents restants. Connectez vous à <a href="https://adherents.association-kdance.fr/" target="_blank">votre compte</a> pour un statut détaillé.
-</p>
-<p>
-  Bonne journée et à bientôt,<br />
-  Tech K'Dance
-</p>
-"""
-        return message
 
 
 @receiver(post_delete, sender=Member)

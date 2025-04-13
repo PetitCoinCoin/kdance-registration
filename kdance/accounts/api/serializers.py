@@ -1,7 +1,6 @@
 import logging
 import re
 
-from contextlib import suppress
 from datetime import timedelta
 from hashlib import sha512
 from secrets import token_urlsafe
@@ -9,12 +8,12 @@ from typing import Any
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
-from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.utils import timezone
 from rest_framework import serializers
 
 from accounts.models import Profile, ResetPassword
+from members.emails import EmailEnum, EmailSender
 from members.models import Member, Payment, Season
 from members.api.serializers import (
     MemberRetrieveSerializer,
@@ -199,58 +198,6 @@ class UserCreateSerializer(UserBaseSerializer):
             payment.save()
         return user
 
-    @classmethod
-    def send_email(cls, username: str) -> None:
-        with suppress(User.DoesNotExist):
-            user: User = User.objects.get(username=username)
-            _logger.info("Envoi d'un email de création de compte")
-            _logger.debug(f"Envoi vers {user.email}")
-            mail = EmailMultiAlternatives(
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[user.email],
-                reply_to=[settings.DEFAULT_FROM_EMAIL],
-                subject="Création d'un compte K'Dance",
-                body=cls.__build_text(username),
-            )
-            mail.attach_alternative(cls.__build_html(username), "text/html")
-            sent = mail.send()
-            if not sent:
-                _logger.warning(
-                    "Echec de l'envoi du mail de création de compte pour %s", username
-                )
-
-    @staticmethod
-    def __build_text(username: str) -> str:
-        message = f"""
-Bonjour,
-
-Vous venez de créer votre compte K'Dance! Utilisez votre email ({username}) comme identifiant pour vous connecter.
-Vous pouvez désormais ajouter et gérer les adhérents de votre famille pour chaque nouvelle saison.
-N'oubliez pas d'utiliser également cet espace pour mettre à jour vos coordonnées en cas de changement.
-
-Bonne journée et à bientôt,
-Tech K'Dance
-"""
-        return message
-
-    @staticmethod
-    def __build_html(username: str) -> str:
-        message = f"""
-<p>Bonjour,</p>
-<p>
-  Vous venez de créer votre compte K'Dance! Utilisez votre email ({username}) comme identifiant pour vous connecter.
-  Vous pouvez désormais ajouter et gérer les adhérents de votre famille pour chaque nouvelle saison.
-</p>
-<p>
-  N'oubliez pas d'utiliser également cet espace pour mettre à jour vos coordonnées en cas de changement.
-</p>
-<p>
-  Bonne journée et à bientôt,<br />
-  Tech K'Dance
-</p>
-"""
-        return message
-
 
 class UserSerializer(UserBaseSerializer):
     profile = ProfileSerializer()
@@ -284,53 +231,6 @@ class UserSerializer(UserBaseSerializer):
                 user.payment = Payment.objects.filter(user=user).all()
                 user.members = Member.objects.filter(user=user).all()
         super().__init__(*args, **kwargs)
-
-    @classmethod
-    def send_email(cls, username: str) -> None:
-        with suppress(User.DoesNotExist):
-            user: User = User.objects.get(username=username)
-            _logger.info("Envoi d'un email de suppression de compte")
-            _logger.debug(f"Envoi vers {user.email}")
-            mail = EmailMultiAlternatives(
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[user.email],
-                reply_to=[settings.DEFAULT_FROM_EMAIL],
-                subject="Suppression de votre compte K'Dance",
-                body=cls.__build_text(username),
-            )
-            mail.attach_alternative(cls.__build_html(username), "text/html")
-            sent = mail.send()
-            if not sent:
-                _logger.warning(
-                    "Echec de l'envoi du mail de suppression de compte pour %s",
-                    username,
-                )
-
-    @staticmethod
-    def __build_text(username: str) -> str:
-        message = f"""
-Bonjour,
-
-Votre compte K'Dance associé à l'adresse {username} a bien été supprimé.
-
-Bonne journée et à bientôt,
-Tech K'Dance
-"""
-        return message
-
-    @staticmethod
-    def __build_html(username: str) -> str:
-        message = f"""
-<p>Bonjour,</p>
-<p>
-  Votre compte K'Dance associé à l'adresse {username} a bien été supprimé.
-</p>
-<p>
-  Bonne journée et à bientôt,<br />
-  Tech K'Dance
-</p>
-"""
-        return message
 
 
 class UserAdminActionSerializer(serializers.Serializer):
@@ -457,57 +357,11 @@ class UserResetPwdSerializer(serializers.Serializer):
             reset_pwd.save()
         _logger.info("Envoi d'un email de réinitialisation de mot de passe")
         _logger.debug(f"Envoi vers {user.email}")
-        mail = EmailMultiAlternatives(
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[user.email],
-            reply_to=[settings.DEFAULT_FROM_EMAIL],
-            subject="Réinitialisation du mot de passe K'Dance",
-            body=self.__build_text(path + "pwd_new?token=" + token),
+        email_sender = EmailSender(EmailEnum.DELETE_USER)
+        email_sender.send_email(
+            emails=[user.email],
+            url=f"{path}pwd_new?token={token}",
         )
-        mail.attach_alternative(
-            self.__build_html(path + "pwd_new?token=" + token), "text/html"
-        )
-        sent = mail.send()
-        if not sent:
-            raise EmailNotSentException(
-                f"Email de ré-initialisation non envoyé à {user.email}"
-            )
-
-    @classmethod
-    def __build_text(cls, url: str) -> str:
-        message = f"""
-Bonjour,
-
-Vous venez de faire une demande de réinitialisation de mot de passe pour votre compte K'Dance ?
-Veuillez cliquer sur le lien suivant, ou le copier-coller dans votre navigateur: {url}
-Ce lien restera valide 30 minutes.
-
-Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email, votre mot de passe restera inchangé.
-
-Bonne journée et à bientôt,
-Tech K'Dance
-"""
-        return message
-
-    @classmethod
-    def __build_html(cls, url: str) -> str:
-        message = f"""
-<p>Bonjour,</p>
-<p>
-  Vous venez de faire une demande de réinitialisation de mot de passe pour votre compte K'Dance ?
-  Veuillez cliquer sur le lien suivant, qui restera valide pendant 30 minutes:
-  <a href="{url}">
-    {url}
-  </a>
-</p>
-<p>Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email, votre mot de passe restera
-  inchangé.</p>
-<p>
-  Bonne journée et à bientôt,<br />
-  Tech K'Dance
-</p>
-"""
-        return message
 
 
 class UserNewPwdSerializer(serializers.Serializer):
