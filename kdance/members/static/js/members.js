@@ -407,6 +407,7 @@ function getMember(memberId) {
         const label = `(Sur liste d'attente) ${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
         $('#course-actual-select').append($('<option>', { value: course.id, text: label }));
       });
+      let isSelected = true;
       document.querySelectorAll("#course-next-select option").forEach(opt => {
         if (data.active_courses.map(c => c.id.toString()).indexOf(opt.value) > -1) {
           opt.label = `(Inscrit(e)) ${opt.label}`;
@@ -417,6 +418,9 @@ function getMember(memberId) {
         } else if (data.cancelled_courses.map(c => c.id.toString()).indexOf(opt.value) > -1) {
           opt.label = `(Annulé) ${opt.label}`;
           opt.disabled = true;
+        } else {
+          opt.selected = isSelected;
+          isSelected = false;
         }
       });
     },
