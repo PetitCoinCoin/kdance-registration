@@ -186,18 +186,19 @@ function getMembers(seasonId) {
             title: 'Cours',
             searchable: true,
             sortable: true,
-            visible: false,
             formatter: courseFormatter,
           }, {
             field: 'documents.authorise_photos',
             title: 'Autorisation photos',
             searchable: true,
             sortable: true,
+            visible: false,
           }, {
             field: 'documents.authorise_emergency',
             title: 'Autorisation parentale',
             searchable: true,
             sortable: true,
+            visible: false,
           }, {
             field: 'documents.medical_document',
             title: 'Doc médical',
