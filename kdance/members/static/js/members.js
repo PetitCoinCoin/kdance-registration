@@ -402,6 +402,11 @@ function getMember(memberId) {
         const label = `${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
         $('#course-actual-select').append($('<option>', { value: course.id, text: label }));
       });
+      data.waiting_courses.map((course) => {
+        const startHour = course.start_hour.split(':');
+        const label = `(Sur liste d'attente) ${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
+        $('#course-actual-select').append($('<option>', { value: course.id, text: label }));
+      });
       document.querySelectorAll("#course-next-select option").forEach(opt => {
         if (data.active_courses.map(c => c.id.toString()).indexOf(opt.value) > -1) {
           opt.label = `(Inscrit(e)) ${opt.label}`;
@@ -551,7 +556,7 @@ function updateMember() {
         success: (data) => {
           data.map(course => {
             const startHour = course.start_hour.split(':');
-            const label = `${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
+            const label = `${course.is_complete ? "(COMPLET) " : ""}${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
             $('#course-next-select').append($('<option>', { value: course.id, text: label }));
           });
           let memberId = button.getAttribute('memberId');
