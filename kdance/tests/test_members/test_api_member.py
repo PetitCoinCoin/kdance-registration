@@ -27,7 +27,13 @@ class TestMemberApiView(AuthTestCase):
 
     @pytest.fixture(autouse=True)
     def set_member(self):
-        season, _ = Season.objects.get_or_create(year="1900-1901")
+        season, _ = Season.objects.get_or_create(
+            year="1900-1901",
+            ffd_a_amount=0,
+            ffd_b_amount=0,
+            ffd_c_amount=0,
+            ffd_d_amount=0,
+        )
         self._season = season
         doc, _ = Documents.objects.get_or_create(
             authorise_photos=False,
@@ -211,6 +217,8 @@ class TestMemberApiView(AuthTestCase):
             "last_name": last_name,
             "birthday": "1900-12-24",
             "address": "Par ici",
+            "city": "Loin",
+            "postal_code": "31000",
             "email": email,
             "phone": "0987654321",
             "sport_pass": {
@@ -231,7 +239,7 @@ class TestMemberApiView(AuthTestCase):
             response = self.client.post(
                 self.view_url, data=data, content_type="application/json"
             )
-            assert response.status_code == 201, response
+            assert response.status_code == 201, response.json()
             response_json = response.json()
             assert response_json["first_name"] == exp_first_name
             assert response_json["last_name"] == exp_last_name
@@ -404,6 +412,8 @@ class TestMemberApiView(AuthTestCase):
             "last_name": "Pouet",
             "birthday": "1900-12-24",
             "address": "Par ici",
+            "city": "Loin",
+            "postal_code": "31000",
             "email": "j@m.com",
             "phone": "0987654321",
             "active_courses": [course.pk],
@@ -622,7 +632,13 @@ class TestMembersCoursesApiView(AuthTestCase):
 
     @pytest.fixture(autouse=True)
     def set_member(self):
-        season, _ = Season.objects.get_or_create(year="1900-1901")
+        season, _ = Season.objects.get_or_create(
+            year="1900-1901",
+            ffd_a_amount=0,
+            ffd_b_amount=0,
+            ffd_c_amount=0,
+            ffd_d_amount=0,
+        )
         self._season = season
         member, _ = Member.objects.get_or_create(
             user=self.testuser,

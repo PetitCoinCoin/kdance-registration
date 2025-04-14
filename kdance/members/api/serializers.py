@@ -292,11 +292,11 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
         queryset=Course.objects.all(),
         default=list,
     )
-    cancelled_courses = serializers.PrimaryKeyRelatedField(
+    cancelled_courses = serializers.PrimaryKeyRelatedField(  # type: ignore
         many=True,
         read_only=True,
     )
-    waiting_courses = serializers.PrimaryKeyRelatedField(
+    waiting_courses = serializers.PrimaryKeyRelatedField(  # type: ignore
         many=True,
         read_only=True,
     )
@@ -337,6 +337,8 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
 
     def validate(self, attr: dict) -> dict:
         validated = super().validate(attr)
+        if validated.get("city"):
+            validated["city"] = validated["city"].title()
         validated["waiting_courses"] = [
             course
             for course in validated.get("active_courses", [])

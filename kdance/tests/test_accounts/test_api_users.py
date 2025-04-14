@@ -22,11 +22,13 @@ class TestUsersView(AuthTestCase):
     view_function = UsersApiViewSet
 
     _TEST_DATA = {
-        "username": "pliploup",
+        "username": "plip@plop.fr",
         "first_name": "Plip",
         "last_name": "Plop",
         "email": "plip@plop.fr",
         "address": "This way",
+        "city": "Là",
+        "postal_code": "31000",
         "phone": "0666666666",
         "password": "SuperM0tdePass3",
     }
@@ -123,7 +125,14 @@ class TestUsersView(AuthTestCase):
     @parameterized.expand([True, False])
     def test_post_not_authenticated(self, with_season):
         if with_season:
-            season = Season.objects.create(year="2010-2011", is_current=True)
+            season = Season.objects.create(
+                year="2010-2011",
+                is_current=True,
+                ffd_a_amount=0,
+                ffd_b_amount=0,
+                ffd_c_amount=0,
+                ffd_d_amount=0,
+            )
         response = self.client.post(
             self.view_url, data=self._TEST_DATA, content_type="application/json"
         )
@@ -188,6 +197,8 @@ class TestUsersView(AuthTestCase):
                 "last_name": "plop",
                 "email": "pLip@plop.FR",
                 "address": "This way",
+                "city": "city",
+                "postal_code": "31000",
                 "phone": "0666666666",
                 "password": "SuperM0tdePass3",
             },

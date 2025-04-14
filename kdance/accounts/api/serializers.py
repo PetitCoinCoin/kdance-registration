@@ -156,6 +156,16 @@ class UserCreateSerializer(UserBaseSerializer):
         allow_blank=False,
         source="profile.address",
     )
+    city = serializers.CharField(
+        required=True,
+        allow_blank=False,
+        source="profile.city",
+    )
+    postal_code = serializers.CharField(
+        required=True,
+        allow_blank=False,
+        source="profile.postal_code",
+    )
     phone = serializers.CharField(
         required=True,
         allow_blank=False,
@@ -171,6 +181,8 @@ class UserCreateSerializer(UserBaseSerializer):
             "first_name",
             "last_name",
             "address",
+            "city",
+            "postal_code",
             "phone",
         )
         extra_kwargs = {
@@ -357,7 +369,7 @@ class UserResetPwdSerializer(serializers.Serializer):
             reset_pwd.save()
         _logger.info("Envoi d'un email de réinitialisation de mot de passe")
         _logger.debug(f"Envoi vers {user.email}")
-        email_sender = EmailSender(EmailEnum.DELETE_USER)
+        email_sender = EmailSender(EmailEnum.RESET_PWD)
         email_sender.send_email(
             emails=[user.email],
             url=f"{path}pwd_new?token={token}",

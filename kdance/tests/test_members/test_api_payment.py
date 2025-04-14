@@ -19,8 +19,22 @@ class TestCheckApiView(AuthTestCase):
     view_function = CheckViewSet
 
     def setup_list(self) -> tuple[Season]:
-        season_1 = Season.objects.create(year="1900-1901", is_current=False)
-        season_2 = Season.objects.create(year="2000-2001", is_current=True)
+        season_1 = Season.objects.create(
+            year="1900-1901",
+            is_current=False,
+            ffd_a_amount=0,
+            ffd_b_amount=0,
+            ffd_c_amount=0,
+            ffd_d_amount=0,
+        )
+        season_2 = Season.objects.create(
+            year="2000-2001",
+            is_current=True,
+            ffd_a_amount=0,
+            ffd_b_amount=0,
+            ffd_c_amount=0,
+            ffd_d_amount=0,
+        )
         for i, season in enumerate([season_1, season_2]):
             payment = self.testuser.payment_set.filter(season=season).first()
             for val in range(1, 4):
@@ -99,7 +113,14 @@ class TestPaymentApiView(AuthTestCase):
     @pytest.fixture(autouse=True)
     def set_season(self):
         # It automatically created Payment for existing users
-        season, _ = Season.objects.get_or_create(year="1900-1901", is_current=False)
+        season, _ = Season.objects.get_or_create(
+            year="1900-1901",
+            is_current=False,
+            ffd_a_amount=0,
+            ffd_b_amount=0,
+            ffd_c_amount=0,
+            ffd_d_amount=0,
+        )
         self._season = season
 
     @property
@@ -148,7 +169,14 @@ class TestPaymentApiView(AuthTestCase):
         self.testuser.save()
         self.super_testuser.last_name = "Superuser"
         self.super_testuser.save()
-        new_season = Season.objects.create(year="2000-2001", is_current=True)
+        new_season = Season.objects.create(
+            year="2000-2001",
+            is_current=True,
+            ffd_a_amount=0,
+            ffd_b_amount=0,
+            ffd_c_amount=0,
+            ffd_d_amount=0,
+        )
         for p in Payment.objects.all():
             p.comment = p.user.username
             p.save()

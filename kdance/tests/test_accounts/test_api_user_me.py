@@ -25,6 +25,8 @@ class TestUserMeView(AuthTestCase):
         "email": "plip@plop.fr",
         "profile": {
             "address": "This way",
+            "city": "Là",
+            "postal_code": "31000",
             "phone": "0666666666",
         },
     }
