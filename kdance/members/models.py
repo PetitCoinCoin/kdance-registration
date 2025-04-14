@@ -32,6 +32,8 @@ class GeneralSettings(SingletonModel):
 
 
 class Season(models.Model):
+    SEASON_COUNT = 5
+
     year = models.CharField(
         null=False,
         blank=False,
@@ -69,8 +71,8 @@ class Season(models.Model):
     def save(self, *args, **kwargs) -> None:
         created = self.pk is None
         # When creating a new season, we delete the older ones
-        if created and Season.objects.count() > 4:
-            too_old = Season.objects.order_by("-year")[4:]
+        if created and Season.objects.count() >= self.SEASON_COUNT:
+            too_old = Season.objects.order_by("-year")[self.SEASON_COUNT - 1 :]
             for season in too_old:
                 season.delete()
         super().save(*args, **kwargs)

@@ -3,6 +3,7 @@
 import pytest
 
 from copy import deepcopy
+from datetime import datetime, timezone
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -10,6 +11,7 @@ from django.urls import reverse
 from parameterized import parameterized
 
 from accounts.api.views import UserMeApiViewSet
+from members.models import Documents, Member, Season
 from tests.authentication import AuthenticatedAction, AuthTestCase
 from tests.data_tests import SUPERTESTUSER, SUPERTESTUSER_EMAIL
 
@@ -124,6 +126,49 @@ class TestUserMeView(AuthTestCase):
                 assert message in response.json()["email"]
             if phone is not None:
                 assert message in response.json()["profile"]["phone"]
+
+    def test_patch_member_cascade_update(self):
+        season, _ = Season.objects.get_or_create(
+            year="1900-1901",
+            ffd_a_amount=0,
+            ffd_b_amount=0,
+            ffd_c_amount=0,
+            ffd_d_amount=0,
+        )
+        doc, _ = Documents.objects.get_or_create(
+            authorise_photos=False,
+            authorise_emergency=False,
+        )
+        member, _ = Member.objects.get_or_create(
+            user=self.testuser,
+            season=season,
+            first_name="Plip",
+            last_name="Plop",
+            birthday=datetime(1900, 5, 1, tzinfo=timezone.utc),
+            address=self.testuser.profile.address,
+            city=self.testuser.profile.city,
+            postal_code=self.testuser.profile.postal_code,
+            email=self.testuser.email,
+            phone=self.testuser.profile.phone,
+            documents=doc,
+        )
+        with AuthenticatedAction(self.client, self.testuser):
+            response = self.client.patch(
+                self.view_url,
+                data={
+                    "email": "new@mail.com",
+                    "address": "new address",
+                    "phone": "0000000000",
+                },
+                content_type="application/json",
+            )
+            assert response.status_code == 200, response
+            member.refresh_from_db()
+            self.testuser.refresh_from_db()
+            assert member.email == self.testuser.email
+            assert member.phone == self.testuser.profile.phone
+            assert member.address == self.testuser.profile.address
+            assert member.email == "new@mail.com"
 
     def test_delete_permissions(self):
         """Tested last because it (obviously) deletes users used in tests."""

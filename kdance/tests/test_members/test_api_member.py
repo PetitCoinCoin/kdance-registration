@@ -46,6 +46,8 @@ class TestMemberApiView(AuthTestCase):
             last_name="Plop",
             birthday=datetime(1900, 5, 1, tzinfo=timezone.utc),
             address="Par ici",
+            city="city",
+            postal_code="31000",
             email="plip@plop.fr",
             phone="0987654321",
             documents=doc,
