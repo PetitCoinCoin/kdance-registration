@@ -485,4 +485,6 @@ class Member(PersonModel):
 def post_delete_member(sender, instance, *args, **kwargs):
     if instance.documents:
         instance.documents.delete()
+    if instance.sport_pass:
+        instance.sport_pass.delete()
     Course.objects.manage_waiting_lists()

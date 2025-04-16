@@ -357,6 +357,7 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
         self.validated_data["user"] = User.objects.get(username=username)
         contacts = self.validated_data.pop("contacts", None)
         documents = self.validated_data.pop("documents", None) if self.partial else None
+        sport_pass = self.validated_data.pop("sport_pass", {})
         active_courses = self.validated_data.pop("active_courses", [])
         waiting_courses = self.validated_data.pop("waiting_courses", [])
         cancelled_courses = self.validated_data.pop("cancelled_courses", [])
@@ -380,6 +381,19 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             for key, value in documents.items():
                 setattr(doc, key, value)
             doc.save()
+        if sport_pass:
+            if SportPass.objects.filter(member__id=member.id).exists():
+                sport_pass_item = SportPass.objects.filter(member__id=member.id).first()
+                sport_pass_item.code = sport_pass["code"]
+                sport_pass_item.save()
+            else:
+                sport_pass_item = SportPass.objects.create(code=sport_pass["code"])
+                member.sport_pass = sport_pass_item
+                member.save()
+        else:
+            if SportPass.objects.filter(member__id=member.id).exists():
+                sport_pass_item = SportPass.objects.filter(member__id=member.id).first()
+                sport_pass_item.delete()
         active_to_remove = [
             c for c in member.active_courses.all() if c not in active_courses
         ]

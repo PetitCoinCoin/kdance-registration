@@ -30,6 +30,9 @@ function handleSwitches() {
   const passSwitch = document.querySelector('#pass-switch');
   passSwitch.addEventListener('change', () => {
     $('#pass-div').attr('hidden', !$('#pass-switch').is(':checked'));
+    if (!$('#pass-switch').is(':checked')) {
+      $('#member-pass-code').val('');
+    }
   });
 }
 
@@ -235,10 +238,7 @@ function postOrPatchMember(url, method, event) {
     });
     data.active_courses = courses;
     if ($('#member-pass-code').val() !== '') {
-      data.sport_pass = {
-        code: $('#member-pass-code').val(),
-        amount: $('#member-pass-amount').val(),
-      };
+      data.sport_pass = { code: $('#member-pass-code').val() };
     }
     $.ajax({
       url: url,
