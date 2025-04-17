@@ -13,6 +13,7 @@ from members.api.views import (
 from members.views import (
     about,
     admin_mgmt,
+    checkout,
     course_mgmt,
     index,
     list_dl,
@@ -54,6 +55,7 @@ singleton_router.register(r"settings", GeneralSettingsViewSet, "api-settings")
 
 urlpatterns = [
     path("", index, name="index"),
+    path("checkout", checkout, name="checkout"),
     path("user_edit", user_edit, name="user_edit"),
     path("user_edit_pwd", user_edit_pwd, name="user_edit_pwd"),
     path("user_delete", user_delete, name="user_delete"),

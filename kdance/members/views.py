@@ -28,6 +28,19 @@ def index(request: HttpRequest) -> HttpResponse:
 
 @require_http_methods(["GET"])
 @login_required()
+def checkout(request: HttpRequest) -> HttpResponse:
+    return render(
+        request,
+        "pages/checkout.html",
+        context={
+            "user": request.user,
+            "season": Season.objects.get(is_current=True),
+        },
+    )
+
+
+@require_http_methods(["GET"])
+@login_required()
 def user_edit(request: HttpRequest) -> HttpResponse:
     return render(
         request,

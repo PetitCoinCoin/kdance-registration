@@ -63,7 +63,8 @@ footer {
 }
 
 /*** Password ***/
-i.bi-eye, i.bi-eye-slash {
+i.bi-eye,
+i.bi-eye-slash {
   cursor: pointer;
 }
 
@@ -132,5 +133,17 @@ a {
 @media (min-width: 540px) {
   #course-header {
     flex-direction: row !important;
+  }
+}
+
+#payment-tabs .nav-link {
+  color: black;
+}
+
+#other,
+#checkout-details {
+  ul {
+    list-style-type: "‣ ";
+
   }
 }

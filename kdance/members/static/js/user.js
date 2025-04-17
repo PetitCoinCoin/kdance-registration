@@ -132,8 +132,8 @@ function getUser() {
         collapseBtn.ariaControls = `accordion-${i}`;
         let collapsing = clone.querySelector('div.accordion-collapse');
         collapsing.id = `accordion-${i}`;
-        // collapse older seasons and add member button for current season
-        if (i > 0) {
+        // collapse older seasons and add member buttons for current season
+        if (!item.season.is_current) {
           collapseBtn.ariaExpanded = false;
           collapseBtn.classList.add('collapsed');
           collapsing.classList.remove('show');
@@ -146,6 +146,9 @@ function getUser() {
           const btnParent = clone.querySelector('.season-btn-div');
           if (data.members.filter((member) => member.season.id == item.season.id && !member.is_validated).length == 0) {
             memberBtnClone.querySelector('#validate-members-btn').disabled = true;
+          }
+          if (item.due <= item.paid) {
+            memberBtnClone.querySelector('#checkout-btn').disabled = true;
           }
           btnParent.appendChild(memberBtnClone);
         }

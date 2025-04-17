@@ -229,6 +229,12 @@
           Ajouter un nouvel adhérent
         </button>
 
+        <button class="btn btn-success mb-1" type="button" onclick="window.location='/checkout'"
+          id="checkout-btn" {% if not allow_new_member %} disabled {% endif %}>
+          <i class="bi-currency-euro"></i>
+          Payer l'inscription
+        </button>
+
         <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#validate-modal"
           id="validate-members-btn" {% if not allow_new_member %} disabled {% endif %}>
           <i class="bi-file-earmark-check-fill"></i>
