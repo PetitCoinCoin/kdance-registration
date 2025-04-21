@@ -1,15 +1,76 @@
+import stripe
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
-from members.models import GeneralSettings, Season
+from members.models import Course, GeneralSettings, Member, Payment, Season, CBPayment
 
 
 def _is_teacher(request: HttpRequest) -> bool:
     return request.user.groups.filter(name=settings.TEACHER_GROUP_NAME).exists()
+
+
+def __identify_products(user, qs) -> list:
+    line_items = [
+        {
+            "price": settings.STRIPE_ADHESION_ID,
+            "quantity": Member.objects.filter(
+                user=user, season__is_current=True
+            ).count(),
+        },
+    ]
+    # Courses
+    for course in qs:
+        line_items.append(
+            {
+                "price": course.stripe_price_id,
+                "quantity": 1,
+            }
+        )
+    # Licenses
+    for member in user.member_set.filter(season__is_current=True).all():
+        if member.ffd_license:
+            for licence in "abcd":
+                if member.ffd_license == getattr(
+                    member.season, f"ffd_{licence}_amount"
+                ):
+                    line_items.append(
+                        {
+                            "price": getattr(
+                                member.season, f"ffd_{licence}_stripe_price_id"
+                            ),
+                            "quantity": 1,
+                        }
+                    )
+                    break
+    return line_items
+
+
+def __identify_discounts(user, qs) -> list:
+    current_season = Season.objects.get(is_current=True)
+    current_payment = Payment.objects.get(season=current_season, user=user)
+    discount = int(current_payment.special_discount * 100)
+    discount += current_payment.sport_pass_amount * 100
+    if qs.count() >= current_season.discount_limit:
+        discount += int(
+            round(sum(c.price for c in qs) * current_season.discount_percent)
+        )
+    coupons = []
+    if discount:
+        try:
+            coupon = stripe.Coupon.create(
+                duration="once",
+                amount_off=discount,
+                currency="eur",
+            )
+            coupons.append({"coupon": coupon.get("id", "")})
+        except Exception:
+            return []
+    return coupons
 
 
 @require_http_methods(["GET"])
@@ -35,6 +96,58 @@ def checkout(request: HttpRequest) -> HttpResponse:
         context={
             "user": request.user,
             "season": Season.objects.get(is_current=True),
+            "stripe_pk": settings.STRIPE_PUBLIC_KEY,
+        },
+    )
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def create_checkout_session(request: HttpRequest) -> JsonResponse:
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+    return_url = (
+        f"{request.scheme}://{request.get_host()}"
+        + "/session_status?session_id={CHECKOUT_SESSION_ID}"
+    )
+    course_queryset = Course.objects.filter(
+        season__is_current=True, members__in=request.user.member_set.all()
+    )
+    line_items = __identify_products(request.user, course_queryset)
+    coupons = __identify_discounts(request.user, course_queryset)
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            ui_mode="embedded",
+            line_items=line_items,
+            discounts=coupons,
+            currency="eur",
+            mode="payment",
+            customer_email=request.user.email,
+            payment_method_types=["card"],
+            return_url=return_url,
+        )
+        return JsonResponse({"clientSecret": checkout_session["client_secret"]})
+    except Exception as e:
+        return JsonResponse({"error": str(e)})
+
+
+@require_http_methods(["GET"])
+def session_status(request: HttpRequest) -> HttpResponse:
+    session = stripe.checkout.Session.retrieve(request.GET.get("session_id"))
+    if session.status == "complete":
+        current_season = Season.objects.get(is_current=True)
+        current_payment = Payment.objects.get(season=current_season, user=request.user)
+        CBPayment(
+            amount=session.amount_total / 100,
+            transaction_type="stripe",
+            payment=current_payment,
+        ).save()
+        current_payment.save()  # Only to validate members
+    return render(
+        request,
+        "pages/session_status.html",
+        context={
+            "user": request.user,
+            "status": session.status,
         },
     )
 

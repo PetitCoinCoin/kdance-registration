@@ -2,6 +2,8 @@ import logging
 
 from enum import Enum
 
+import stripe
+
 from members.emails import EmailEnum, EmailSender
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -66,6 +68,21 @@ class Season(models.Model):
     ffd_d_amount = models.PositiveIntegerField(
         blank=False, verbose_name="Licence D Compétiteur international price"
     )
+    ffd_a_stripe_price_id = models.CharField(
+        null=False, blank=True, max_length=100, default=""
+    )
+    ffd_b_stripe_price_id = models.CharField(
+        null=False, blank=True, max_length=100, default=""
+    )
+    ffd_c_stripe_price_id = models.CharField(
+        null=False, blank=True, max_length=100, default=""
+    )
+    ffd_d_stripe_price_id = models.CharField(
+        null=False, blank=True, max_length=100, default=""
+    )
+    ffd_stripe_product_id = models.CharField(
+        null=False, blank=True, max_length=100, default=""
+    )
 
     @transaction.atomic
     def save(self, *args, **kwargs) -> None:
@@ -75,6 +92,9 @@ class Season(models.Model):
             too_old = Season.objects.order_by("-year")[self.SEASON_COUNT - 1 :]
             for season in too_old:
                 season.delete()
+        if created:
+            self.create_stripe_product()
+        self.create_stripe_prices()
         super().save(*args, **kwargs)
         # Only one current season is possible
         if self.is_current:
@@ -83,6 +103,30 @@ class Season(models.Model):
         if created:
             for user in User.objects.exclude(username=settings.SUPERUSER_EMAIL).all():
                 Payment(user=user, season=self).save()
+
+    def create_stripe_product(self) -> None:
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        resp = stripe.Product.create(
+            name=f"Licence {self.year}",
+        )
+        self.ffd_stripe_product_id = resp.get("id", "")
+
+    def create_stripe_prices(self) -> None:
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        for licence in "abcd":
+            if not getattr(self, f"ffd_{licence}_amount"):
+                continue
+            previous_id = ""
+            if getattr(self, f"ffd_{licence}_stripe_price_id"):
+                previous_id = getattr(self, f"ffd_{licence}_stripe_price_id")
+            resp = stripe.Price.create(
+                unit_amount=getattr(self, f"ffd_{licence}_amount") * 100,
+                currency="eur",
+                product=self.ffd_stripe_product_id,
+            )
+            setattr(self, f"ffd_{licence}_stripe_price_id", resp.get("id", ""))
+            if previous_id:
+                stripe.Price.modify(previous_id, active=False)
 
     def __repr__(self) -> str:
         return self.year
@@ -148,11 +192,17 @@ class Course(models.Model):
     start_hour = models.TimeField()
     end_hour = models.TimeField()
     capacity = models.PositiveIntegerField(null=False, default=12)
+    stripe_price_id = models.CharField(
+        null=False, blank=True, max_length=100, default=""
+    )
 
     objects = CourseManager()
 
     def __repr__(self) -> str:
         return f"{self.name} {self.season.year}"
+
+    def __str__(self) -> str:
+        return f"{self.name}, {self.get_weekday_display()} - {self.season.year}"
 
     class Meta:
         unique_together = ("name", "season", "weekday", "start_hour")
@@ -168,6 +218,8 @@ class Course(models.Model):
     @transaction.atomic
     def save(self, *args, **kwargs) -> None:
         is_edit = self.pk is not None
+        if not is_edit:
+            self.create_stripe_product()
         super().save(*args, **kwargs)
         if is_edit and GeneralSettings.get_solo().allow_new_member:
             self.update_queue()
@@ -186,6 +238,22 @@ class Course(models.Model):
                 weekday=self.get_weekday_display(),
                 start_hour=self.start_hour.strftime("%Hh%M"),
             )
+
+    def create_stripe_product(self) -> None:
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        resp = stripe.Product.create(
+            name=str(self),
+        )
+        self.create_stripe_price(resp.get("id", ""))
+
+    def create_stripe_price(self, product_id: str) -> None:
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        resp = stripe.Price.create(
+            unit_amount=self.price * 100,
+            currency="eur",
+            product=product_id,
+        )
+        self.stripe_price_id = resp.get("id", "")
 
 
 class MedicEnum(Enum):
@@ -299,6 +367,8 @@ class Payment(models.Model):
             paid += self.sport_coupon.amount
         if hasattr(self, "ancv"):
             paid += self.ancv.amount
+        if hasattr(self, "cb_payment"):
+            paid += self.cb_payment.amount
         if self.other_payment is not None:
             paid += self.other_payment.amount
         for check in self.check_payment.all():
@@ -317,6 +387,16 @@ class Payment(models.Model):
             ).all():
                 member.is_validated = True
                 member.save()
+
+
+class CBPayment(models.Model):
+    amount = models.FloatField(null=False, validators=[MinValueValidator(0)])
+    transaction_type = models.CharField(
+        null=False, blank=True, max_length=10, default=""
+    )
+    payment = models.OneToOneField(
+        Payment, related_name="cb_payment", on_delete=models.CASCADE
+    )
 
 
 class SportCoupon(models.Model):

@@ -147,7 +147,7 @@ function getUser() {
           if (data.members.filter((member) => member.season.id == item.season.id && !member.is_validated).length == 0) {
             memberBtnClone.querySelector('#validate-members-btn').disabled = true;
           }
-          if (item.due <= item.paid) {
+          if (item.paid != item.sport_pass_amount) {
             memberBtnClone.querySelector('#checkout-btn').disabled = true;
           }
           btnParent.appendChild(memberBtnClone);

@@ -103,7 +103,6 @@ function createUpdateMember() {
     event.preventDefault();
     const url = $('#form-member').data('url');
     const method = $('#form-member').data('method');
-    console.log(url, method)
     postOrPatchMember(url, method, event);
   })
 }

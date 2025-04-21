@@ -22,6 +22,7 @@ from members.models import (
     Season,
     SportCoupon,
     SportPass,
+    CBPayment,
     Teacher,
 )
 
@@ -201,6 +202,12 @@ class OtherPaymentSerializer(serializers.ModelSerializer):
         fields = ("amount", "comment")
 
 
+class CBPaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CBPayment
+        fields = ("amount", "transaction_type")
+
+
 class CheckSerializer(serializers.ModelSerializer):
     class Meta:
         model = Check
@@ -220,6 +227,7 @@ class PaymentSerializer(WritableNestedModelSerializer, serializers.ModelSerializ
     sport_coupon = SportCouponSerializer(required=False)
     other_payment = OtherPaymentSerializer(required=False)
     check_payment = CheckSerializer(many=True)
+    cb_payment = CBPaymentSerializer(required=False, read_only=True)
     user_email = serializers.CharField(
         read_only=True,
         source="user.username",
@@ -238,6 +246,7 @@ class PaymentSerializer(WritableNestedModelSerializer, serializers.ModelSerializ
             "ancv",
             "check_payment",
             "other_payment",
+            "cb_payment",
             "comment",
             "refund",
             "special_discount",

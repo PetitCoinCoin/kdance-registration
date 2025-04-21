@@ -24,6 +24,7 @@
 			{% if user.is_authenticated %}
 			<div class="container">
 				<p><strong>Saison:</strong> {{season.year}}</p>
+				<p id="checkout-due"></p>
 				<p id="checkout-details"></p>
 				<ul class="nav nav-tabs mt-4" id="payment-tabs" role="tablist">
 					<li class="nav-item" role="presentation">
@@ -42,7 +43,7 @@
 
 				<div class="tab-content mt-3" id="payment-tabs-content">
 					<div class="tab-pane fade show active" id="card" role="tabpanel" aria-labelledby="card-tab">
-						<p>Paiement par carte.</p>
+						<div id="checkout"></div>
 					</div>
 					<div class="tab-pane fade" id="transfer" role="tabpanel" aria-labelledby="transfer-tab">
 						<p class="fw-semibold">Vous pouvez effectuer un virement sur le compte de l'association.</p>
@@ -73,7 +74,10 @@
 	</section>
 	<script type="text/javascript">
 		const userMeUrl = "{% url 'api-user-me' %}";
+		const stripePk = "{{ stripe_pk }}";
+		const userEmail = "{{ user.email }}";
 	</script>
+	<script src="https://js.stripe.com/v3/"></script>
 	<script src="{% static 'js/checkout.js' %}"></script>
 </main>
 

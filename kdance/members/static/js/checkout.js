@@ -1,8 +1,10 @@
+let checkout;
 $(document).ready(() => {
-	fetchDetails();
+	initCheckout();
+	initStripe();
 });
 
-function fetchDetails() {
+async function initCheckout() {
 	$.ajax({
 		url: userMeUrl,
 		type: 'GET',
@@ -13,8 +15,13 @@ function fetchDetails() {
 				return
 			}
 			const payment = payments[0];
-			let details = '<strong>Details:</strong><ul>' + payment.due_detail.map(t => `<li>${t}</li>`).join('') + '</ul>';
+			let details = '<strong>Details:</strong><ul>' + payment.due_detail.map(t => `<li>${t}</li>`).join('');
+			if (payment.sport_pass_count > 0) {
+				details += `<li>${payment.sport_pass_count} Pass Sport: -${payment.sport_pass_amount}€</li>`;
+			}
+			details += '</ul>';
 			document.getElementById('checkout-details').innerHTML = details;
+			document.getElementById('checkout-due').innerHTML = `<strong>Somme dûe:</strong> ${payment.due - payment.paid + payment.refund}€`;
 		},
 		error: (error) => {
 			showToast('Impossible de récupérer vos informations pour le moment.');
@@ -23,8 +30,20 @@ function fetchDetails() {
 	});
 }
 
-function showToast(text) {
-	const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('checkout-error-toast'));
-	$('#checkout-error-body').text(`${text} ${ERROR_SUFFIX}`);
-	toast.show();
+async function initStripe() {
+	const stripe = Stripe(stripePk);
+	const fetchClientSecret = async () => {
+		const response = await fetch("/create-checkout-session/", {
+			method: "POST",
+		});
+		const { clientSecret } = await response.json();
+		return clientSecret;
+	};
+
+	const checkout = await stripe.initEmbeddedCheckout({
+		fetchClientSecret,
+	});
+
+	// Mount Checkout
+	checkout.mount('#checkout');
 }
