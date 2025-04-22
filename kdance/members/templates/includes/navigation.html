@@ -13,10 +13,8 @@
           <button class="btn btn-outline-info me-2" type="button" onclick="location.href = '/';">Mon compte</button>
         {% endif %}
       {% else %}
-        {% if request.path == "/about" %}
-          {% if user.is_authenticated %}
+        {% if user.is_authenticated and not request.path == "/" %}
             <button class="btn btn-outline-info me-2" type="button" onclick="location.href = '/';">Mon compte</button>
-          {% endif %}
         {% else %}
           <button class="btn btn-outline-info me-2" type="button" onclick="location.href = '/about';">A propos</button>
         {% endif %}
