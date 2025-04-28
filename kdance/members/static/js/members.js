@@ -19,13 +19,6 @@ function populateMonths(itemId) {
   }
 }
 
-function populateLicense() {
-  for (let [key, value] of Object.entries(LICENSES)) {
-    const label = key === '0' ? value : `${value} (${key}€)`;
-    $('#member-license').append($('<option>', { value: key, text: label, selected: key == '0' }));
-  }
-}
-
 function displayPayments() {
   const cashSwitch = document.querySelector('#cash-switch');
   cashSwitch.addEventListener('change', () => {
@@ -193,18 +186,19 @@ function getMembers(seasonId) {
             title: 'Cours',
             searchable: true,
             sortable: true,
-            visible: false,
             formatter: courseFormatter,
           }, {
             field: 'documents.authorise_photos',
             title: 'Autorisation photos',
             searchable: true,
             sortable: true,
+            visible: false,
           }, {
             field: 'documents.authorise_emergency',
             title: 'Autorisation parentale',
             searchable: true,
             sortable: true,
+            visible: false,
           }, {
             field: 'documents.medical_document',
             title: 'Doc médical',
@@ -244,7 +238,13 @@ function getMembers(seasonId) {
               ...m,
               name: `${m.last_name} ${m.first_name}`,
               status: m.is_validated ? 'Validé' : 'En attente',
-              courses: m.active_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`).concat(m.cancelled_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)),
+              courses: m.active_courses.map(
+                (c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`
+              ).concat(m.waiting_courses.map(
+                (c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Liste d'attente)`)
+              ).concat(m.cancelled_courses.map(
+                (c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)
+              ),
               solde: solde % 1 === 0 ? solde : solde.toFixed(2),
               documents: m.documents ? {
                 ...m.documents,
@@ -263,7 +263,13 @@ function getMembers(seasonId) {
             ...m,
             name: `${m.last_name} ${m.first_name}`,
             status: m.is_validated ? 'Validé' : 'En attente',
-            courses: m.active_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`).concat(m.cancelled_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)),
+            courses: m.active_courses.map(
+              (c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`
+            ).concat(m.waiting_courses.map(
+              (c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Liste d'attente)`)
+            ).concat(m.cancelled_courses.map(
+              (c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)
+            ),
             solde: solde % 1 === 0 ? solde : solde.toFixed(2),
             documents: m.documents ? {
               ...m.documents,
@@ -357,6 +363,9 @@ function getMember(memberId) {
         if (data.active_courses.map(c => c.id.toString()).indexOf(opt.value) > -1) {
           opt.label = `(Inscrit(e)) ${opt.label}`;
           opt.disabled = true;
+        } else if (data.waiting_courses.map(c => c.id.toString()).indexOf(opt.value) > -1) {
+          opt.label = `(Sur liste d'attente) ${opt.label}`;
+          opt.disabled = true;
         } else if (data.cancelled_courses.map(c => c.id.toString()).indexOf(opt.value) > -1) {
           opt.label = `(Annulé) ${opt.label}`;
           opt.disabled = true;
@@ -367,6 +376,11 @@ function getMember(memberId) {
       data.active_courses.map((course) => {
         const startHour = course.start_hour.split(':');
         const label = `${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
+        $('#courses-delete-select').append($('<option>', { value: course.id, text: label }));
+      });
+      data.waiting_courses.map((course) => {
+        const startHour = course.start_hour.split(':');
+        const label = `(Sur liste d'attente) ${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
         $('#courses-delete-select').append($('<option>', { value: course.id, text: label }));
       });
       data.cancelled_courses.map((course) => {
@@ -388,13 +402,25 @@ function getMember(memberId) {
         const label = `${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
         $('#course-actual-select').append($('<option>', { value: course.id, text: label }));
       });
+      data.waiting_courses.map((course) => {
+        const startHour = course.start_hour.split(':');
+        const label = `(Sur liste d'attente) ${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
+        $('#course-actual-select').append($('<option>', { value: course.id, text: label }));
+      });
+      let isSelected = true;
       document.querySelectorAll("#course-next-select option").forEach(opt => {
         if (data.active_courses.map(c => c.id.toString()).indexOf(opt.value) > -1) {
           opt.label = `(Inscrit(e)) ${opt.label}`;
           opt.disabled = true;
+        } else if (data.waiting_courses.map(c => c.id.toString()).indexOf(opt.value) > -1) {
+          opt.label = `(Sur liste d'attente) ${opt.label}`;
+          opt.disabled = true;
         } else if (data.cancelled_courses.map(c => c.id.toString()).indexOf(opt.value) > -1) {
           opt.label = `(Annulé) ${opt.label}`;
           opt.disabled = true;
+        } else {
+          opt.selected = isSelected;
+          isSelected = false;
         }
       });
     },
@@ -446,7 +472,6 @@ function updateMember() {
   }
   if (memberLicenseModal) {
     $('#member-license-modal').on('show.bs.modal', function (event) {
-      populateLicense();
       const button = event.relatedTarget;
       let memberId = button.getAttribute('memberId');
       let initValue = button.getAttribute('initValue');
@@ -471,6 +496,7 @@ function updateMember() {
         dataType: 'json',
         success: () => {
           const newFfd = $('#member-license').val();
+          console.log(initValue, newFfd)
           $('#members-table').bootstrapTable('updateCell', {
             index: rowIndex,
             field: 'solde',
@@ -534,7 +560,7 @@ function updateMember() {
         success: (data) => {
           data.map(course => {
             const startHour = course.start_hour.split(':');
-            const label = `${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
+            const label = `${course.is_complete ? "(COMPLET) " : ""}${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
             $('#course-next-select').append($('<option>', { value: course.id, text: label }));
           });
           let memberId = button.getAttribute('memberId');
@@ -792,7 +818,6 @@ function patchPayment(memberId, paymentId, event) {
 }
 
 function patchMemberCoursesActions(memberId, action) {
-  console.log("patch")
   let data = {
     courses: action === "add" ? $('#add-courses-select').val() : $('#courses-delete-select').val(),
   };

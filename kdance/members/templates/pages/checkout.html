@@ -1,0 +1,84 @@
+{% extends 'layouts/base.html' %}
+
+{% load static %}
+
+{% block content %}
+
+<main>
+	<section>
+		<!-- Toast -->
+		<div class="toast-container position-fixed bottom-0 end-0 p-3">
+			<div id="checkout-error-toast" class="toast align-items-center bg-alert" role="alert" aria-live="assertive"
+				aria-atomic="true">
+				<div class="d-flex">
+					<div class="toast-body fw-semibold" id="checkout-error-body"></div>
+					<button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+				</div>
+			</div>
+		</div>
+
+		<div class="container">
+			<div class="text-center">
+				<h1 class="display-4 mb-5">Paiement de l'inscription</h1>
+			</div>
+			{% if user.is_authenticated %}
+			<div class="container">
+				<p><strong>Saison:</strong> {{season.year}}</p>
+				<p id="checkout-due"></p>
+				<p id="checkout-details"></p>
+				<ul class="nav nav-tabs mt-4" id="payment-tabs" role="tablist">
+					<li class="nav-item" role="presentation">
+						<button class="nav-link active" id="card-tab" data-bs-toggle="tab" data-bs-target="#card" type="button"
+							role="tab" aria-controls="card" aria-selected="true">Par carte bancaire</button>
+					</li>
+					<li class="nav-item" role="presentation">
+						<button class="nav-link" id="transfer-tab" data-bs-toggle="tab" data-bs-target="#transfer" type="button"
+							role="tab" aria-controls="transfer" aria-selected="false">Virement</button>
+					</li>
+					<li class="nav-item" role="presentation">
+						<button class="nav-link" id="other-tab" data-bs-toggle="tab" data-bs-target="#other" type="button"
+							role="tab" aria-controls="other" aria-selected="false">Autre</button>
+					</li>
+				</ul>
+
+				<div class="tab-content mt-3" id="payment-tabs-content">
+					<div class="tab-pane fade show active" id="card" role="tabpanel" aria-labelledby="card-tab">
+						<div id="checkout"></div>
+					</div>
+					<div class="tab-pane fade" id="transfer" role="tabpanel" aria-labelledby="transfer-tab">
+						<p class="fw-semibold">Vous pouvez effectuer un virement sur le compte de l'association.</p>
+						<p><strong>IBAN:</strong> FRXX XXXX XXXX XXXX XXXX XXXX XXX</p>
+						<p><strong>BIC:</strong> XXXXXXXXXXX</p>
+						<p>N'oubliez pas d'inscrire votre <strong>nom</strong> et <strong>prénom</strong> dans l'intitulé du
+							virement, ainsi que votre <strong>ID de compte K'Dance: {{ user.pk }}</strong></p>
+					</div>
+					<div class="tab-pane fade" id="other" role="tabpanel" aria-labelledby="other-tab">
+						<p class="fw-semibold">Vous pouvez venir déposer votre règlement à l'association, lors des permanences ou
+							dans la boite aux
+							lettres mise à disposition.</p>
+						<p>
+							Modes de paiement acceptés:<br />
+						<ul>
+							<li>Espèces,</li>
+							<li>Chèques: jusqu'à 6, encaissés du mois d'ocotobre au mois d'avril (sauf en décembre <i
+									class="bi-tree"></i>),</li>
+							<li>Chèques ANCV,</li>
+							<li>Coupons sport,</li>
+							<li>Pass Sport: à saisir directement dans votre espace.</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+			{% endif %}
+		</div>
+	</section>
+	<script type="text/javascript">
+		const userMeUrl = "{% url 'api-user-me' %}";
+		const stripePk = "{{ stripe_pk }}";
+		const userEmail = "{{ user.email }}";
+	</script>
+	<script src="https://js.stripe.com/v3/"></script>
+	<script src="{% static 'js/checkout.js' %}"></script>
+</main>
+
+{% endblock content %}

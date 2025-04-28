@@ -22,11 +22,13 @@ class TestUsersView(AuthTestCase):
     view_function = UsersApiViewSet
 
     _TEST_DATA = {
-        "username": "pliploup",
+        "username": "plip@plop.fr",
         "first_name": "Plip",
         "last_name": "Plop",
         "email": "plip@plop.fr",
         "address": "This way",
+        "city": "Là",
+        "postal_code": "31000",
         "phone": "0666666666",
         "password": "SuperM0tdePass3",
     }
@@ -123,7 +125,14 @@ class TestUsersView(AuthTestCase):
     @parameterized.expand([True, False])
     def test_post_not_authenticated(self, with_season):
         if with_season:
-            season = Season.objects.create(year="2010-2011", is_current=True)
+            season = Season.objects.create(
+                year="2010-2011",
+                is_current=True,
+                ffd_a_amount=0,
+                ffd_b_amount=0,
+                ffd_c_amount=0,
+                ffd_d_amount=0,
+            )
         response = self.client.post(
             self.view_url, data=self._TEST_DATA, content_type="application/json"
         )
@@ -188,6 +197,8 @@ class TestUsersView(AuthTestCase):
                 "last_name": "plop",
                 "email": "pLip@plop.FR",
                 "address": "This way",
+                "city": "city",
+                "postal_code": "31000",
                 "phone": "0666666666",
                 "password": "SuperM0tdePass3",
             },
@@ -345,3 +356,125 @@ class TestUsersAdminView(AuthTestCase):
             assert (
                 User.objects.get(username=settings.SUPERUSER_EMAIL).is_superuser is True
             )
+
+
+@pytest.mark.django_db
+class TestUsersTeacherView(AuthTestCase):
+    view_function = UsersApiViewSet
+    _kwargs = {}
+
+    _tmp_user: User | None = None
+
+    @pytest.fixture(autouse=True)
+    def set_tmp_user(self):
+        tmp_user, _ = User.objects.get_or_create(
+            username="tmpuser", email="tmp@mail.fr"
+        )
+        self._tmp_user = tmp_user
+
+    @property
+    def view_url(self):
+        return reverse("api-users-teacher", kwargs=self._kwargs)
+
+    @parameterized.expand(
+        [
+            ("get", 403, 405),
+            (
+                "post",
+                405,
+                405,
+            ),  # simple user allowed to create user (but POST not allowed on this url)
+            ("put", 403, 400),
+            ("patch", 403, 405),
+            ("delete", 403, 405),
+        ]
+    )
+    def test_permissions(self, method, user_status, superuser_status):
+        self._kwargs["action"] = "activate"
+        assert self.users_have_permission(
+            method=method,
+            user_status=user_status,
+            superuser_status=superuser_status,
+        )
+        self._kwargs["action"] = "deactivate"
+        assert self.users_have_permission(
+            method=method,
+            user_status=user_status,
+            superuser_status=superuser_status,
+        )
+
+    @parameterized.expand(
+        [
+            "get",
+            "post",
+            "put",
+            "patch",
+            "delete",
+        ]
+    )
+    def test_authentication_mandatory(self, method):
+        # POST does not require authentication for user creation, but does not exist on this url, thus 405.
+        status = 405 if method == "post" else 403
+        assert self.anonymous_has_permission(method, status)
+
+    @parameterized.expand(
+        [
+            (None, "activate", 200, None, [], []),
+            ([], "activate", 400, [], [], []),
+            ([TESTUSER_EMAIL], "activate", 200, [TESTUSER_EMAIL], [], []),
+            (["Test@KDance.COM"], "activate", 200, [TESTUSER_EMAIL], [], []),
+            (
+                [TESTUSER_EMAIL, "plip@plop.fr"],
+                "activate",
+                200,
+                [TESTUSER_EMAIL],
+                ["plip@plop.fr"],
+                [],
+            ),
+            (["plip@plop.fr"], "activate", 400, [], ["plip@plop.fr"], []),
+            (None, "deactivate", 200, None, [], []),
+            ([], "deactivate", 400, [], [], []),
+            ([TESTUSER_EMAIL], "deactivate", 200, [TESTUSER_EMAIL], [], []),
+            (["Test@KDance.COM"], "deactivate", 200, [TESTUSER_EMAIL], [], []),
+            (
+                [TESTUSER_EMAIL, "plip@plop.fr"],
+                "deactivate",
+                200,
+                [TESTUSER_EMAIL],
+                ["plip@plop.fr"],
+                [],
+            ),
+            (["plip@plop.fr"], "deactivate", 400, [], ["plip@plop.fr"], []),
+        ]
+    )
+    def test_put(self, emails, action, status_code, processed, not_found, other):
+        emails = [TESTUSER_EMAIL, self._tmp_user.email] if emails is None else emails
+        processed = (
+            [TESTUSER_EMAIL, self._tmp_user.email] if processed is None else processed
+        )
+        self._kwargs["action"] = action
+        with AuthenticatedAction(self.client, self.super_testuser):
+            response = self.client.put(
+                self.view_url,
+                data={"emails": emails},
+                content_type="application/json",
+            )
+            assert response.status_code == status_code, response
+            response_json = response.json()
+            assert response_json["processed"] == processed
+            assert response_json["not_found"] == not_found
+            assert response_json["other"] == other
+        for email in processed:
+            assert User.objects.get(email=email).groups.filter(
+                name=settings.TEACHER_GROUP_NAME
+            ).exists() is (action == "activate")
+
+    def test_put_action_error(self):
+        self._kwargs["action"] = "action"
+        with AuthenticatedAction(self.client, self.super_testuser):
+            response = self.client.put(
+                self.view_url,
+                data={"emails": []},
+                content_type="application/json",
+            )
+            assert response.status_code == 404, response

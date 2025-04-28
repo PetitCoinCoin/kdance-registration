@@ -302,7 +302,13 @@ function buildMembersInfo(data) {
         status: m.is_validated ? 'Validé' : 'En attente',
         created: (new Date(m.created)).toLocaleString('fr-FR'),
         name: `${m.last_name} ${m.first_name}`,
-        courses: m.active_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`).concat(m.cancelled_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)),
+        courses: m.active_courses.map(
+          (c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`
+        ).concat(m.waiting_courses.map(
+          (c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Liste d'attente)`)
+        ).concat(m.cancelled_courses.map(
+          (c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)
+        ),
         documents: {
           ...m.documents,
           authorise_photos: m.documents.authorise_photos ? 'Oui': 'Non',
@@ -550,11 +556,28 @@ function buildLicenseInfo(data) {
         email: m.email,
         birthday: (new Date(m.birthday)).toLocaleDateString('fr-FR'),
         address: m.address,
-        license: LICENSES[m.ffd_license],
+        license: getLicenseLabel(m.ffd_license),
         ...buildContactsData(m.contacts),
       }
     })
   });
+}
+
+function getLicenseLabel(value) {
+  switch (value.toString()) {
+    case "0":
+      return 'Aucune'
+    case ffdA:
+      return 'Licence A Loisir'
+    case ffdB:
+      return 'Licence B Compétiteur'
+    case ffdC:
+      return 'Licence C Compétiteur national'
+    case ffdD:
+      return 'Licence D Compétiteur international'
+    default:
+      return 'Inconnu'
+  }
 }
 
 function getChecksPerMonth() {

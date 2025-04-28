@@ -25,7 +25,13 @@ class TestCourseApiView(AuthTestCase):
 
     @pytest.fixture(autouse=True)
     def set_course(self):
-        self._season, _ = Season.objects.get_or_create(year="1900-1901")
+        self._season, _ = Season.objects.get_or_create(
+            year="1900-1901",
+            ffd_a_amount=0,
+            ffd_b_amount=0,
+            ffd_c_amount=0,
+            ffd_d_amount=0,
+        )
         self._course, _ = Course.objects.get_or_create(
             name="Cha cha cha",
             season=self._season,
@@ -191,7 +197,13 @@ class TestCoursesCopyApiView(AuthTestCase):
 
     @pytest.fixture(autouse=True)
     def set_course(self):
-        self._season, _ = Season.objects.get_or_create(year="1900-1901")
+        self._season, _ = Season.objects.get_or_create(
+            year="1900-1901",
+            ffd_a_amount=0,
+            ffd_b_amount=0,
+            ffd_c_amount=0,
+            ffd_d_amount=0,
+        )
         self._course, _ = Course.objects.get_or_create(
             name="Cha cha cha",
             season=self._season,
@@ -221,7 +233,13 @@ class TestCoursesCopyApiView(AuthTestCase):
         assert self.anonymous_has_permission("put", 403)
 
     def test_copy_season(self):
-        new_season = Season.objects.create(year="2000-2001")
+        new_season = Season.objects.create(
+            year="2000-2001",
+            ffd_a_amount=0,
+            ffd_b_amount=0,
+            ffd_c_amount=0,
+            ffd_d_amount=0,
+        )
         data = {
             "from_season": self._season.pk,
             "to_season": new_season.pk,

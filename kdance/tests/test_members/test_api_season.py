@@ -21,7 +21,14 @@ class TestSeasonApiView(AuthTestCase):
 
     @pytest.fixture(autouse=True)
     def set_season(self):
-        season, _ = Season.objects.get_or_create(year="1900-1901", is_current=True)
+        season, _ = Season.objects.get_or_create(
+            year="1900-1901",
+            is_current=True,
+            ffd_a_amount=0,
+            ffd_b_amount=0,
+            ffd_c_amount=0,
+            ffd_d_amount=0,
+        )
         self._season = season
 
     @property
@@ -66,8 +73,20 @@ class TestSeasonApiView(AuthTestCase):
     def test_get_list(self):
         self._kwargs = {}
         assert Season.objects.count() == 1
-        last_season = Season.objects.create(year="2000-2001")
-        mid_season = Season.objects.create(year="1950-1951")
+        last_season = Season.objects.create(
+            year="2000-2001",
+            ffd_a_amount=0,
+            ffd_b_amount=0,
+            ffd_c_amount=0,
+            ffd_d_amount=0,
+        )
+        mid_season = Season.objects.create(
+            year="1950-1951",
+            ffd_a_amount=0,
+            ffd_b_amount=0,
+            ffd_c_amount=0,
+            ffd_d_amount=0,
+        )
         with AuthenticatedAction(self.client, self.super_testuser):
             response = self.client.get(self.view_url)
             assert response.status_code == 200, response
@@ -91,8 +110,22 @@ class TestSeasonApiView(AuthTestCase):
     )
     def test_get_list_filter(self, key, value, count):
         self._kwargs = {}
-        season_1 = Season.objects.create(year="2000-2001", is_current=False)
-        season_2 = Season.objects.create(year="1950-1951", is_current=False)
+        season_1 = Season.objects.create(
+            year="2000-2001",
+            is_current=False,
+            ffd_a_amount=0,
+            ffd_b_amount=0,
+            ffd_c_amount=0,
+            ffd_d_amount=0,
+        )
+        season_2 = Season.objects.create(
+            year="1950-1951",
+            is_current=False,
+            ffd_a_amount=0,
+            ffd_b_amount=0,
+            ffd_c_amount=0,
+            ffd_d_amount=0,
+        )
         with AuthenticatedAction(self.client, self.super_testuser):
             response = self.client.get(f"{self.view_url}?{urlencode({key: value})}")
             assert response.status_code == 200, response
@@ -104,7 +137,13 @@ class TestSeasonApiView(AuthTestCase):
                 assert [s["id"] for s in response_json] == [season_1.pk, season_2.pk]
 
     def test_get_one(self):
-        new_season = Season.objects.create(year="2000-2001")
+        new_season = Season.objects.create(
+            year="2000-2001",
+            ffd_a_amount=0,
+            ffd_b_amount=0,
+            ffd_c_amount=0,
+            ffd_d_amount=0,
+        )
         self._kwargs = {"pk": new_season.pk}
         with AuthenticatedAction(self.client, self.super_testuser):
             response = self.client.get(self.view_url)
@@ -116,7 +155,13 @@ class TestSeasonApiView(AuthTestCase):
     @parameterized.expand([False, True, None])
     def test_post(self, is_current):
         year = "2000-2001"
-        data = {"year": year}
+        data = {
+            "year": year,
+            "ffd_a_amount": 0,
+            "ffd_b_amount": 0,
+            "ffd_c_amount": 0,
+            "ffd_d_amount": 0,
+        }
         if is_current is not None:
             data["is_current"] = is_current
         assert self._season.is_current
@@ -129,6 +174,7 @@ class TestSeasonApiView(AuthTestCase):
             )
             assert response.status_code == 201, response
             assert response.json()["year"] == year
+            assert response.json()["pass_sport_amount"] == 50  # default
             assert (
                 response.json()["is_current"] is is_current
                 if is_current is not None
@@ -156,7 +202,14 @@ class TestSeasonApiView(AuthTestCase):
             assert message in response.json()["year"]
 
     def test_patch(self):
-        new_season = Season.objects.create(year="2000-2001", is_current=False)
+        new_season = Season.objects.create(
+            year="2000-2001",
+            is_current=False,
+            ffd_a_amount=0,
+            ffd_b_amount=0,
+            ffd_c_amount=0,
+            ffd_d_amount=0,
+        )
         new_year = "2010-2011"
         assert self._season.is_current
         self._kwargs = {"pk": new_season.pk}
@@ -164,7 +217,14 @@ class TestSeasonApiView(AuthTestCase):
         with AuthenticatedAction(self.client, self.super_testuser):
             response = self.client.patch(
                 self.view_url,
-                data={"year": new_year, "is_current": True},
+                data={
+                    "year": new_year,
+                    "is_current": True,
+                    "ffd_a_amount": 0,
+                    "ffd_b_amount": 0,
+                    "ffd_c_amount": 0,
+                    "ffd_d_amount": 0,
+                },
                 content_type="application/json",
             )
             assert response.status_code == 200, response

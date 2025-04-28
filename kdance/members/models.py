@@ -2,6 +2,9 @@ import logging
 
 from enum import Enum
 
+import stripe
+
+from members.emails import EmailEnum, EmailSender
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.validators import (
@@ -14,11 +17,25 @@ from django.db import models, transaction
 from django.db.models.signals import post_delete
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
+from solo.models import SingletonModel
 
 _logger = logging.getLogger(__name__)
 
 
+class GeneralSettings(SingletonModel):
+    allow_signup = models.BooleanField(
+        null=False,
+        default=True,
+    )
+    allow_new_member = models.BooleanField(
+        null=False,
+        default=True,
+    )
+
+
 class Season(models.Model):
+    SEASON_COUNT = 5
+
     year = models.CharField(
         null=False,
         blank=False,
@@ -35,15 +52,49 @@ class Season(models.Model):
         default=2,
         blank=False,
     )
+    pass_sport_amount = models.PositiveIntegerField(
+        default=50,
+        blank=False,
+    )
+    ffd_a_amount = models.PositiveIntegerField(
+        blank=False, verbose_name="Licence A Loisir price"
+    )
+    ffd_b_amount = models.PositiveIntegerField(
+        blank=False, verbose_name="Licence B Compétiteur price"
+    )
+    ffd_c_amount = models.PositiveIntegerField(
+        blank=False, verbose_name="Licence C Compétiteur national price"
+    )
+    ffd_d_amount = models.PositiveIntegerField(
+        blank=False, verbose_name="Licence D Compétiteur international price"
+    )
+    ffd_a_stripe_price_id = models.CharField(
+        null=False, blank=True, max_length=100, default=""
+    )
+    ffd_b_stripe_price_id = models.CharField(
+        null=False, blank=True, max_length=100, default=""
+    )
+    ffd_c_stripe_price_id = models.CharField(
+        null=False, blank=True, max_length=100, default=""
+    )
+    ffd_d_stripe_price_id = models.CharField(
+        null=False, blank=True, max_length=100, default=""
+    )
+    ffd_stripe_product_id = models.CharField(
+        null=False, blank=True, max_length=100, default=""
+    )
 
     @transaction.atomic
     def save(self, *args, **kwargs) -> None:
         created = self.pk is None
         # When creating a new season, we delete the older ones
-        if created and Season.objects.count() > 4:
-            too_old = Season.objects.order_by("-year")[4:]
+        if created and Season.objects.count() >= self.SEASON_COUNT:
+            too_old = Season.objects.order_by("-year")[self.SEASON_COUNT - 1 :]
             for season in too_old:
                 season.delete()
+        if created:
+            self.create_stripe_product()
+        self.create_stripe_prices()
         super().save(*args, **kwargs)
         # Only one current season is possible
         if self.is_current:
@@ -52,6 +103,30 @@ class Season(models.Model):
         if created:
             for user in User.objects.exclude(username=settings.SUPERUSER_EMAIL).all():
                 Payment(user=user, season=self).save()
+
+    def create_stripe_product(self) -> None:
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        resp = stripe.Product.create(
+            name=f"Licence {self.year}",
+        )
+        self.ffd_stripe_product_id = resp.get("id", "")
+
+    def create_stripe_prices(self) -> None:
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        for licence in "abcd":
+            if not getattr(self, f"ffd_{licence}_amount"):
+                continue
+            previous_id = ""
+            if getattr(self, f"ffd_{licence}_stripe_price_id"):
+                previous_id = getattr(self, f"ffd_{licence}_stripe_price_id")
+            resp = stripe.Price.create(
+                unit_amount=getattr(self, f"ffd_{licence}_amount") * 100,
+                currency="eur",
+                product=self.ffd_stripe_product_id,
+            )
+            setattr(self, f"ffd_{licence}_stripe_price_id", resp.get("id", ""))
+            if previous_id:
+                stripe.Price.modify(previous_id, active=False)
 
     def __repr__(self) -> str:
         return self.year
@@ -86,6 +161,13 @@ class CourseManager(models.Manager):
             except IntegrityError:
                 _logger.info("Cours non copié")
 
+    def manage_waiting_lists(self):
+        if not GeneralSettings.get_solo().allow_new_member:
+            return
+        current_season = Season.objects.get(is_current=True)
+        for course in self.filter(season__id=current_season.id):
+            course.update_queue()
+
 
 class Course(models.Model):
     name = models.CharField(
@@ -109,14 +191,69 @@ class Course(models.Model):
     )
     start_hour = models.TimeField()
     end_hour = models.TimeField()
+    capacity = models.PositiveIntegerField(null=False, default=12)
+    stripe_price_id = models.CharField(
+        null=False, blank=True, max_length=100, default=""
+    )
 
     objects = CourseManager()
 
     def __repr__(self) -> str:
         return f"{self.name} {self.season.year}"
 
+    def __str__(self) -> str:
+        return f"{self.name}, {self.get_weekday_display()} - {self.season.year}"
+
     class Meta:
         unique_together = ("name", "season", "weekday", "start_hour")
+
+    @property
+    def is_complete(self) -> bool:
+        return self.members.count() >= self.capacity
+
+    @property
+    def waiting(self) -> int:
+        return self.members_waiting.count()
+
+    @transaction.atomic
+    def save(self, *args, **kwargs) -> None:
+        is_edit = self.pk is not None
+        if not is_edit:
+            self.create_stripe_product()
+        super().save(*args, **kwargs)
+        if is_edit and GeneralSettings.get_solo().allow_new_member:
+            self.update_queue()
+
+    def update_queue(self) -> None:
+        if self.members_waiting.count() and not self.is_complete:
+            member: Member = self.members_waiting.order_by("created").first()  # type: ignore
+            member.active_courses.add(self)
+            member.waiting_courses.remove(self)
+            member.save()
+            email_sender = EmailSender(EmailEnum.WAITING_TO_ACTIVE_COURSE)
+            email_sender.send_email(
+                emails=[member.email, member.user.username],
+                full_name=f"{member.first_name} {member.last_name}",
+                course_name=self.name,
+                weekday=self.get_weekday_display(),
+                start_hour=self.start_hour.strftime("%Hh%M"),
+            )
+
+    def create_stripe_product(self) -> None:
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        resp = stripe.Product.create(
+            name=str(self),
+        )
+        self.create_stripe_price(resp.get("id", ""))
+
+    def create_stripe_price(self, product_id: str) -> None:
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        resp = stripe.Price.create(
+            unit_amount=self.price * 100,
+            currency="eur",
+            product=product_id,
+        )
+        self.stripe_price_id = resp.get("id", "")
 
 
 class MedicEnum(Enum):
@@ -230,6 +367,8 @@ class Payment(models.Model):
             paid += self.sport_coupon.amount
         if hasattr(self, "ancv"):
             paid += self.ancv.amount
+        if hasattr(self, "cb_payment"):
+            paid += self.cb_payment.amount
         if self.other_payment is not None:
             paid += self.other_payment.amount
         for check in self.check_payment.all():
@@ -250,6 +389,16 @@ class Payment(models.Model):
                 member.save()
 
 
+class CBPayment(models.Model):
+    amount = models.FloatField(null=False, validators=[MinValueValidator(0)])
+    transaction_type = models.CharField(
+        null=False, blank=True, max_length=10, default=""
+    )
+    payment = models.OneToOneField(
+        Payment, related_name="cb_payment", on_delete=models.CASCADE
+    )
+
+
 class SportCoupon(models.Model):
     amount = models.PositiveIntegerField(null=False)
     count = models.PositiveIntegerField(null=False)
@@ -265,8 +414,11 @@ class Ancv(models.Model):
 
 
 class SportPass(models.Model):
-    amount = models.PositiveIntegerField(null=False, default=50)
     code = models.CharField(null=False, blank=False, max_length=50)
+
+    @property
+    def amount(self) -> int:
+        return self.member.season.pass_sport_amount
 
 
 class Check(models.Model):
@@ -364,6 +516,7 @@ class Member(PersonModel):
     created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     active_courses = models.ManyToManyField(Course, related_name="members")
+    waiting_courses = models.ManyToManyField(Course, related_name="members_waiting")
     cancelled_courses = models.ManyToManyField(Course, related_name="members_cancelled")
     contacts = models.ManyToManyField(Contact)
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
@@ -374,21 +527,23 @@ class Member(PersonModel):
         blank=False,
         max_length=500,
     )
+    postal_code = models.CharField(
+        null=False,
+        blank=False,
+        max_length=5,
+    )
+    city = models.CharField(
+        null=False,
+        blank=False,
+        max_length=40,
+    )
     sport_pass = models.OneToOneField(SportPass, null=True, on_delete=models.SET_NULL)
     cancel_refund = models.FloatField(
         null=False, default=0.0, validators=[MinValueValidator(0)]
     )
-    ffd_license = models.PositiveIntegerField(
-        choices=[
-            (0, "Aucune"),
-            (24, "Licence A Loisir"),
-            (26, "Licence B Compétiteur"),
-            (43, "Licence C Compétiteur national"),
-            (55, "Licence D Compétiteur international"),
-        ],
-        default=0,
-    )
+    ffd_license = models.PositiveIntegerField(default=0)
     is_validated = models.BooleanField(default=False, null=False)
+    created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ("first_name", "last_name", "user", "season")
@@ -401,8 +556,15 @@ class Member(PersonModel):
     def courses(self) -> list:
         return list(self.active_courses.all()) + list(self.cancelled_courses.all())
 
+    @property
+    def full_address(self) -> str:
+        return f"{self.address}, {self.postal_code} {self.city}"
+
 
 @receiver(post_delete, sender=Member)
-def post_delete_documents(sender, instance, *args, **kwargs):
+def post_delete_member(sender, instance, *args, **kwargs):
     if instance.documents:
         instance.documents.delete()
+    if instance.sport_pass:
+        instance.sport_pass.delete()
+    Course.objects.manage_waiting_lists()

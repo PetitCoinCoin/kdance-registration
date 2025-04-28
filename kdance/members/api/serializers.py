@@ -15,16 +15,24 @@ from members.models import (
     Contact,
     Course,
     Documents,
+    GeneralSettings,
     Member,
     OtherPayment,
     Payment,
     Season,
     SportCoupon,
     SportPass,
+    CBPayment,
     Teacher,
 )
 
 _logger = logging.getLogger(__name__)
+
+
+class GeneralSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GeneralSettings
+        fields = ("allow_signup", "allow_new_member")
 
 
 class SeasonSerializer(serializers.ModelSerializer):
@@ -36,6 +44,11 @@ class SeasonSerializer(serializers.ModelSerializer):
             "is_current",
             "discount_percent",
             "discount_limit",
+            "pass_sport_amount",
+            "ffd_a_amount",
+            "ffd_b_amount",
+            "ffd_c_amount",
+            "ffd_d_amount",
         )
 
     @staticmethod
@@ -83,6 +96,9 @@ class CourseSerializer(serializers.ModelSerializer):
             "weekday",
             "start_hour",
             "end_hour",
+            "capacity",
+            "is_complete",
+            "waiting",
         )
 
 
@@ -186,6 +202,12 @@ class OtherPaymentSerializer(serializers.ModelSerializer):
         fields = ("amount", "comment")
 
 
+class CBPaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CBPayment
+        fields = ("amount", "transaction_type")
+
+
 class CheckSerializer(serializers.ModelSerializer):
     class Meta:
         model = Check
@@ -205,6 +227,7 @@ class PaymentSerializer(WritableNestedModelSerializer, serializers.ModelSerializ
     sport_coupon = SportCouponSerializer(required=False)
     other_payment = OtherPaymentSerializer(required=False)
     check_payment = CheckSerializer(many=True)
+    cb_payment = CBPaymentSerializer(required=False, read_only=True)
     user_email = serializers.CharField(
         read_only=True,
         source="user.username",
@@ -223,6 +246,7 @@ class PaymentSerializer(WritableNestedModelSerializer, serializers.ModelSerializ
             "ancv",
             "check_payment",
             "other_payment",
+            "cb_payment",
             "comment",
             "refund",
             "special_discount",
@@ -277,10 +301,13 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
         queryset=Course.objects.all(),
         default=list,
     )
-    cancelled_courses = serializers.PrimaryKeyRelatedField(
+    cancelled_courses = serializers.PrimaryKeyRelatedField(  # type: ignore
         many=True,
-        queryset=Course.objects.all(),
-        default=list,
+        read_only=True,
+    )
+    waiting_courses = serializers.PrimaryKeyRelatedField(  # type: ignore
+        many=True,
+        read_only=True,
     )
 
     class Meta:
@@ -292,11 +319,14 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             "last_name",
             "birthday",
             "address",
+            "postal_code",
+            "city",
             "email",
             "phone",
             "season",
             "active_courses",
             "cancelled_courses",
+            "waiting_courses",
             "ffd_license",
             "is_validated",
             "documents",
@@ -314,12 +344,32 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             )
         return courses
 
+    def validate(self, attr: dict) -> dict:
+        validated = super().validate(attr)
+        if validated.get("city"):
+            validated["city"] = validated["city"].title()
+        validated["waiting_courses"] = [
+            course
+            for course in validated.get("active_courses", [])
+            if course.is_complete
+        ]
+        validated["active_courses"] = [
+            course
+            for course in validated.get("active_courses", [])
+            if not course.is_complete
+        ]
+        return validated
+
     @transaction.atomic
-    def save(self, **kwargs: Member) -> None:
+    def save(self, **kwargs: Member) -> Member:
         username = kwargs.get("user")
         self.validated_data["user"] = User.objects.get(username=username)
         contacts = self.validated_data.pop("contacts", None)
         documents = self.validated_data.pop("documents", None) if self.partial else None
+        sport_pass = self.validated_data.pop("sport_pass", {})
+        active_courses = self.validated_data.pop("active_courses", [])
+        waiting_courses = self.validated_data.pop("waiting_courses", [])
+        cancelled_courses = self.validated_data.pop("cancelled_courses", [])
         try:
             member = super().save()
         except IntegrityError:
@@ -340,11 +390,51 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             for key, value in documents.items():
                 setattr(doc, key, value)
             doc.save()
+        if sport_pass:
+            if SportPass.objects.filter(member__id=member.id).exists():
+                sport_pass_item = SportPass.objects.filter(member__id=member.id).first()
+                sport_pass_item.code = sport_pass["code"]
+                sport_pass_item.save()
+            else:
+                sport_pass_item = SportPass.objects.create(code=sport_pass["code"])
+                member.sport_pass = sport_pass_item
+                member.save()
+        else:
+            if SportPass.objects.filter(member__id=member.id).exists():
+                sport_pass_item = SportPass.objects.filter(member__id=member.id).first()
+                sport_pass_item.delete()
+        active_to_remove = [
+            c for c in member.active_courses.all() if c not in active_courses
+        ]
+        active_to_add = [
+            c for c in active_courses if c not in member.active_courses.all()
+        ]
+        for course in active_to_add:
+            member.active_courses.add(course)
+        for course in active_to_remove:
+            member.active_courses.remove(course)
+        waiting_to_remove = [
+            c for c in member.waiting_courses.all() if c not in waiting_courses
+        ]
+        waiting_to_add = [
+            c for c in waiting_courses if c not in member.waiting_courses.all()
+        ]
+        for course in waiting_to_add:
+            member.waiting_courses.add(course)
+        for course in waiting_to_remove:
+            member.waiting_courses.remove(course)
+        if cancelled_courses:
+            member.cancelled_courses.clear()
+            for course in cancelled_courses:
+                member.cancelled_courses.add(course)
+        Course.objects.manage_waiting_lists()
+        return member
 
 
 class MemberRetrieveSerializer(MemberSerializer):
     active_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
     cancelled_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
+    waiting_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
     season = SeasonSerializer()
 
 
@@ -357,8 +447,10 @@ class MemberRetrieveShortSerializer(MemberRetrieveSerializer):
             "id",
             "first_name",
             "last_name",
+            "ffd_license",
             "active_courses",
             "cancelled_courses",
+            "waiting_courses",
             "is_validated",
             "documents",
             "payment",
@@ -407,13 +499,26 @@ class MemberCoursesSerializer(serializers.Serializer):
 
     def save(self, **kwargs: Any) -> None:
         if self._action == MemberCoursesActionsEnum.ADD:
-            self._member.active_courses.add(*self.validated_data.get("courses", []))
-            self._member.cancelled_courses.remove(
-                *self.validated_data.get("courses", [])
-            )
+            active_courses = [
+                course
+                for course in self.validated_data.get("courses", [])
+                if not course.is_complete
+            ]
+            waiting_courses = [
+                course
+                for course in self.validated_data.get("courses", [])
+                if course.is_complete
+            ]
+            self._member.active_courses.add(*active_courses)
+            self._member.waiting_courses.add(*waiting_courses)
+            self._member.cancelled_courses.remove(*active_courses, *waiting_courses)
             self._member.save()
         elif self._action == MemberCoursesActionsEnum.REMOVE:
-            self._member.cancelled_courses.add(*self.validated_data.get("courses", []))
-            self._member.active_courses.remove(*self.validated_data.get("courses", []))
+            for course in self.validated_data.get("courses", []):
+                if self._member.waiting_courses.filter(pk=course.pk):
+                    self._member.waiting_courses.remove(course)
+                else:
+                    self._member.cancelled_courses.add(course)
+                    self._member.active_courses.remove(course)
             self._member.cancel_refund = self.validated_data.get("cancel_refund")
             self._member.save()
