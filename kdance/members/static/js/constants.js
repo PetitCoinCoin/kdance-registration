@@ -19,8 +19,7 @@ const MONTH = {
 }
 
 const CHECK_NUMBER = 8;
-const CONTACT_CUSTOM_NUMBER = 2;
-const CONTACT_ALL_NUMBER = CONTACT_CUSTOM_NUMBER + 1; // Plus user
+const CONTACT_NUMBER = 2;
 
 const CONTACT_MAPPING = {
   'responsible': 'Responsable légal',

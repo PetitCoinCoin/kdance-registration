@@ -379,7 +379,7 @@ function buildContactsData(data) {
   Object.keys(CONTACT_MAPPING).forEach(key => {
     const subContacts = data.filter(c => c.contact_type === key);
     // Technically, we could have 3 contacts per type. But this is higly unusual
-    for (i=0; i<CONTACT_ALL_NUMBER; i++) {
+    for (i=0; i<CONTACT_NUMBER; i++) {
       contacts[`name-${key}-${i+1}`] = i < subContacts.length ? `${subContacts[i].first_name} ${subContacts[i].last_name}` : undefined;
       contacts[`phone-${key}-${i+1}`] = i < subContacts.length ? subContacts[i].phone : undefined;
       if (key === 'responsible') {

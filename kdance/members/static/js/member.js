@@ -34,6 +34,31 @@ function handleSwitches() {
       $('#member-pass-code').val('');
     }
   });
+  Object.keys(CONTACT_MAPPING).forEach(key => {
+    const contactMeSwitch = document.querySelector(`#${key}-me-switch`);
+    contactMeSwitch.addEventListener('change', () => {
+      contactMeImpact(key, $(`#${key}-me-switch`).is(':checked'))
+    });
+  });
+}
+
+function contactMeImpact(contactType, checked) {
+  // "me" contact should always be first in case someone just plays with the switch...
+  if (checked) {
+    ['firstname', 'lastname', 'phone', 'email'].forEach(item => {
+      if ($(`#${item}-${contactType}-0`).val() !== '') {
+        $(`#${item}-${contactType}-1`).val($(`#${item}-${contactType}-0`).val())
+      }
+      $(`#${item}-${contactType}-0`).val(document.querySelector('#form-member').getAttribute(`data-bs-${item}`));
+    });
+    $(`#contact-${contactType}-1`).attr('hidden', false);
+  } else {
+    ['firstname', 'lastname', 'phone', 'email'].forEach(item => {
+      $(`#${item}-${contactType}-0`).val($(`#${item}-${contactType}-1`).val());
+      $(`#${item}-${contactType}-1`).val('');
+    });
+    $(`#contact-${contactType}-1`).attr('hidden', true);
+  }
 }
 
 function getAge(birthday) {
@@ -107,100 +132,89 @@ function createUpdateMember() {
   })
 }
 
-function getMember() {
-  getCourses().then(() => {
-    var urlParams = new URLSearchParams(window.location.search);
-    let member;
-    var isEdition = true;
-    if (urlParams.get('from_pk') !== null) {
-      member = urlParams.get('from_pk');
-      $('#form-member').data('url', membersUrl);
-      $('#form-member').data('method', 'POST');
-      isEdition = false;
-    } else if (urlParams.get('pk') !== null) {
-      member = urlParams.get('pk');
-      $('#form-member').data('url', membersUrl + member + '/');
-      $('#form-member').data('method', 'PATCH');
-    } else {
-      $('h1').html('Ajouter un nouvel adhérent');
-      $('#form-member').data('url', membersUrl);
-      $('#form-member').data('method', 'POST');
-      return
-    }
-    $.ajax({
-      url: membersUrl + member + '/',
-      type: 'GET',
-      success: (data) => {
-        $('#me-switch').prop('disabled', true);
-        const action = isEdition ? 'Modifier les infos de' : 'Renouveller' ;
-        $('h1').html(`${action} ${data.first_name} ${data.last_name}`);
-        $('#member-firstname').val(data.first_name);
-        $('#member-lastname').val(data.last_name);
-        $('#member-email').val(data.email);
-        $('#member-phone').val(data.phone);
-        $('#member-address').val(data.address);
-        $('#member-postal-code').val(data.postal_code);
-        $('#member-city').val(data.city);
-        $('#member-birthday').val(data.birthday);
-        $('#authorise-photos').prop('checked', isEdition ? data.documents.authorise_photos : true);
-        $('#authorise-emergency').prop('checked', isEdition ? data.documents.authorise_emergency : true);
-        $('#member-pass-code').val(data.sport_pass?.code || '');
-        $('#member-pass-amount').val(data.sport_pass?.amount || 50);
-        const withPass = !(data.sport_pass === null || data.sport_pass?.code === null || data.sport_pass?.code === '');
-        $('#pass-div').attr('hidden', !withPass);
-        $('#pass-switch').prop('checked', withPass);
-        document.querySelectorAll('.course-checkbox').forEach(item => {
-          isActive = data.active_courses.map(c => c.id.toString()).indexOf(item.value) > -1;
-          isWaiting = data.waiting_courses.map(c => c.id.toString()).indexOf(item.value) > -1;
-          item.checked = isActive || isWaiting;
-          if (isWaiting) {
-            label = $(`label[for="${item.id}"]`)[0]
-            label.innerHTML += ' <strong>(sur liste d\'attente)</strong>';
-          }
-        });
-        $('#member-license').val(isEdition ? data.ffd_license : 0);
-        if (isEdition && data.is_validated) {
-          $('#member-courses-accordion').addClass('d-none');
-          $('#authorise-photos').prop('disabled', true);
-          $('#authorise-emergency').prop('disabled', true);
-          $('#member-btn').html('Modifier');
+async function getMember() {
+  await getCourses();
+  var urlParams = new URLSearchParams(window.location.search);
+  let member;
+  var isEdition = true;
+  if (urlParams.get('from_pk') !== null) {
+    member = urlParams.get('from_pk');
+    $('#form-member').data('url', membersUrl);
+    $('#form-member').data('method', 'POST');
+    isEdition = false;
+  } else if (urlParams.get('pk') !== null) {
+    member = urlParams.get('pk');
+    $('#form-member').data('url', membersUrl + member + '/');
+    $('#form-member').data('method', 'PATCH');
+  } else {
+    $('h1').html('Ajouter un nouvel adhérent');
+    $('#form-member').data('url', membersUrl);
+    $('#form-member').data('method', 'POST');
+    return
+  }
+  $.ajax({
+    url: membersUrl + member + '/',
+    type: 'GET',
+    success: (data) => {
+      $('#me-switch').prop('disabled', true);
+      const action = isEdition ? 'Modifier les infos de' : 'Renouveller' ;
+      $('h1').html(`${action} ${data.first_name} ${data.last_name}`);
+      $('#member-firstname').val(data.first_name);
+      $('#member-lastname').val(data.last_name);
+      $('#member-email').val(data.email);
+      $('#member-phone').val(data.phone);
+      $('#member-address').val(data.address);
+      $('#member-postal-code').val(data.postal_code);
+      $('#member-city').val(data.city);
+      $('#member-birthday').val(data.birthday);
+      $('#authorise-photos').prop('checked', isEdition ? data.documents.authorise_photos : true);
+      $('#authorise-emergency').prop('checked', isEdition ? data.documents.authorise_emergency : true);
+      $('#member-pass-code').val(data.sport_pass?.code || '');
+      $('#member-pass-amount').val(data.sport_pass?.amount || 50);
+      const withPass = !(data.sport_pass === null || data.sport_pass?.code === null || data.sport_pass?.code === '');
+      $('#pass-div').attr('hidden', !withPass);
+      $('#pass-switch').prop('checked', withPass);
+      document.querySelectorAll('.course-checkbox').forEach(item => {
+        isActive = data.active_courses.map(c => c.id.toString()).indexOf(item.value) > -1;
+        isWaiting = data.waiting_courses.map(c => c.id.toString()).indexOf(item.value) > -1;
+        item.checked = isActive || isWaiting;
+        if (isWaiting) {
+          label = $(`label[for="${item.id}"]`)[0]
+          label.innerHTML += ' <strong>(sur liste d\'attente)</strong>';
         }
-        if (isMe(data)) {
-          $('#emergency-me-switch').attr('disabled', true);
-          $('#emergency-me-switch').prop('checked', false);
-        } else {
-          $('#emergency-me-switch').attr('disabled', false);
-        }
-        const isMajor = Boolean(getAge(data.birthday) >= 18);
-        majorityImpact(isMajor);
-        Object.keys(CONTACT_MAPPING).forEach(key => {
-          $(`#${key}-me-switch`).prop('checked', false);
-          const subContacts = data.contacts.filter((c) => c.contact_type === key);
-          let delta = 0;
-          for (let i = 0; i < CONTACT_ALL_NUMBER; i++) {
-            if (i < subContacts.length && isMe(subContacts[i])) {
-              $(`#${key}-me-switch`).prop('checked', true);
-              delta++;
-            } else {
-              $(`#firstname-${key}-${i-delta}`).val(i < subContacts.length ? subContacts[i].first_name : '');
-              $(`#lastname-${key}-${i-delta}`).val(i < subContacts.length ? subContacts[i].last_name : '');
-              $(`#phone-${key}-${i-delta}`).val(i < subContacts.length ? subContacts[i].phone : '');
-              $(`#contact-${key}-${i-delta}`).attr('hidden', i-delta > 0 && i-delta >= subContacts.length);
-              if (key === 'responsible') {
-                $(`#email-${key}-${i-delta}`).val(i < subContacts.length ? subContacts[i].email : '');
-              }
-            }
-          }
-        });
-      },
-      error: (error) => {
-        showToast('Impossible de récupérer les informations de cet adhérent.');
-        console.log(error);
+      });
+      $('#member-license').val(isEdition ? data.ffd_license : 0);
+      if (isEdition && data.is_validated) {
+        $('#member-license').prop('disabled', true);
+        document.querySelectorAll('.course-checkbox').forEach(item => { item.disabled = true });
+        $('#authorise-photos').prop('disabled', true);
+        $('#authorise-emergency').prop('disabled', true);
+        $('#member-btn').html('Modifier');
       }
-    });
-  }).catch(error => {
-    showToast('Impossible de récupérer la saison en cours.');
-    console.log(error);
+      $('#emergency-me-switch').attr('disabled', isMe(data));
+      const isMajor = Boolean(getAge(data.birthday) >= 18);
+      majorityImpact(isMajor);
+      Object.keys(CONTACT_MAPPING).forEach(key => {
+        $(`#${key}-me-switch`).prop('checked', false);
+        const subContacts = data.contacts.filter((c) => c.contact_type === key);
+        for (const [i, contact] of subContacts.entries()) {
+          $(`#contact-${key}-${i+1}`).attr('hidden', false);
+          if (isMe(contact)) {
+            $(`#${key}-me-switch`).prop('checked', true);
+          }
+          $(`#firstname-${key}-${i}`).val(i < subContacts.length ? contact.first_name : '');
+          $(`#lastname-${key}-${i}`).val(i < subContacts.length ? contact.last_name : '');
+          $(`#phone-${key}-${i}`).val(i < subContacts.length ? contact.phone : '');
+          if (key === 'responsible') {
+            $(`#email-${key}-${i}`).val(i < subContacts.length ? contact.email : '');
+          }
+        }
+      });
+    },
+    error: (error) => {
+      showToast('Impossible de récupérer les informations de cet adhérent.');
+      console.log(error);
+    }
   });
 }
 
@@ -252,7 +266,7 @@ function postOrPatchMember(url, method, event) {
       },
       error: (error) => {
         if (!error.responseJSON) {
-          showToast('Une erreur est survenue lors de l\'enregistrement du membre.');
+          showToast('Une erreur est survenue lors de l\'enregistrement de l\'adhérent.');
         } else {
           const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('member-error-toast'));
           let message = 'Certaines informations sont manquantes ou erronées. Veuillez vérifier les différents champs.';
@@ -309,16 +323,7 @@ function buildContactsData() {
   let contacts = [];
   const isMajor = Boolean(getAge($('#member-birthday').val()) >= 18);
   if (!isMajor) {
-    if ($('#responsible-me-switch').is(':checked')) {
-      contacts.push({
-        first_name: document.querySelector('#form-member').getAttribute('data-bs-firstname'),
-        last_name: document.querySelector('#form-member').getAttribute('data-bs-lastname'),
-        phone: document.querySelector('#form-member').getAttribute('data-bs-phone'),
-        email: document.querySelector('#form-member').getAttribute('data-bs-email'),
-        contact_type: 'responsible',
-      });
-    }
-    for (let i = 0; i < CONTACT_CUSTOM_NUMBER; i++) {
+    for (let i = 0; i < CONTACT_NUMBER; i++) {
       if ($(`#firstname-responsible-${i}`).val() !== '') {
         contacts.push({
           first_name: $(`#firstname-responsible-${i}`).val(),
@@ -331,16 +336,7 @@ function buildContactsData() {
     }
   }
 
-  if ($('#emergency-me-switch').is(':checked')) {
-    contacts.push({
-      first_name: document.querySelector('#form-member').getAttribute('data-bs-firstname'),
-      last_name: document.querySelector('#form-member').getAttribute('data-bs-lastname'),
-      phone: document.querySelector('#form-member').getAttribute('data-bs-phone'),
-      email: undefined,
-      contact_type: 'emergency',
-    });
-  }
-  for (let i = 0; i < CONTACT_CUSTOM_NUMBER; i++) {
+  for (let i = 0; i < CONTACT_NUMBER; i++) {
     if ($(`#firstname-emergency-${i}`).val() !== '') {
       contacts.push({
         first_name: $(`#firstname-emergency-${i}`).val(),
@@ -358,7 +354,7 @@ function initContacts() {
   const emergencyParent = document.querySelector('#contact-emergency-div');
   const responsibleParent = document.querySelector('#contact-responsible-div');
   const contactTemplate = document.querySelector('#contact-template');
-  for (let i = 0; i < CONTACT_CUSTOM_NUMBER; i++) {
+  for (let i = 0; i < CONTACT_NUMBER; i++) {
     Object.keys(CONTACT_MAPPING).forEach(key => {
       const clone = contactTemplate.content.cloneNode(true);
       const items = clone.querySelectorAll('.form-outline');
@@ -376,7 +372,7 @@ function initContacts() {
         }
       }
       // Add button except for last
-      if (i < CONTACT_CUSTOM_NUMBER - 1) {
+      if (i < CONTACT_NUMBER - 1) {
         const addTemplate = document.querySelector('#add-contact-template');
         const addClone = addTemplate.content.cloneNode(true);
         let addContactButton = addClone.querySelector('button');
@@ -405,12 +401,12 @@ function initContacts() {
 
 function handleContacts() {
   Object.keys(CONTACT_MAPPING).forEach(key => {
-    for (let i = 0; i < CONTACT_CUSTOM_NUMBER - 1; i++) {
+    for (let i = 0; i < CONTACT_NUMBER - 1; i++) {
       $(`#add-contact-${key}-${i}`).on('click', () => {
         $(`#contact-${key}-${i + 1}`).attr('hidden', false);
       });
     }
-    for (let i = 1; i < CONTACT_CUSTOM_NUMBER; i++) {
+    for (let i = 1; i < CONTACT_NUMBER; i++) {
       $(`#remove-contact-${key}-${i}`).on('click', () => {
         ['firstname', 'lastname', 'phone', 'email'].forEach(item => {
           $(`#${item}-${key}-${i}`).val('');
@@ -423,7 +419,10 @@ function handleContacts() {
     $(`#member-${name}`).change(function () {
       const isMeMember = isMe({first_name: $('#member-firstname').val(), last_name: $('#member-lastname').val()});
       $('#emergency-me-switch').attr('disabled', isMeMember);
-      $('#emergency-me-switch').prop('checked', !isMeMember);
+      if (isMeMember) {
+        $('#emergency-me-switch').prop('checked', false);
+        contactMeImpact('emergency', false);
+      }
     });
   });
 }
