@@ -89,7 +89,7 @@ function getCurrentSeason() {
   });
 }
 
-function getCourses() {
+async function getCourses() {
   return getCurrentSeason().then(data => {
     const seasonId = data[0].id;
     $.ajax({
