@@ -97,6 +97,8 @@ def checkout(request: HttpRequest) -> HttpResponse:
             "user": request.user,
             "season": Season.objects.get(is_current=True),
             "stripe_pk": settings.STRIPE_PUBLIC_KEY,
+            "bank_iban": settings.BANK_IBAN,
+            "bank_bic": settings.BANK_BIC,
         },
     )
 

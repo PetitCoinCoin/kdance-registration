@@ -47,8 +47,8 @@
 					</div>
 					<div class="tab-pane fade" id="transfer" role="tabpanel" aria-labelledby="transfer-tab">
 						<p class="fw-semibold">Vous pouvez effectuer un virement sur le compte de l'association.</p>
-						<p><strong>IBAN:</strong> FRXX XXXX XXXX XXXX XXXX XXXX XXX</p>
-						<p><strong>BIC:</strong> XXXXXXXXXXX</p>
+						<p><strong>IBAN:</strong> {{bank_iban}}</p>
+						<p><strong>BIC:</strong> {{bank_bic}}</p>
 						<p>N'oubliez pas d'inscrire votre <strong>nom</strong> et <strong>prénom</strong> dans l'intitulé du
 							virement, ainsi que votre <strong>ID de compte K'Dance: {{ user.pk }}</strong></p>
 					</div>
