@@ -11,6 +11,7 @@ _logger = logging.getLogger(__name__)
 class EmailEnum(Enum):
     CREATE_USER = "create_user"
     DELETE_USER = "delete_user"
+    UPDATE_USER_EMAIL = "email_user"
     CREATE_MEMBER = "create member"
     DELETE_MEMBER = "delete member"
     WAITING_TO_ACTIVE_COURSE = "waiting to active course"
@@ -48,6 +49,8 @@ class EmailSender:
                 return self.__subject_create_user
             case EmailEnum.DELETE_USER:
                 return self.__subject_delete_user
+            case EmailEnum.UPDATE_USER_EMAIL:
+                return self.__subject_email_user
             case EmailEnum.CREATE_MEMBER:
                 return self.__subject_create_member
             case EmailEnum.DELETE_MEMBER:
@@ -65,6 +68,8 @@ class EmailSender:
                 return self.__build_text_create_user
             case EmailEnum.DELETE_USER:
                 return self.__build_text_delete_user
+            case EmailEnum.UPDATE_USER_EMAIL:
+                return self.__build_text_email_user
             case EmailEnum.CREATE_MEMBER:
                 return self.__build_text_create_member
             case EmailEnum.DELETE_MEMBER:
@@ -82,6 +87,8 @@ class EmailSender:
                 return self.__build_html_create_user
             case EmailEnum.DELETE_USER:
                 return self.__build_html_delete_user
+            case EmailEnum.UPDATE_USER_EMAIL:
+                return self.__build_html_email_user
             case EmailEnum.CREATE_MEMBER:
                 return self.__build_html_create_member
             case EmailEnum.DELETE_MEMBER:
@@ -100,6 +107,10 @@ class EmailSender:
     @staticmethod
     def __subject_delete_user(**_k) -> str:
         return "Suppression de votre compte K'Dance"
+
+    @staticmethod
+    def __subject_email_user(**_k) -> str:
+        return "Mise à jour d'un email utilisateur"
 
     @staticmethod
     def __subject_create_member(**kwargs) -> str:
@@ -150,6 +161,21 @@ Tech K'Dance
 Bonjour,
 
 Votre compte K'Dance associé à l'adresse {kwargs["username"]} a bien été supprimé.
+
+Bonne journée et à bientôt,
+Tech K'Dance
+"""
+
+    @staticmethod
+    def __build_text_email_user(**kwargs) -> str:
+        if not kwargs.get("username"):
+            raise ValueError("Un argument username est nécessaire pour cet email")
+        if not isinstance(kwargs.get("members"), list):
+            raise ValueError("Un argument members est nécessaire pour cet email")
+        return f"""
+Bonjour,
+
+Le responsable de {", ".join(kwargs["members"])} a mis à jour son adresse email: {kwargs["username"]}.
 
 Bonne journée et à bientôt,
 Tech K'Dance
@@ -266,6 +292,23 @@ Tech K'Dance
 <p>Bonjour,</p>
 <p>
   Votre compte K'Dance associé à l'adresse {kwargs["username"]} a bien été supprimé.
+</p>
+<p>
+  Bonne journée et à bientôt,<br />
+  Tech K'Dance
+</p>
+"""
+
+    @staticmethod
+    def __build_html_email_user(**kwargs) -> str:
+        if not kwargs.get("username"):
+            raise ValueError("Un argument username est nécessaire pour cet email")
+        if not isinstance(kwargs.get("members"), list):
+            raise ValueError("Un argument members est nécessaire pour cet email")
+        return f"""
+<p>Bonjour,</p>
+<p>
+  Le responsable de {", ".join(kwargs["members"])} a mis à jour son adresse email: {kwargs["username"]}.
 </p>
 <p>
   Bonne journée et à bientôt,<br />
