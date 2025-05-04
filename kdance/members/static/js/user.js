@@ -144,7 +144,8 @@ function getUser() {
             copyBtn.remove();
           }
           const btnParent = clone.querySelector('.season-btn-div');
-          if (data.members.filter((member) => member.season.id == item.season.id && !member.is_validated).length == 0) {
+          const notValidatedMembers = data.members.filter((member) => member.season.id == item.season.id && !member.is_validated);
+          if (notValidatedMembers.filter((member) => member.active_courses.length > 0).length == 0) {
             memberBtnClone.querySelector('#checkout-btn').disabled = true;
           }
           btnParent.appendChild(memberBtnClone);
