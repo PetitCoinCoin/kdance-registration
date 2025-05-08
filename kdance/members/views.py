@@ -114,6 +114,7 @@ def checkout(request: HttpRequest) -> HttpResponse:
 
 
 @csrf_exempt
+@login_required()
 @require_http_methods(["POST"])
 def create_checkout_session(request: HttpRequest) -> JsonResponse:
     stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -130,7 +131,7 @@ def create_checkout_session(request: HttpRequest) -> JsonResponse:
             discounts=coupons,
             currency="eur",
             mode="payment",
-            customer_email=request.user.email,
+            customer_email=request.user.email,  # type: ignore[union-attr]
             payment_method_types=["card"],
             return_url=return_url,
         )
@@ -139,18 +140,20 @@ def create_checkout_session(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"error": str(e)})
 
 
+@login_required
 @require_http_methods(["GET"])
 def session_status(request: HttpRequest) -> HttpResponse:
-    session = stripe.checkout.Session.retrieve(request.GET.get("session_id"))
+    session = stripe.checkout.Session.retrieve(request.GET.get("session_id", ""))
     if session.status == "complete":
+        amount = session.amount_total or 0
         current_season = Season.objects.get(is_current=True)
-        current_payment = Payment.objects.get(season=current_season, user=request.user)
+        current_payment = Payment.objects.get(season=current_season, user=request.user)  # type: ignore [misc]
         if hasattr(current_payment, "cb_payment"):
-            current_payment.cb_payment.amount += session.amount_total / 100
+            current_payment.cb_payment.amount += amount / 100
             current_payment.cb_payment.save()
         else:
             CBPayment(
-                amount=session.amount_total / 100,
+                amount=amount / 100,
                 transaction_type="stripe",
                 payment=current_payment,
             ).save()
