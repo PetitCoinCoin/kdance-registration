@@ -11,6 +11,7 @@ from parameterized import parameterized
 from members.api.views import CheckViewSet, PaymentViewSet
 from members.models import Check, Payment, Season
 from tests.authentication import AuthenticatedAction, AuthTestCase
+from tests.data_tests import SEASON
 
 
 @pytest.mark.django_db
@@ -111,17 +112,9 @@ class TestPaymentApiView(AuthTestCase):
     _season: Season | None = None
 
     @pytest.fixture(autouse=True)
-    def set_season(self):
+    def set_season(self, mock_season):
         # It automatically created Payment for existing users
-        season, _ = Season.objects.get_or_create(
-            year="1900-1901",
-            is_current=False,
-            ffd_a_amount=0,
-            ffd_b_amount=0,
-            ffd_c_amount=0,
-            ffd_d_amount=0,
-        )
-        self._season = season
+        self._season = mock_season
 
     @property
     def view_url(self):
@@ -170,12 +163,8 @@ class TestPaymentApiView(AuthTestCase):
         self.super_testuser.last_name = "Superuser"
         self.super_testuser.save()
         new_season = Season.objects.create(
+            **SEASON,
             year="2000-2001",
-            is_current=True,
-            ffd_a_amount=0,
-            ffd_b_amount=0,
-            ffd_c_amount=0,
-            ffd_d_amount=0,
         )
         for p in Payment.objects.all():
             p.comment = p.user.username

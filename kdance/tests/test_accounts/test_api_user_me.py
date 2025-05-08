@@ -13,7 +13,11 @@ from parameterized import parameterized
 from accounts.api.views import UserMeApiViewSet
 from members.models import Documents, Member, Season
 from tests.authentication import AuthenticatedAction, AuthTestCase
-from tests.data_tests import SUPERTESTUSER, SUPERTESTUSER_EMAIL
+from tests.data_tests import (
+    SEASON,
+    SUPERTESTUSER,
+    SUPERTESTUSER_EMAIL,
+)
 
 
 @pytest.mark.django_db
@@ -129,11 +133,8 @@ class TestUserMeView(AuthTestCase):
 
     def test_patch_member_cascade_update(self):
         season, _ = Season.objects.get_or_create(
+            **SEASON,
             year="1900-1901",
-            ffd_a_amount=0,
-            ffd_b_amount=0,
-            ffd_c_amount=0,
-            ffd_d_amount=0,
         )
         doc, _ = Documents.objects.get_or_create(
             authorise_photos=False,

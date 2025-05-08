@@ -1,4 +1,3 @@
-from datetime import time
 from unittest.mock import patch
 
 import pytest
@@ -12,6 +11,8 @@ from members.models import (
     Season,
 )
 from tests.data_tests import (
+    COURSE,
+    SEASON,
     TESTUSER,
     TESTUSER_EMAIL,
 )
@@ -63,20 +64,10 @@ def test_season_create_payment():
 @patch.object(Course, "update_queue")
 @pytest.mark.django_db
 def test_manage_waiting_list(can_add_member, update):
-    season = Season.objects.create(
-        year="1900-1901",
-        ffd_a_amount=0,
-        ffd_b_amount=0,
-        ffd_c_amount=0,
-        ffd_d_amount=0,
-    )
+    season = Season.objects.create(**SEASON, year="1900-1901")
     Course.objects.create(
-        name="Cha cha cha",
+        **COURSE,
         season=season,
-        price=10,
-        weekday=0,
-        start_hour=time(10, 0),
-        end_hour=time(11, 0),
     )
     gen_settings = GeneralSettings.get_solo()
     gen_settings.allow_new_member = can_add_member

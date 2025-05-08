@@ -1,6 +1,6 @@
 """Tests related to Member API view."""
 
-from datetime import datetime, time, timezone
+from datetime import datetime, timezone
 
 import pytest
 
@@ -24,45 +24,13 @@ class TestMemberApiView(AuthTestCase):
 
     _member: Member | None = None
     _season: Season | None = None
+    _course: Course | None = None
 
     @pytest.fixture(autouse=True)
-    def set_member(self):
-        season, _ = Season.objects.get_or_create(
-            year="1900-1901",
-            ffd_a_amount=0,
-            ffd_b_amount=0,
-            ffd_c_amount=0,
-            ffd_d_amount=0,
-        )
-        self._season = season
-        doc, _ = Documents.objects.get_or_create(
-            authorise_photos=False,
-            authorise_emergency=False,
-        )
-        member, _ = Member.objects.get_or_create(
-            user=self.testuser,
-            season=season,
-            first_name="Plip",
-            last_name="Plop",
-            birthday=datetime(1900, 5, 1, tzinfo=timezone.utc),
-            address="Par ici",
-            city="city",
-            postal_code="31000",
-            email="plip@plop.fr",
-            phone="0987654321",
-            documents=doc,
-        )
-        self._member = member
-
-    def setup_course(self) -> Course:
-        return Course.objects.create(
-            name="Cha cha cha",
-            season=self._season,
-            price=10,
-            weekday=0,
-            start_hour=time(10, 0),
-            end_hour=time(11, 0),
-        )
+    def set_member(self, mock_season, mock_member, mock_course):
+        self._season = mock_season
+        self._member = mock_member
+        self._course = mock_course
 
     @property
     def view_url(self):
@@ -212,7 +180,6 @@ class TestMemberApiView(AuthTestCase):
         self, first_name, exp_first_name, last_name, exp_last_name, email, exp_email
     ):
         """Tests creation with data formating."""
-        course = self.setup_course()
         data = {
             "season": self._season.pk,
             "first_name": first_name,
@@ -227,7 +194,7 @@ class TestMemberApiView(AuthTestCase):
                 "code": "AZE-AZE-AZE",
                 "amount": 50,
             },
-            "active_courses": [course.pk],
+            "active_courses": [self._course.pk],
             "contacts": [],
             "documents": {
                 "authorise_photos": False,
@@ -406,7 +373,6 @@ class TestMemberApiView(AuthTestCase):
         key,
         message,
     ):
-        course = self.setup_course()
         data = {
             "user": self.testuser.pk,
             "season": self._season.pk,
@@ -418,7 +384,7 @@ class TestMemberApiView(AuthTestCase):
             "postal_code": "31000",
             "email": "j@m.com",
             "phone": "0987654321",
-            "active_courses": [course.pk],
+            "active_courses": [self._course.pk],
             "contacts": [],
             "documents": {
                 "authorise_photos": False,
@@ -631,38 +597,13 @@ class TestMembersCoursesApiView(AuthTestCase):
 
     _member: Member | None = None
     _season: Season | None = None
+    _course: Course | None = None
 
     @pytest.fixture(autouse=True)
-    def set_member(self):
-        season, _ = Season.objects.get_or_create(
-            year="1900-1901",
-            ffd_a_amount=0,
-            ffd_b_amount=0,
-            ffd_c_amount=0,
-            ffd_d_amount=0,
-        )
-        self._season = season
-        member, _ = Member.objects.get_or_create(
-            user=self.testuser,
-            season=season,
-            first_name="Plip",
-            last_name="Plop",
-            birthday=datetime(1900, 5, 1, tzinfo=timezone.utc),
-            address="Par ici",
-            email="plip@plop.fr",
-            phone="0987654321",
-        )
-        self._member = member
-
-    def set_course(self):
-        return Course.objects.create(
-            name="Cha cha cha",
-            season=self._season,
-            price=10,
-            weekday=0,
-            start_hour=time(10, 0),
-            end_hour=time(11, 0),
-        )
+    def set_member(self, mock_season, mock_member, mock_course):
+        self._season = mock_season
+        self._member = mock_member
+        self._course = mock_course
 
     @property
     def view_url(self):
@@ -702,34 +643,32 @@ class TestMembersCoursesApiView(AuthTestCase):
         assert self.anonymous_has_permission(method, 403)
 
     def test_add(self):
-        course = self.set_course()
         self._kwargs["action"] = "add"
         with AuthenticatedAction(self.client, self.super_testuser):
             response = self.client.put(
                 self.view_url,
-                data={"courses": [course.pk]},
+                data={"courses": [self._course.pk]},
                 content_type="application/json",
             )
             assert response.status_code == 200, response
         self._member.refresh_from_db()
-        assert course in self._member.active_courses.all()
+        assert self._course in self._member.active_courses.all()
 
     def test_remove(self):
-        course = self.set_course()
-        self._member.active_courses.add(course)
+        self._member.active_courses.add(self._course)
         self._member.refresh_from_db()
         assert len(self._member.active_courses.all()) == 1
         self._kwargs["action"] = "remove"
         with AuthenticatedAction(self.client, self.super_testuser):
             response = self.client.put(
                 self.view_url,
-                data={"courses": [course.pk], "cancel_refund": 5},
+                data={"courses": [self._course.pk], "cancel_refund": 5},
                 content_type="application/json",
             )
             assert response.status_code == 200, response
         self._member.refresh_from_db()
         assert not len(self._member.active_courses.all())
-        assert course in self._member.cancelled_courses.all()
+        assert self._course in self._member.cancelled_courses.all()
 
     @parameterized.expand(
         [
@@ -755,9 +694,8 @@ class TestMembersCoursesApiView(AuthTestCase):
         ]
     )
     def test_action_error(self, course_pk, refund, action, key, status_code, message):
-        course = self.set_course()
         data = {
-            "courses": [course_pk or course.pk],
+            "courses": [course_pk or self._course.pk],
         }
         if refund is not None:
             data["cancel_refund"] = refund
