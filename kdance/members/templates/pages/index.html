@@ -156,6 +156,23 @@
                 </div>
                 <div class="season-btn-div d-flex flex-column col-12 col-sm-4"></div>
               </div>
+
+          <div class="col-12 col-sm-8 mb-3 dropdown">
+            <b>Ai-je besoin d'un certificat médical ?</b><br/>
+            <p>
+              Téléchargez l'auto-questionnaire correspondant à votre situation. Si vous répondez au moins une fois "oui", vous avez besoin d'un certificat.
+              Sinon, vous pouvez télécharger et remplir l'attestation sur l'honneur disponible.
+            </p>
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Télécharger un document
+            </button>
+            <ul class="dropdown-menu">
+              <li><button class="dropdown-item" type="button" onclick="window.open('download-pdf/?doc=auto-questionnaire-sante-mineurs')">Auto-questionnaire enfant</button></li>
+              <li><button class="dropdown-item" type="button" onclick="window.open('download-pdf?doc=auto-questionnaire-sante-adultes')">Auto-questionnaire adulte</button></li>
+              <li><button class="dropdown-item" type="button" onclick="window.open('download-pdf?doc=attestation-sur-honneur-kdance')">Attestation sur l'honneur</button></li>
+            </ul>
+          </div>
+
             </div>
           </div>
         </div>

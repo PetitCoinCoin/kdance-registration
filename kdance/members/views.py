@@ -1,10 +1,13 @@
+from pathlib import Path
+
 import stripe
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count
-from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render
+from django.templatetags.static import static
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
@@ -311,3 +314,17 @@ def about(request: HttpRequest) -> HttpResponse:
         "pages/about.html",
         context={"user": request.user, "is_teacher": _is_teacher(request)},
     )
+
+
+@require_http_methods(["GET"])
+@login_required()
+def download_pdf(request: HttpRequest) -> HttpResponse:
+    filename = request.GET.get("doc")
+    file_path = Path(static(f"pdf/{filename}.pdf"))
+    file_path = Path(static(f"pdf/{filename}.pdf"))
+    if file_path.exists():
+        with file_path.open("rb") as f:
+            response = HttpResponse(f.read(), content_type="application/pdf")
+            response["Content-Disposition"] = "inline; filename=" + filename
+            return response
+    raise Http404
