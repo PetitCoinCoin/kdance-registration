@@ -16,6 +16,7 @@ from members.views import (
     checkout,
     course_mgmt,
     create_checkout_session,
+    download_pdf,
     index,
     list_dl,
     member,
@@ -57,6 +58,7 @@ singleton_router.register(r"settings", GeneralSettingsViewSet, "api-settings")
 
 urlpatterns = [
     path("", index, name="index"),
+    path("download-pdf/", download_pdf, name="download"),
     path("checkout", checkout, name="checkout"),
     path("create-checkout-session/", create_checkout_session),
     path("session_status/", session_status),

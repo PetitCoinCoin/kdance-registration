@@ -154,10 +154,12 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = (os.path.join(BASE_DIR, os.getenv("STATICFILES_DIRS", "")),)
 STATIC_ROOT = os.getenv("STATIC_ROOT")
 
-# Stripe
+# Payment
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
 STRIPE_ADHESION_ID = os.getenv("STRIPE_ADHESION_ID")
+BANK_IBAN = os.getenv("BANK_IBAN")
+BANK_BIC = os.getenv("BANK_BIC")
 
 # Other
 REST_FRAMEWORK = {

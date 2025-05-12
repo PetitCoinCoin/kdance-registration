@@ -154,13 +154,28 @@ class UserMeApiViewSet(
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
+        email_update = ""
         if request.data.get("username", "").lower() == instance.username.lower():
             request.data.pop("username")
         if request.data.get("email", "").lower() == instance.email.lower():
             request.data.pop("email")
+        else:
+            email_update = request.data.get("email", "").lower()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+        if email_update:
+            email_sender = EmailSender(EmailEnum.UPDATE_USER_EMAIL)
+            email_sender.send_email(
+                emails=[settings.DEFAULT_FROM_EMAIL, settings.SUPERUSER_EMAIL],
+                username=[email_update],
+                members=[
+                    f"{member.first_name} {member.last_name}"
+                    for member in request.user.member_set.filter(
+                        season__is_current=True
+                    )
+                ],
+            )
         return Response(serializer.data)
 
     @action(detail=False, methods=["put"])

@@ -14,6 +14,7 @@ from django.core.validators import (
     RegexValidator,
 )
 from django.db import models, transaction
+from django.db.models import Count, Q
 from django.db.models.signals import post_delete
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
@@ -322,8 +323,11 @@ class Payment(models.Model):
         if total >= self.season.discount_limit:
             due *= (100 - self.season.discount_percent) / 100
         # Adhesion and license
-        due += len(members) * 10
-        due += sum([member.ffd_license for member in members])
+        validated_members = members.annotate(
+            num_courses=Count("active_courses")
+        ).filter(Q(num_courses__gt=0) | Q(is_validated=True))
+        due += validated_members.count() * 10
+        due += sum([member.ffd_license for member in validated_members])
         # Refund after cancellation
         due -= sum(member.cancel_refund for member in members)
         return int(round(due))
@@ -335,14 +339,19 @@ class Payment(models.Model):
         courses_price = 0
         members = self.user.member_set.filter(season=self.season).all()
         for member in members:
-            members_count += 1
+            if member.is_validated or member.courses:
+                members_count += 1
             for course in member.courses:
                 courses_count += 1
                 courses_price += course.price
         discount = 0
         if courses_count >= self.season.discount_limit:
             discount = int(round(courses_price * self.season.discount_percent / 100))
-        licenses = [member.ffd_license for member in members if member.ffd_license > 0]
+        licenses = [
+            member.ffd_license
+            for member in members
+            if member.ffd_license > 0 and (member.is_validated or member.courses)
+        ]
         license_count = len(licenses)
         license_price = sum(licenses)
         cancelled = sum(member.cancel_refund for member in members)

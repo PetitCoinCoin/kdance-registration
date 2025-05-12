@@ -19,6 +19,9 @@ async function initCheckout() {
 			if (payment.sport_pass_count > 0) {
 				details += `<li>${payment.sport_pass_count} Pass Sport: -${payment.sport_pass_amount}€</li>`;
 			}
+			if (payment.paid > payment.sport_pass_amount) {
+				details += `<li>Déjà payé: -${payment.paid - payment.sport_pass_amount}€</li>`;
+			}
 			details += '</ul>';
 			document.getElementById('checkout-details').innerHTML = details;
 			document.getElementById('checkout-due').innerHTML = `<strong>Somme dûe:</strong> ${payment.due - payment.paid + payment.refund}€`;

@@ -68,39 +68,6 @@
       </div>
     </div>
 
-    <div class="modal fade" id="validate-modal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title">Valider mes inscriptions pour la saison</h4>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body text-justify">
-            <p>
-              Après validation de votre inscription, toute modification, ajout, ou suppression de cours pour les
-              adhérents inscrits devra se faire auprès de l'équipe K'Dance. Il ne sera plus possible de supprimer un
-              adhérent.
-            </p>
-            <p>
-              La validation définitive se fera à réception du paiement. A ce jour, le paiement en ligne n'est pas encore
-              possible, mais vous pouvez voir facilement un statut de votre compte pour la saison en cours, et faire
-              passer
-              votre règlement à K'Dance lors du forum des associations ou des permanences qui auront lieu fin septembre.
-            </p>
-            <p>
-              Le document médical, attestation sur l'honneur ou certificat, sera à remettre dès que possible de la même
-              façon,
-              ou auprès des professeurs.
-            </p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-            <button id="validate-btn" type="submit" class="btn btn-success">Valider</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Content -->
     <div class="container">
       <div class="text-center">
@@ -145,13 +112,13 @@
           </div>
         </div>
         <div class="mb-4">
-          <p>Pour commencer l'inscription, cliquez sur <span class="main-blue fst-italic">Ajouter un nouvel
-              adhérent</span> dans la
-            saison en cours. Recommencez pour chaque adhérent de la famille.<br />
-            Lorsque tout le monde est inscrit et que les cours sont choisis, vous pourrez <span
-              class="main-green fst-italic">Valider les inscriptions</span>.
+          <p>
+            Pour commencer l'inscription, cliquez sur <span class="main-blue fst-italic">Ajouter un nouvel adhérent</span> dans la saison en cours.
+            Recommencez pour chaque adhérent de la famille.<br />
+            Pour une ré-inscription, vous pouvez également cliquer sur <span class="main-blue fst-italic">Ajouter un adhérent d'une saison précédente</span>.<br />
+            L'inscription sera validée à réception du paiement.
           </p>
-          <p class="fst-italic">Pour en savoir un peu plus sur ce nouvel outil, <a href="/about">cliquez ici</a>.</p>
+          <p class="fst-italic">Pour en savoir un peu plus sur cet espace, <a href="/about">cliquez ici</a>.</p>
           {% if not allow_new_member %}
             <p>Les inscriptions sont terminées pour cette année. <strong>Vous ne pouvez plus ajouter d'adhérent.</strong></p>
           {% endif %}
@@ -189,6 +156,23 @@
                 </div>
                 <div class="season-btn-div d-flex flex-column col-12 col-sm-4"></div>
               </div>
+
+          <div class="col-12 col-sm-8 mb-3 dropdown">
+            <b>Ai-je besoin d'un certificat médical ?</b><br/>
+            <p>
+              Téléchargez l'auto-questionnaire correspondant à votre situation. Si vous répondez au moins une fois "oui", vous avez besoin d'un certificat.
+              Sinon, vous pouvez télécharger et remplir l'attestation sur l'honneur disponible.
+            </p>
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Télécharger un document
+            </button>
+            <ul class="dropdown-menu">
+              <li><button class="dropdown-item" type="button" onclick="window.open('download-pdf/?doc=auto-questionnaire-sante-mineurs')">Auto-questionnaire enfant</button></li>
+              <li><button class="dropdown-item" type="button" onclick="window.open('download-pdf?doc=auto-questionnaire-sante-adultes')">Auto-questionnaire adulte</button></li>
+              <li><button class="dropdown-item" type="button" onclick="window.open('download-pdf?doc=attestation-sur-honneur-kdance')">Attestation sur l'honneur</button></li>
+            </ul>
+          </div>
+
             </div>
           </div>
         </div>
@@ -234,12 +218,6 @@
           <i class="bi-currency-euro"></i>
           Payer l'inscription
         </button>
-
-        <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#validate-modal"
-          id="validate-members-btn" {% if not allow_new_member %} disabled {% endif %}>
-          <i class="bi-file-earmark-check-fill"></i>
-          Valider les inscriptions
-        </button>
       </template>
 
       <template id="member-doc-template">
@@ -253,55 +231,6 @@
         <li class="list-group-item">
           <i></i>
         </li>
-      </template>
-
-      <template id="contact-template">
-        <div>
-          <div class="row flex-wrap align-items-end">
-            <div class="col">
-              <div class="form-outline mb-4">
-                <label class="form-label required" for="firstname-">Prénom</label>
-                <input type="text" id="firstname-" class="form-control" />
-              </div>
-            </div>
-            <div class="col">
-              <div class="form-outline mb-4">
-                <label class="form-label required" for="lastname-">Nom de famille</label>
-                <input type="text" id="lastname-" class="form-control" />
-              </div>
-            </div>
-            <div class="col-3">
-              <div class="form-outline mb-4">
-                <label class="form-label required" for="phone-">Téléphone</label>
-                <input type="text" id="phone-" maxlength="10" class="form-control" />
-                <div id="invalid-phone-" class="invalid-feedback"></div>
-              </div>
-            </div>
-            <div class="col-3">
-              <div class="form-outline mb-4">
-                <label class="form-label required" for="email-">Email</label>
-                <input type="text" id="email-" class="form-control" />
-                <div id="invalid-email-" class="invalid-feedback"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </template>
-
-      <template id="add-contact-template">
-        <div class="col-1 mb-4">
-          <button class="btn btn-outline-info" type="button">
-            <i class="bi-plus-square"></i>
-          </button>
-        </div>
-      </template>
-
-      <template id="remove-contact-template">
-        <div class="col-1 mb-4">
-          <button class="btn btn-outline-danger" type="button">
-            <i class="bi-trash3-fill"></i>
-          </button>
-        </div>
       </template>
 
       {% endif %}

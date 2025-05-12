@@ -392,7 +392,7 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             doc.save()
         if sport_pass:
             if SportPass.objects.filter(member__id=member.id).exists():
-                sport_pass_item = SportPass.objects.filter(member__id=member.id).first()
+                sport_pass_item = SportPass.objects.get(member__id=member.id)
                 sport_pass_item.code = sport_pass["code"]
                 sport_pass_item.save()
             else:
@@ -401,7 +401,7 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
                 member.save()
         else:
             if SportPass.objects.filter(member__id=member.id).exists():
-                sport_pass_item = SportPass.objects.filter(member__id=member.id).first()
+                sport_pass_item = SportPass.objects.get(member__id=member.id)
                 sport_pass_item.delete()
         active_to_remove = [
             c for c in member.active_courses.all() if c not in active_courses

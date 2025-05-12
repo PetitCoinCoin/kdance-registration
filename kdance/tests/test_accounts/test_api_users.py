@@ -13,7 +13,7 @@ from parameterized import parameterized
 from accounts.api.views import UsersApiViewSet
 from members.models import Payment, Season
 from tests.authentication import AuthenticatedAction, AuthTestCase
-from tests.data_tests import TESTUSER, TESTUSER_EMAIL
+from tests.data_tests import SEASON, TESTUSER, TESTUSER_EMAIL
 
 
 @pytest.mark.django_db
@@ -128,10 +128,7 @@ class TestUsersView(AuthTestCase):
             season = Season.objects.create(
                 year="2010-2011",
                 is_current=True,
-                ffd_a_amount=0,
-                ffd_b_amount=0,
-                ffd_c_amount=0,
-                ffd_d_amount=0,
+                **SEASON,
             )
         response = self.client.post(
             self.view_url, data=self._TEST_DATA, content_type="application/json"

@@ -6,7 +6,6 @@ import pytest
 from django.urls import reverse
 from parameterized import parameterized
 
-from members.models import Season
 from members.views import (
     about,
     admin_mgmt,
@@ -32,14 +31,8 @@ class MembersViewsTestCase(AuthTestCase):
     ADMIN_ONLY: bool
 
     @pytest.fixture(autouse=True)
-    def setup_season(self):
-        Season.objects.get_or_create(
-            year="1900-1901",
-            ffd_a_amount=0,
-            ffd_b_amount=0,
-            ffd_c_amount=0,
-            ffd_d_amount=0,
-        )
+    def setup_season(self, mock_season):
+        pass
 
     @parameterized.expand(["get", "post", "put", "patch", "delete"])
     def test_permissions(self, method):

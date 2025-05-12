@@ -13,6 +13,7 @@ from members.models import (
     Season,
 )
 from tests.authentication import AuthenticatedAction, AuthTestCase
+from tests.data_tests import SEASON
 
 
 @pytest.mark.django_db
@@ -24,22 +25,9 @@ class TestCourseApiView(AuthTestCase):
     _season: Season | None = None
 
     @pytest.fixture(autouse=True)
-    def set_course(self):
-        self._season, _ = Season.objects.get_or_create(
-            year="1900-1901",
-            ffd_a_amount=0,
-            ffd_b_amount=0,
-            ffd_c_amount=0,
-            ffd_d_amount=0,
-        )
-        self._course, _ = Course.objects.get_or_create(
-            name="Cha cha cha",
-            season=self._season,
-            price=10,
-            weekday=0,
-            start_hour=time(10, 0),
-            end_hour=time(11, 0),
-        )
+    def set_course(self, mock_season, mock_course):
+        self._season = mock_season
+        self._course = mock_course
 
     @property
     def view_url(self):
@@ -196,22 +184,9 @@ class TestCoursesCopyApiView(AuthTestCase):
     _season: Season | None = None
 
     @pytest.fixture(autouse=True)
-    def set_course(self):
-        self._season, _ = Season.objects.get_or_create(
-            year="1900-1901",
-            ffd_a_amount=0,
-            ffd_b_amount=0,
-            ffd_c_amount=0,
-            ffd_d_amount=0,
-        )
-        self._course, _ = Course.objects.get_or_create(
-            name="Cha cha cha",
-            season=self._season,
-            price=10,
-            weekday=0,
-            start_hour=time(10, 0),
-            end_hour=time(11, 0),
-        )
+    def set_course(self, mock_season, mock_course):
+        self._season = mock_season
+        self._course = mock_course
 
     @parameterized.expand(
         [
@@ -234,11 +209,8 @@ class TestCoursesCopyApiView(AuthTestCase):
 
     def test_copy_season(self):
         new_season = Season.objects.create(
+            **SEASON,
             year="2000-2001",
-            ffd_a_amount=0,
-            ffd_b_amount=0,
-            ffd_c_amount=0,
-            ffd_d_amount=0,
         )
         data = {
             "from_season": self._season.pk,
