@@ -7,7 +7,6 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import Count
 from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render
-from django.templatetags.static import static
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
@@ -320,8 +319,7 @@ def about(request: HttpRequest) -> HttpResponse:
 @login_required()
 def download_pdf(request: HttpRequest) -> HttpResponse:
     filename = request.GET.get("doc")
-    file_path = Path(static(f"pdf/{filename}.pdf"))
-    file_path = Path(static(f"pdf/{filename}.pdf"))
+    file_path = Path(f"{settings.STATIC_ROOT}/pdf/{filename}.pdf")
     if file_path.exists():
         with file_path.open("rb") as f:
             response = HttpResponse(f.read(), content_type="application/pdf")
