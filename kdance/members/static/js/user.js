@@ -182,7 +182,7 @@ function getUser() {
               let liItem = document.createElement('li');
               liItem.className = 'list-group-item fst-italic';
               const startHour = course.start_hour.split(':');
-              liItem.textContent = `Sur liste d'attente: ${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
+              liItem.textContent = `--- Sur liste d'attente: ${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]} ---`;
               memberInfos.appendChild(liItem);
             })
             member.cancelled_courses.map((course) => {
@@ -192,6 +192,10 @@ function getUser() {
               liItem.textContent = `(Annulé) ${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
               memberInfos.appendChild(liItem);
             })
+            if (member.waiting_courses.length) {
+              let memberWarning = cardClone.querySelector('p');
+              memberWarning.hidden = false;
+            }
             populateDocuments(member, memberInfos);
             body.appendChild(cardClone);
           }
