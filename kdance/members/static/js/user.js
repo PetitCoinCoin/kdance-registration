@@ -137,6 +137,8 @@ function getUser() {
           collapseBtn.ariaExpanded = false;
           collapseBtn.classList.add('collapsed');
           collapsing.classList.remove('show');
+          const medicalDocDropdown = clone.querySelector('.medical-dropdown');
+          medicalDocDropdown.remove();
         } else {
           const memberBtnClone = memberBtnTemplate.content.cloneNode(true);
           if (previousMembers.length == 0) {
