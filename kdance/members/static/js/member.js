@@ -101,7 +101,10 @@ async function getCourses() {
         data.map((course) => {
           const startHour = course.start_hour.split(':');
           const endHour = course.end_hour.split(':');
-          const label = `${course.name} - ${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]} à ${endHour[0]}h${endHour[1]} - ${course.price}€`;
+          let label = `${course.name} - ${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]} à ${endHour[0]}h${endHour[1]} - ${course.price}€`;
+          if (course.is_complete) {
+            label = `COMPLET (liste d'attente): ${label}`;
+          }
           memberCourses.innerHTML += `<div class="form-check">
   <input class="form-check-input course-checkbox" type="checkbox" value="${course.id}" id="check-${course.id}">
   <label class="form-check-label" for="check-${course.id}">${label}</label>
