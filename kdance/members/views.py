@@ -1,3 +1,4 @@
+from datetime import date
 from pathlib import Path
 
 import stripe
@@ -88,6 +89,8 @@ def __identify_discounts(user, total_before_discount) -> list:
 @require_http_methods(["GET"])
 @login_required()
 def index(request: HttpRequest) -> HttpResponse:
+    current_season = Season.objects.filter(is_current=True).first()
+    pre_signup = current_season and current_season.pre_signup_end >= date.today()
     return render(
         request,
         "pages/index.html",
@@ -95,6 +98,9 @@ def index(request: HttpRequest) -> HttpResponse:
             "user": request.user,
             "is_teacher": _is_teacher(request),
             "allow_new_member": GeneralSettings.get_solo().allow_new_member,
+            "previous_season": current_season.previous_season if current_season else "",
+            "pre_signup_start": current_season.pre_signup_start if pre_signup else "",
+            "pre_signup_end": current_season.pre_signup_end if pre_signup else "",
         },
     )
 

@@ -112,6 +112,18 @@
           </div>
         </div>
         <div class="mb-4">
+          {% if pre_signup_start and pre_signup_end %}
+            <div class="border border-warning border-5 rounded px-2 pt-2 mb-2">
+              <h5>Pré-inscriptions</h5>
+              <p>Uniquement pour les adhérents <span class="border-bottom border-danger">inscrits la saison précédente</span>: <strong>du {{ pre_signup_start }} au {{ pre_signup_end }}.</strong></p>
+            </div>
+          {% endif %}
+          {% if signup_start and signup_end %}
+            <div class="border border-warning border-5 rounded px-2 pt-2 mb-2">
+              <h5>Inscriptions</h5>
+              <p>Les inscriptions en ligne pour cette saison auront lieu <strong>du {{ signup_start }} au {{ signup_end }}.</strong></p>
+            </div>
+          {% endif %}
           <p>
             Pour commencer l'inscription, cliquez sur <span class="main-blue fst-italic">Ajouter un nouvel adhérent</span> dans la saison en cours.
             Recommencez pour chaque adhérent de la famille.<br />
@@ -215,7 +227,6 @@
           <i class="bi-plus-square"></i>
           Ajouter un nouvel adhérent
         </button>
-
         <button class="btn btn-success mb-1" type="button" onclick="window.location='/checkout'"
           id="checkout-btn" {% if not allow_new_member %} disabled {% endif %}>
           <i class="bi-currency-euro"></i>
@@ -244,6 +255,8 @@
     const userMeValidateUrl = "{% url 'api-user-me-validate' %}";
     const membersUrl = "{% url 'api-members-list' %}";
     const settingsUrl = "{% url 'api-settings-detail' %}";
+    const previousSeason = "{{ previous_season }}";
+    const preSignupEnd = "{{ pre_signup_end | date:'Y-m-d' }}";
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
   </script>
   <script src="{% static 'js/user.js' %}"></script>

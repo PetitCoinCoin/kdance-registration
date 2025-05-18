@@ -9,7 +9,6 @@ $(document).ready(() => {
   });
 });
 
-
 function displayPwdToast() {
   if (window.location.hash === '#pwd_ok') {
     const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('pwd-success-toast'));
@@ -108,8 +107,11 @@ function getUser() {
       const accordionTemplate = document.querySelector('#accordion-item-template');
       const cardTemplate = document.querySelector('#card-template');
       const memberBtnTemplate = document.querySelector('#member-btn-template');
+      const isPreSignup = new Date(preSignupEnd) >= new Date();
       // Previous seasons members
-      const previousMembers = getPreviousMembers(data.members.filter((m) => !m.season.is_current));
+      const previousMembers = isPreSignup ?
+        data.members.filter((m) => m.season.year === previousSeason) :
+        getPreviousMembers(data.members.filter((m) => !m.season.is_current));
       let memberSelect = $('#copy-member-select');
       previousMembers.map((m) => {
         memberSelect.append($('<option>', { value: m.id, text: `${m.first_name} ${m.last_name}` }));
@@ -144,6 +146,9 @@ function getUser() {
           if (previousMembers.length == 0) {
             let copyBtn = memberBtnClone.querySelector('#copy-member-btn');
             copyBtn.remove();
+          } else if (new Date(item.season.pre_signup_start) > new Date()) {
+            let copyBtn = memberBtnClone.querySelector('#copy-member-btn');
+            copyBtn.disabled = true;
           }
           const btnParent = clone.querySelector('.season-btn-div');
           const notValidatedMembers = data.members.filter((member) => member.season.id == item.season.id && !member.is_validated);

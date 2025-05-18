@@ -131,6 +131,13 @@ class Season(models.Model):
             if previous_id:
                 stripe.Price.modify(previous_id, active=False)
 
+    @property
+    def previous_season(self) -> str:
+        previous_season = (
+            Season.objects.filter(year__lt=self.year).order_by("-year").first()
+        )
+        return previous_season.year if previous_season else ""
+
     def __repr__(self) -> str:
         return self.year
 
