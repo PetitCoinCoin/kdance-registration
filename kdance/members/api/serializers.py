@@ -46,6 +46,8 @@ class SeasonSerializer(serializers.ModelSerializer):
             "is_current",
             "pre_signup_start",
             "pre_signup_end",
+            "signup_start",
+            "signup_end",
             "discount_percent",
             "discount_limit",
             "pass_sport_amount",
@@ -75,6 +77,31 @@ class SeasonSerializer(serializers.ModelSerializer):
                 {
                     "pre_signup_end": [
                         "La fin des pré-inscriptions ne peut être qu'après le début des pré-inscriptions."
+                    ]
+                }
+            )
+
+        if (
+            validated.get("signup_start")
+            and validated.get("pre_signup_end")
+            and validated.get("signup_start") < validated.get("pre_signup_end")
+        ):
+            raise serializers.ValidationError(
+                {
+                    "signup_start": [
+                        "Le début des inscriptions ne peut être qu'après la fin des pré-inscriptions."
+                    ]
+                }
+            )
+        if (
+            validated.get("signup_end")
+            and validated.get("signup_end")
+            and validated.get("signup_end") < validated.get("signup_start")
+        ):
+            raise serializers.ValidationError(
+                {
+                    "signup_end": [
+                        "La fin des inscriptions ne peut être qu'après le début des inscriptions."
                     ]
                 }
             )

@@ -47,6 +47,8 @@ class Season(models.Model):
     is_current = models.BooleanField(null=False, blank=False, default=True)
     pre_signup_start = models.DateField(null=False, blank=False)
     pre_signup_end = models.DateField(null=False, blank=False)
+    signup_start = models.DateField(null=True)
+    signup_end = models.DateField(null=True)
     discount_percent = models.PositiveIntegerField(
         default=10,
         blank=False,
@@ -147,6 +149,17 @@ class Season(models.Model):
     def is_pre_signup_ongoing(self) -> bool:
         today = date.today()
         return self.pre_signup_start <= today <= self.pre_signup_end
+
+    @property
+    def is_before_signup(self) -> bool:
+        return self.signup_start and self.signup_end and date.today() <= self.signup_end
+
+    @property
+    def is_signup_ongoing(self) -> bool:
+        if not self.signup_start or not self.signup_end:
+            return False
+        today = date.today()
+        return self.signup_start <= today <= self.signup_end
 
     def __repr__(self) -> str:
         return self.year
