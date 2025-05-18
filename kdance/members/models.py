@@ -44,6 +44,8 @@ class Season(models.Model):
         validators=[RegexValidator(r"\d{4}-\d{4}")],
     )
     is_current = models.BooleanField(null=False, blank=False, default=True)
+    pre_signup_start = models.DateField(null=False, blank=False)
+    pre_signup_end = models.DateField(null=False, blank=False)
     discount_percent = models.PositiveIntegerField(
         default=10,
         blank=False,

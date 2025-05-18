@@ -1,10 +1,13 @@
 """Tests related to Season API view."""
 
+from datetime import timedelta
 from urllib.parse import urlencode
 
 import pytest
 
+from django.conf import settings
 from django.urls import reverse
+from django.utils import timezone
 from parameterized import parameterized
 
 from members.api.views import SeasonViewSet
@@ -135,6 +138,12 @@ class TestSeasonApiView(AuthTestCase):
         year = "2000-2001"
         data = {
             "year": year,
+            "pre_signup_start": (timezone.now() - timedelta(days=2)).strftime(
+                settings.DATE_FORMAT
+            ),
+            "pre_signup_end": (timezone.now() + timedelta(days=2)).strftime(
+                settings.DATE_FORMAT
+            ),
             "ffd_a_amount": 0,
             "ffd_b_amount": 0,
             "ffd_c_amount": 0,
@@ -164,20 +173,40 @@ class TestSeasonApiView(AuthTestCase):
 
     @parameterized.expand(
         [
-            ("2000-01", "Saisissez une valeur valide."),
-            ("1800-1801", "On ne peut pas créer de saison dans le passé !"),
+            ({"year": "2000-01"}, "year", "Saisissez une valeur valide."),
+            (
+                {"year": "1800-1801"},
+                "year",
+                "On ne peut pas créer de saison dans le passé !",
+            ),
+            (
+                {
+                    "pre_signup_start": timezone.now().strftime(settings.DATE_FORMAT),
+                    "pre_signup_end": (timezone.now() - timedelta(days=2)).strftime(
+                        settings.DATE_FORMAT
+                    ),
+                    "ffd_a_amount": 0,
+                    "ffd_b_amount": 0,
+                    "ffd_c_amount": 0,
+                    "ffd_d_amount": 0,
+                    "year": "2012-2013",
+                },
+                "pre_signup_end",
+                "La fin des pré-inscriptions ne peut être qu'après le début des pré-inscriptions.",
+            ),
         ]
     )
-    def test_post_payload_error(self, year, message):
+    def test_post_payload_error(self, fields, err_field, message):
         self._kwargs = {}
         with AuthenticatedAction(self.client, self.super_testuser):
             response = self.client.post(
                 self.view_url,
-                data={"year": year},
+                data=fields,
                 content_type="application/json",
             )
             assert response.status_code == 400, response
-            assert message in response.json()["year"]
+            print(response.json())
+            assert message in response.json()[err_field]
 
     def test_patch(self):
         new_season = Season.objects.create(
@@ -195,10 +224,6 @@ class TestSeasonApiView(AuthTestCase):
                 data={
                     "year": new_year,
                     "is_current": True,
-                    "ffd_a_amount": 0,
-                    "ffd_b_amount": 0,
-                    "ffd_c_amount": 0,
-                    "ffd_d_amount": 0,
                 },
                 content_type="application/json",
             )

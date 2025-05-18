@@ -1,4 +1,5 @@
-from datetime import datetime, time, timezone
+from datetime import datetime, time, timedelta, timezone as tz
+from django.utils import timezone
 
 TESTUSER = "testuser"
 TESTUSER_EMAIL = "test@kdance.com"
@@ -16,7 +17,7 @@ COURSE = {
 MEMBER = {
     "first_name": "Plip",
     "last_name": "Plop",
-    "birthday": datetime(1900, 5, 1, tzinfo=timezone.utc),
+    "birthday": datetime(1900, 5, 1, tzinfo=tz.utc),
     "address": "Par ici",
     "city": "city",
     "postal_code": "31000",
@@ -25,6 +26,8 @@ MEMBER = {
 }
 
 SEASON = {
+    "pre_signup_start": timezone.now() - timedelta(days=2),
+    "pre_signup_end": timezone.now() + timedelta(days=2),
     "ffd_a_amount": 0,
     "ffd_b_amount": 0,
     "ffd_c_amount": 0,

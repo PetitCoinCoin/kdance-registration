@@ -42,6 +42,8 @@ class SeasonSerializer(serializers.ModelSerializer):
             "id",
             "year",
             "is_current",
+            "pre_signup_start",
+            "pre_signup_end",
             "discount_percent",
             "discount_limit",
             "pass_sport_amount",
@@ -59,6 +61,23 @@ class SeasonSerializer(serializers.ModelSerializer):
                 "On ne peut pas créer de saison dans le passé !"
             )
         return year
+
+    def validate(self, attr: dict) -> dict:
+        validated = super().validate(attr)
+        print("*************", validated)
+        if (
+            validated.get("pre_signup_end")
+            and validated.get("pre_signup_end")
+            and validated.get("pre_signup_end") < validated.get("pre_signup_start")
+        ):
+            raise serializers.ValidationError(
+                {
+                    "pre_signup_end": [
+                        "La fin des pré-inscriptions ne peut être qu'après le début des pré-inscriptions."
+                    ]
+                }
+            )
+        return validated
 
 
 class TeacherSerializer(serializers.ModelSerializer):

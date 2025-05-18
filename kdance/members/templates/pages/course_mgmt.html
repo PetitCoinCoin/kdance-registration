@@ -28,7 +28,7 @@
           </div>
           <form id="form-season" name="form-season">
             <div class="modal-body">
-              <div class="form-outline mb-4">
+              <div class="form-outline mb-2">
                 <label class="form-label required" for="season-year">Saison (format XXXX-YYYY)</label>
                 <input type="text" id="season-year" class="form-control" maxlength="9" required />
                 <div id="invalid-season-year" class="invalid-feedback"></div>
@@ -50,6 +50,23 @@
               <div class="form-outline mb-4">
                 <label class="form-label" for="season-pass-sport-amount">Montant du Pass Sport pour la saison</label>
                 <input type="number" id="season-pass-sport-amount" class="form-control" min="0" value="50" />
+              </div>
+              <div class="form-outline mb-4">
+                <h6>Pré-inscriptions</h6>
+                <div class="row">
+                  <label class="form-label required col-2" for="pre-signup-start">Du</label>
+                  <div class="col-10">
+                    <input type="date" id="pre-signup-start" class="form-control" />
+                    <div id="invalid-pre-signup-start" class="invalid-feedback"></div>
+                  </div>
+                </div>
+                <div class="row">
+                  <label class="form-label required col-2" for="pre-signup-end">au</label>
+                  <div class="col-10">
+                    <input type="date" id="pre-signup-end" class="form-control" />
+                    <div id="invalid-pre-signup-end" class="invalid-feedback"></div>
+                  </div>
+                </div>
               </div>
               <div class="form-outline mb-4">
                 <h6>Tarifs FFD</h6>

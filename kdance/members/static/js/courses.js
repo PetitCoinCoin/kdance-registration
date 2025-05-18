@@ -56,6 +56,8 @@ function getSeason(season) {
       $('#season-discount-percent').val(data.discount_percent);
       $('#season-discount-limit').val(data.discount_limit);
       $('#season-pass-sport-amount').val(data.pass_sport_amount);
+      $('#pre-signup-start').val(data.pre_signup_start);
+      $('#pre-signup-end').val(data.pre_signup_end);
       $('#season-ffd-a-amount').val(data.ffd_a_amount);
       $('#season-ffd-b-amount').val(data.ffd_b_amount);
       $('#season-ffd-c-amount').val(data.ffd_c_amount);
@@ -94,10 +96,13 @@ function createUpdateSeason() {
 
 function postOrPatchSeason(url, method) {
   $('#form-season').submit((event) => {
+    $('.invalid-feedback').removeClass('d-inline');
     event.preventDefault();
     const data = {
       year: $('#season-year').val(),
       is_current: $('#season-current').is(':checked'),
+      pre_signup_start: $('#pre-signup-start').val() !== '' ? $('#pre-signup-start').val() : undefined,
+      pre_signup_end: $('#pre-signup-end').val() !== '' ? $('#pre-signup-end').val() : undefined,
       ffd_a_amount: $('#season-ffd-a-amount').val(),
       ffd_b_amount: $('#season-ffd-b-amount').val(),
       ffd_c_amount: $('#season-ffd-c-amount').val(),
@@ -131,6 +136,14 @@ function postOrPatchSeason(url, method) {
         if (error.responseJSON.year) {
           $('#invalid-season-year').html(error.responseJSON.year[0] + ' Format attendu: XXXX-YYYY');
           $('#invalid-season-year').addClass('d-inline');
+        }
+        if (error.responseJSON.pre_signup_start) {
+          $('#invalid-pre-signup-start').html(error.responseJSON.pre_signup_start[0]);
+          $('#invalid-pre-signup-start').addClass('d-inline');
+        }
+        if (error.responseJSON.pre_signup_end) {
+          $('#invalid-pre-signup-end').html(error.responseJSON.pre_signup_end[0]);
+          $('#invalid-pre-signup-end').addClass('d-inline');
         }
       }
     });
