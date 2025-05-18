@@ -311,6 +311,10 @@ function postOrPatchMember(url, method, event) {
           $('#invalid-member-phone').html(error.responseJSON.phone[0] + ' Format attendu: 0123456789.');
           $('#invalid-member-phone').addClass('d-inline');
         }
+        if (error.responseJSON && error.responseJSON.ffd_license) {
+          $('#invalid-member-license').html(error.responseJSON.ffd_license);
+          $('#invalid-member-license').addClass('d-inline');
+        }
         if (error.responseJSON && error.responseJSON.active_courses) {
           $('#invalid-member-courses').html(error.responseJSON.active_courses[0]);
           $('#invalid-member-courses').addClass('d-inline');

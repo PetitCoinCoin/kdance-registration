@@ -173,13 +173,16 @@
               <div class="form-outline mb-4" id="form-member-courses">
                 <div class="d-flex mb-3 align-items-center">
                   <label class="form-label min-w-fit me-3" for="member-courses">License FFD</label>
-                  <select id="member-license" class="form-select">
-                    <option value="0" selected>Aucune</option>
-                    <option value="{{season.ffd_a_amount}}">Licence A Loisir ({{season.ffd_a_amount}}€)</option>
-                    <option value="{{season.ffd_b_amount}}">Licence B Compétiteur ({{season.ffd_b_amount}}€)</option>
-                    <option value="{{season.ffd_c_amount}}">Licence C Compétiteur national ({{season.ffd_c_amount}}€)</option>
-                    <option value="{{season.ffd_d_amount}}">Licence D Compétiteur international ({{season.ffd_d_amount}}€)</option>
-                  </select>
+                  <div>
+                    <select id="member-license" class="form-select">
+                      <option value="0" selected>Aucune</option>
+                      <option value="{{season.ffd_a_amount}}">Licence A Loisir ({{season.ffd_a_amount}}€)</option>
+                      <option value="{{season.ffd_b_amount}}">Licence B Compétiteur ({{season.ffd_b_amount}}€)</option>
+                      <option value="{{season.ffd_c_amount}}">Licence C Compétiteur national ({{season.ffd_c_amount}}€)</option>
+                      <option value="{{season.ffd_d_amount}}">Licence D Compétiteur international ({{season.ffd_d_amount}}€)</option>
+                    </select>
+                    <div id="invalid-member-license" class="invalid-feedback"></div>
+                  </div>
                 </div>
                 <div id="member-courses"></div>
                 <div id="invalid-member-courses" class="invalid-feedback"></div>
