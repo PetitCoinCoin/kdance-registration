@@ -14,6 +14,7 @@ class EmailEnum(Enum):
     UPDATE_USER_EMAIL = "email_user"
     CREATE_MEMBER = "create member"
     DELETE_MEMBER = "delete member"
+    PRE_SIGNUP_WARNING = "pre signup warning"
     WAITING_TO_ACTIVE_COURSE = "waiting to active course"
     RESET_PWD = "reset_password"
 
@@ -55,6 +56,8 @@ class EmailSender:
                 return self.__subject_create_member
             case EmailEnum.DELETE_MEMBER:
                 return self.__subject_delete_member
+            case EmailEnum.PRE_SIGNUP_WARNING:
+                return self.__subject_pre_signup_warning
             case EmailEnum.WAITING_TO_ACTIVE_COURSE:
                 return self.__subject_waiting_active
             case EmailEnum.RESET_PWD:
@@ -74,6 +77,8 @@ class EmailSender:
                 return self.__build_text_create_member
             case EmailEnum.DELETE_MEMBER:
                 return self.__build_text_delete_member
+            case EmailEnum.PRE_SIGNUP_WARNING:
+                return self.__build_text_pre_signup_warning
             case EmailEnum.WAITING_TO_ACTIVE_COURSE:
                 return self.__build_text_waiting_active
             case EmailEnum.RESET_PWD:
@@ -93,6 +98,8 @@ class EmailSender:
                 return self.__build_html_create_member
             case EmailEnum.DELETE_MEMBER:
                 return self.__build_html_delete_member
+            case EmailEnum.PRE_SIGNUP_WARNING:
+                return self.__build_html_pre_signup_warning
             case EmailEnum.WAITING_TO_ACTIVE_COURSE:
                 return self.__build_html_waiting_active
             case EmailEnum.RESET_PWD:
@@ -127,6 +134,10 @@ class EmailSender:
         return (
             f"Suppression d'un adhérent K'Dance pour la saison {kwargs['season_year']}"
         )
+
+    @staticmethod
+    def __subject_pre_signup_warning(**kwargs) -> str:
+        return "Pré-inscription à vérifier: risque de fraude"
 
     @staticmethod
     def __subject_waiting_active(**kwargs) -> str:
@@ -223,6 +234,24 @@ Bonjour,
 
 L'adhérent {kwargs["full_name"]} a été supprimé pour la saison {kwargs["season_year"]}.
 Si c'est une erreur, vous pouvez toujours refaire l'inscription ou contacter l'équipe K'Dance.
+
+Bonne journée et à bientôt,
+Tech K'Dance
+"""
+
+    @staticmethod
+    def __build_text_pre_signup_warning(**kwargs) -> str:
+        if not kwargs.get("username"):
+            raise ValueError("Un argument username est nécessaire pour cet email")
+        if not kwargs.get("full_name"):
+            raise ValueError("Un argument full_name est nécessaire pour cet email")
+        if not kwargs.get("birthday"):
+            raise ValueError("Un argument birthday est nécessaire pour cet email")
+        return f"""
+Bonjour,
+
+L'utilisateur {kwargs["username"]} a effectué une pré-inscription douteuse. L'adhérent suivant n'a pas été retrouvé dans les données de la saison précédente:
+{kwargs["full_name"]}, né(e) le {kwargs["birthday"]}
 
 Bonne journée et à bientôt,
 Tech K'Dance
@@ -363,6 +392,26 @@ Tech K'Dance
 <p>
   L'adhérent {kwargs["full_name"]} a été supprimé pour la saison {kwargs["season_year"]}.
   Si c'est une erreur, vous pouvez toujours refaire l'inscription ou contacter l'équipe K'Dance.
+</p>
+<p>
+  Bonne journée et à bientôt,<br />
+  Tech K'Dance
+</p>
+"""
+
+    @staticmethod
+    def __build_html_pre_signup_warning(**kwargs) -> str:
+        if not kwargs.get("username"):
+            raise ValueError("Un argument username est nécessaire pour cet email")
+        if not kwargs.get("full_name"):
+            raise ValueError("Un argument full_name est nécessaire pour cet email")
+        if not kwargs.get("birthday"):
+            raise ValueError("Un argument birthday est nécessaire pour cet email")
+        return f"""
+<p>Bonjour,</p>
+<p>
+  L'utilisateur {kwargs["username"]} a effectué une pré-inscription douteuse. L'adhérent suivant n'a pas été retrouvé dans les données de la saison précédente:<br />
+  {kwargs["full_name"]}, né(e) le {kwargs["birthday"]}
 </p>
 <p>
   Bonne journée et à bientôt,<br />

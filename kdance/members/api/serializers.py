@@ -3,12 +3,14 @@ import logging
 from enum import Enum
 from typing import Any
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.utils import IntegrityError
 from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework import serializers
 
+from members.emails import EmailEnum, EmailSender
 from members.models import (
     Ancv,
     Check,
@@ -64,7 +66,6 @@ class SeasonSerializer(serializers.ModelSerializer):
 
     def validate(self, attr: dict) -> dict:
         validated = super().validate(attr)
-        print("*************", validated)
         if (
             validated.get("pre_signup_end")
             and validated.get("pre_signup_end")
@@ -378,6 +379,21 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             if not course.is_complete
         ]
         return validated
+
+    def check_presignup(self, username: str) -> None:
+        if not Member.objects.filter(
+            first_name=self.validated_data["first_name"],
+            last_name=self.validated_data["last_name"],
+            birthday=self.validated_data["birthday"],
+            season__year=self.validated_data["season"].previous_season,
+        ).exists():
+            email_sender = EmailSender(EmailEnum.PRE_SIGNUP_WARNING)
+            email_sender.send_email(
+                emails=[settings.DEFAULT_FROM_EMAIL, settings.SUPERUSER_EMAIL],
+                username=username,
+                full_name=f"{self.validated_data["first_name"]} {self.validated_data["last_name"]}",
+                birthday=self.validated_data["birthday"],
+            )
 
     @transaction.atomic
     def save(self, **kwargs: Member) -> Member:

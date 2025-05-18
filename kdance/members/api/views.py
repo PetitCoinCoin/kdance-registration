@@ -1,3 +1,4 @@
+from datetime import date
 from members.emails import EmailEnum, EmailSender
 from members.models import (
     Check,
@@ -233,6 +234,16 @@ class MemberViewSet(
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        current_season = Season.objects.filter(is_current=True).first()
+        print(current_season, type(request.data["season"]), type(current_season.id))
+        if not current_season or request.data["season"] != str(current_season.id):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        today = date.today()
+        if current_season.pre_signup_start <= today <= current_season.pre_signup_end:
+            serializer.check_presignup(self.request.user)
+        else:
+            # TODO: handle signup zone
+            pass
         member = serializer.save(user=self.request.user)
         headers = self.get_success_headers(serializer.data)
         email_sender = EmailSender(EmailEnum.CREATE_MEMBER)
