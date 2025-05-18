@@ -391,7 +391,7 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             email_sender.send_email(
                 emails=[settings.DEFAULT_FROM_EMAIL, settings.SUPERUSER_EMAIL],
                 username=username,
-                full_name=f"{self.validated_data["first_name"]} {self.validated_data["last_name"]}",
+                full_name=f"{self.validated_data['first_name']} {self.validated_data['last_name']}",
                 birthday=self.validated_data["birthday"],
             )
 

@@ -140,6 +140,10 @@ class Season(models.Model):
         return previous_season.year if previous_season else ""
 
     @property
+    def is_before_pre_signup(self) -> bool:
+        return date.today() <= self.pre_signup_end
+
+    @property
     def is_pre_signup_ongoing(self) -> bool:
         today = date.today()
         return self.pre_signup_start <= today <= self.pre_signup_end

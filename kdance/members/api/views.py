@@ -234,7 +234,6 @@ class MemberViewSet(
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         current_season = Season.objects.filter(is_current=True).first()
-        print(current_season, type(request.data["season"]), type(current_season.id))
         if not current_season or request.data["season"] != str(current_season.id):
             return Response(status=status.HTTP_403_FORBIDDEN)
         if current_season.is_pre_signup_ongoing:

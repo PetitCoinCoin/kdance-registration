@@ -112,10 +112,10 @@
           </div>
         </div>
         <div class="mb-4">
-          {% if pre_signup_start and pre_signup_end %}
+          {% if current_season.is_before_pre_signup %}
             <div class="border border-warning border-5 rounded px-2 pt-2 mb-2">
               <h5>Pré-inscriptions</h5>
-              <p>Uniquement pour les adhérents <span class="border-bottom border-danger">inscrits la saison précédente</span>: <strong>du {{ pre_signup_start }} au {{ pre_signup_end }}.</strong></p>
+              <p>Uniquement pour les adhérents <span class="border-bottom border-danger">inscrits la saison précédente</span>: <strong>du {{ current_season.pre_signup_start }} au {{ current_season.pre_signup_end }}.</strong></p>
             </div>
           {% endif %}
           {% if signup_start and signup_end %}
@@ -255,8 +255,8 @@
     const userMeValidateUrl = "{% url 'api-user-me-validate' %}";
     const membersUrl = "{% url 'api-members-list' %}";
     const settingsUrl = "{% url 'api-settings-detail' %}";
-    const previousSeason = "{{ previous_season }}";
-    const preSignupEnd = "{{ pre_signup_end | date:'Y-m-d' }}";
+    const previousSeason = "{{ current_season.previous_season }}";
+    const isPreSignupOngoing = "{{ current_season.is_pre_signup_ongoing }}";
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
   </script>
   <script src="{% static 'js/user.js' %}"></script>
