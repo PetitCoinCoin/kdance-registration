@@ -161,6 +161,10 @@ class Season(models.Model):
         today = date.today()
         return self.signup_start <= today <= self.signup_end
 
+    @property
+    def is_after_signup(self) -> bool:
+        return self.signup_start and self.signup_end and date.today() > self.signup_end
+
     def __repr__(self) -> str:
         return self.year
 

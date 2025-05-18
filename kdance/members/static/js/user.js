@@ -147,10 +147,17 @@ function getUser() {
             copyBtn.remove();
           } else {
             if (isPreSignupOngoing) {
+              console.log("pre insc")
               let addBtn = memberBtnClone.querySelector('#add-member-btn');
               addBtn.disabled = true;
             }
-            // else if !isSignupOngoing > disable copyBtn
+            else if (!isSignupOngoing) {
+              console.log("rien")
+              let addBtn = memberBtnClone.querySelector('#add-member-btn');
+              let copyBtn = memberBtnClone.querySelector('#copy-member-btn');
+              addBtn.disabled = true;
+              copyBtn.disabled = true;
+            }
           }
           const btnParent = clone.querySelector('.season-btn-div');
           const notValidatedMembers = data.members.filter((member) => member.season.id == item.season.id && !member.is_validated);

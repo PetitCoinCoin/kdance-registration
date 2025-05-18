@@ -75,7 +75,7 @@
       </div>
       {% if user.is_authenticated %}
       <div class="container">
-        <div class="row mb-3">
+        <div class="row">
           <div class="col-10 col-sm">
             <dl class="row">
               <dt class="col-sm-3">Email:</dt>
@@ -111,28 +111,37 @@
             </span>
           </div>
         </div>
-        <div class="mb-4">
+        <div class="mb-3">
           {% if current_season.is_before_pre_signup %}
             <div class="border border-warning border-5 rounded px-2 pt-2 mb-2">
               <h5>Pré-inscriptions</h5>
               <p>Uniquement pour les adhérents <span class="border-bottom border-danger">inscrits la saison précédente</span>: <strong>du {{ current_season.pre_signup_start }} au {{ current_season.pre_signup_end }}.</strong></p>
             </div>
           {% endif %}
-          {% if signup_start and signup_end %}
+          {% if current_season.is_before_signup %}
             <div class="border border-warning border-5 rounded px-2 pt-2 mb-2">
               <h5>Inscriptions</h5>
-              <p>Les inscriptions en ligne pour cette saison auront lieu <strong>du {{ signup_start }} au {{ signup_end }}.</strong></p>
+              <p>Les inscriptions en ligne pour cette saison auront lieu <strong>du {{ current_season.signup_start }} au {{ current_season.signup_end }}.</strong> Elles sont ouvertes à toutes et à tous.</p>
+            </div>
+          {% elif current_season.is_after_signup %}
+            <div class="border border-warning border-5 rounded px-2 pt-2 mb-2">
+              <h5>Inscriptions</h5>
+              <p>Les inscriptions sont terminées pour cette année depuis le {{ current_season.signup_end }}. <strong>Vous ne pouvez plus ajouter d'adhérent.</strong></p>
             </div>
           {% endif %}
-          <p>
-            Pour commencer l'inscription, cliquez sur <span class="main-blue fst-italic">Ajouter un nouvel adhérent</span> dans la saison en cours.
-            Recommencez pour chaque adhérent de la famille.<br />
-            Pour une ré-inscription, vous pouvez également cliquer sur <span class="main-blue fst-italic">Ajouter un adhérent d'une saison précédente</span>.<br />
-            L'inscription sera validée à réception du paiement.
-          </p>
-          <p class="fst-italic">Pour en savoir un peu plus sur cet espace, <a href="/about">cliquez ici</a>.</p>
-          {% if not allow_new_member %}
-            <p>Les inscriptions sont terminées pour cette année. <strong>Vous ne pouvez plus ajouter d'adhérent.</strong></p>
+          <details>
+            <summary class="main-blue mb-1"><i class="bi-info-circle"> Comment ça marche ?</i> </summary>
+            <p>
+              Pour commencer l'inscription, cliquez sur <span class="main-blue fst-italic">Ajouter un nouvel adhérent</span> dans la saison en cours.
+              Recommencez pour chaque adhérent de la famille.<br />
+              Pour une ré-inscription, vous pouvez également cliquer sur <span class="main-blue fst-italic">Ajouter un adhérent d'une saison précédente</span>.<br />
+              L'inscription sera validée à réception du paiement.
+            </p>
+            <p class="fst-italic">Pour en savoir un peu plus sur cet espace, <a href="/about">cliquez ici</a>.</p>
+          </details>
+          {% if not allow_new_member and not current_season.is_after_signup  %}
+            <p>Les inscriptions sont impossibles pour le moment. N'hésitez pas à contacter le bureau K'Dance par <a
+              href="mailto:kdance31340@gmail.com">email</a> ou par téléphone au 0768294811.</p>
           {% endif %}
         </div>
         <div class="row">
@@ -256,7 +265,8 @@
     const membersUrl = "{% url 'api-members-list' %}";
     const settingsUrl = "{% url 'api-settings-detail' %}";
     const previousSeason = "{{ current_season.previous_season }}";
-    const isPreSignupOngoing = "{{ current_season.is_pre_signup_ongoing }}";
+    const isPreSignupOngoing = "{{ current_season.is_pre_signup_ongoing }}".toLowerCase() === "true";
+    const isSignupOngoing = "{{ current_season.is_signup_ongoing }}".toLowerCase() === "true";
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
   </script>
   <script src="{% static 'js/user.js' %}"></script>
