@@ -1,6 +1,7 @@
 import logging
 
 from enum import Enum
+from datetime import date
 
 import stripe
 
@@ -137,6 +138,11 @@ class Season(models.Model):
             Season.objects.filter(year__lt=self.year).order_by("-year").first()
         )
         return previous_season.year if previous_season else ""
+
+    @property
+    def is_pre_signup_ongoing(self) -> bool:
+        today = date.today()
+        return self.pre_signup_start <= today <= self.pre_signup_end
 
     def __repr__(self) -> str:
         return self.year

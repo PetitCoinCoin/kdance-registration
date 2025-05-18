@@ -1,4 +1,3 @@
-from datetime import date
 from members.emails import EmailEnum, EmailSender
 from members.models import (
     Check,
@@ -238,8 +237,7 @@ class MemberViewSet(
         print(current_season, type(request.data["season"]), type(current_season.id))
         if not current_season or request.data["season"] != str(current_season.id):
             return Response(status=status.HTTP_403_FORBIDDEN)
-        today = date.today()
-        if current_season.pre_signup_start <= today <= current_season.pre_signup_end:
+        if current_season.is_pre_signup_ongoing:
             serializer.check_presignup(self.request.user)
         else:
             # TODO: handle signup zone
