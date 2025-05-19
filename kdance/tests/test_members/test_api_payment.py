@@ -1,11 +1,14 @@
 """Tests related to Payment and Check API views."""
 
+from datetime import timedelta
 from urllib.parse import urlencode
 
 import pytest
 
+from django.conf import settings
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
+from django.utils import timezone
 from parameterized import parameterized
 
 from members.api.views import CheckViewSet, PaymentViewSet
@@ -23,6 +26,12 @@ class TestCheckApiView(AuthTestCase):
         season_1 = Season.objects.create(
             year="1900-1901",
             is_current=False,
+            pre_signup_start=(timezone.now() - timedelta(days=2)).strftime(
+                settings.DATE_FORMAT
+            ),
+            pre_signup_end=(timezone.now() + timedelta(days=2)).strftime(
+                settings.DATE_FORMAT
+            ),
             ffd_a_amount=0,
             ffd_b_amount=0,
             ffd_c_amount=0,
@@ -31,6 +40,12 @@ class TestCheckApiView(AuthTestCase):
         season_2 = Season.objects.create(
             year="2000-2001",
             is_current=True,
+            pre_signup_start=(timezone.now() - timedelta(days=2)).strftime(
+                settings.DATE_FORMAT
+            ),
+            pre_signup_end=(timezone.now() + timedelta(days=2)).strftime(
+                settings.DATE_FORMAT
+            ),
             ffd_a_amount=0,
             ffd_b_amount=0,
             ffd_c_amount=0,

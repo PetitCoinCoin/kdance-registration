@@ -26,8 +26,10 @@ MEMBER = {
 }
 
 SEASON = {
-    "pre_signup_start": timezone.now() - timedelta(days=2),
-    "pre_signup_end": timezone.now() + timedelta(days=2),
+    "pre_signup_start": timezone.now() - timedelta(days=4),
+    "pre_signup_end": timezone.now() - timedelta(days=2),
+    "signup_start": timezone.now() - timedelta(days=2),
+    "signup_end": timezone.now() + timedelta(days=2),
     "ffd_a_amount": 0,
     "ffd_b_amount": 0,
     "ffd_c_amount": 0,

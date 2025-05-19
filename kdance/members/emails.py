@@ -137,7 +137,7 @@ class EmailSender:
 
     @staticmethod
     def __subject_pre_signup_warning(**kwargs) -> str:
-        return "Pré-inscription à vérifier: risque de fraude"
+        return "Suspicion de pré-inscription frauduleuse: à vérifier"
 
     @staticmethod
     def __subject_waiting_active(**kwargs) -> str:
@@ -353,8 +353,7 @@ Tech K'Dance
             raise ValueError("Un argument season_year est nécessaire pour cet email")
         course_message = "Vous n'avez cependant pas de cours pour le moment."
         if kwargs.get("active_courses"):
-            course_message = f"""
-</p>
+            course_message = f"""</p>
 <p>
   Cours choisi(s):<br />
   {"<br />".join([c.name for c in kwargs["active_courses"]])}<br />

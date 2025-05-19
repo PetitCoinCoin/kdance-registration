@@ -152,7 +152,11 @@ class Season(models.Model):
 
     @property
     def is_before_signup(self) -> bool:
-        return self.signup_start and self.signup_end and date.today() <= self.signup_end
+        return (
+            self.signup_start is not None
+            and self.signup_end is not None
+            and date.today() <= self.signup_end
+        )
 
     @property
     def is_signup_ongoing(self) -> bool:
@@ -163,7 +167,11 @@ class Season(models.Model):
 
     @property
     def is_after_signup(self) -> bool:
-        return self.signup_start and self.signup_end and date.today() > self.signup_end
+        return (
+            self.signup_start is not None
+            and self.signup_end is not None
+            and date.today() > self.signup_end
+        )
 
     def __repr__(self) -> str:
         return self.year
@@ -541,7 +549,7 @@ class ContactManager(models.Manager):
     def clean_orphan(self) -> None:
         """If contact is linked to no one, we delete it."""
         for contact in self.all():
-            if not contact.member_set.all():  # type:ignore[attr-defined]
+            if not contact.member_set.all():  # type: ignore[attr-defined]
                 contact.delete()
 
 

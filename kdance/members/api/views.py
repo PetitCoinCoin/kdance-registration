@@ -237,19 +237,19 @@ class MemberViewSet(
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         current_season = Season.objects.filter(is_current=True).first()
-        if not current_season or request.data["season"] != str(current_season.id):
+        if not current_season or str(request.data["season"]) != str(current_season.id):
             return Response(
                 status=status.HTTP_405_METHOD_NOT_ALLOWED, data={"error": SIGNUP_ERROR}
             )
         if current_season.is_pre_signup_ongoing:
-            serializer.check_presignup(self.request.user)
+            serializer.check_presignup(self.request.user)  # type: ignore[attr-defined]
         else:
             if not current_season.is_signup_ongoing:
                 return Response(
                     status=status.HTTP_405_METHOD_NOT_ALLOWED,
                     data={"error": SIGNUP_ERROR},
                 )
-        member = serializer.save(user=self.request.user)
+        member = serializer.save(user=self.request.user.username)
         headers = self.get_success_headers(serializer.data)
         email_sender = EmailSender(EmailEnum.CREATE_MEMBER)
         email_sender.send_email(
@@ -275,7 +275,7 @@ class MemberViewSet(
         user = self.get_object().user
         serializer.save(user=user)
 
-    def destroy(self, request, *args, **kwargs):
+    def destroy(self, request, *args, **kwargs) -> Response:
         instance: Member = self.get_object()
         if not request.user.is_superuser and instance.user != request.user:
             return Response(status=status.HTTP_403_FORBIDDEN)

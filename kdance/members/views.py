@@ -322,6 +322,8 @@ def about(request: HttpRequest) -> HttpResponse:
 @login_required()
 def download_pdf(request: HttpRequest) -> HttpResponse:
     filename = request.GET.get("doc")
+    if not filename:
+        raise Http404
     file_path = Path(f"{settings.STATIC_ROOT}/pdf/{filename}.pdf")
     if file_path.exists():
         with file_path.open("rb") as f:

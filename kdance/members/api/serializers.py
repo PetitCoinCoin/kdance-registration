@@ -419,11 +419,11 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
                 emails=[settings.DEFAULT_FROM_EMAIL, settings.SUPERUSER_EMAIL],
                 username=username,
                 full_name=f"{self.validated_data['first_name']} {self.validated_data['last_name']}",
-                birthday=self.validated_data["birthday"],
+                birthday=self.validated_data["birthday"].strftime("%d/%m/%Y"),
             )
 
     @transaction.atomic
-    def save(self, **kwargs: Member) -> Member:
+    def save(self, **kwargs: Any) -> Member:
         username = kwargs.get("user")
         self.validated_data["user"] = User.objects.get(username=username)
         contacts = self.validated_data.pop("contacts", None)
