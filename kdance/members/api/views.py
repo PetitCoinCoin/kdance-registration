@@ -229,18 +229,26 @@ class MemberViewSet(
         return Response(serializer.data)
 
     def create(self, request: Request, *a, **k) -> Response:
+        SIGNUP_ERROR = "Les inscriptions ne sont pas ouvertes. Vous ne pouvez pas ajouter d'adhérent pour le moment."
         if not GeneralSettings.get_solo().allow_new_member:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                status=status.HTTP_405_METHOD_NOT_ALLOWED, data={"error": SIGNUP_ERROR}
+            )
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         current_season = Season.objects.filter(is_current=True).first()
         if not current_season or request.data["season"] != str(current_season.id):
-            return Response(status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                status=status.HTTP_405_METHOD_NOT_ALLOWED, data={"error": SIGNUP_ERROR}
+            )
         if current_season.is_pre_signup_ongoing:
             serializer.check_presignup(self.request.user)
         else:
-            # TODO: handle signup zone
-            pass
+            if not current_season.is_signup_ongoing:
+                return Response(
+                    status=status.HTTP_405_METHOD_NOT_ALLOWED,
+                    data={"error": SIGNUP_ERROR},
+                )
         member = serializer.save(user=self.request.user)
         headers = self.get_success_headers(serializer.data)
         email_sender = EmailSender(EmailEnum.CREATE_MEMBER)

@@ -273,8 +273,12 @@ function postOrPatchMember(url, method, event) {
         } else {
           const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('member-error-toast'));
           let message = 'Certaines informations sont manquantes ou erronées. Veuillez vérifier les différents champs.';
-          if (error.responseJSON.contacts) {
-            message += ' Il y a notamment un souci au niveau des contacts.';
+          if (error.responseJSON.error) {
+            message = error.responseJSON.error;
+          } else {
+            if (error.responseJSON.contacts) {
+              message += ' Il y a notamment un souci au niveau des contacts.';
+            }
           }
           $('#member-error-body').text(message);
           toast.show();
