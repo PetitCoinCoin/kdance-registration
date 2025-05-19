@@ -187,7 +187,9 @@ class MemberViewSet(
             queryset = queryset.filter(season__id=season)
         if course:
             queryset = queryset.filter(
-                Q(active_courses__id=course) | Q(cancelled_courses__id=course)
+                Q(active_courses__id=course)
+                | Q(cancelled_courses__id=course)
+                | Q(waiting_courses__id=course)
             )
         if with_pass:
             queryset = queryset.filter(

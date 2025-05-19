@@ -147,7 +147,7 @@ function getMembersPerCourse(mainValue) {
       $('#data-table').bootstrapTable('destroy');
       switch (mainValue) {
         case '1':
-          buildMembersInfo(data);
+          buildMembersInfo(data, subValue);
           break
         case '2':
         case '3':
@@ -178,7 +178,131 @@ function getMembersPerCourse(mainValue) {
   });
 }
 
-function buildMembersInfo(data) {
+function buildMembersInfo(data, courseId) {
+  let columns = [
+    {
+      field: 'name',
+      title: 'Adhérent',
+      searchable: true,
+      sortable: true,
+    },
+    {
+      field: 'created',
+      title: 'Inscrit le',
+      searchable: false,
+      sortable: true,
+      visible: false,
+    }, {
+      field: 'status',
+      title: 'Statut',
+      searchable: true,
+      sortable: true,
+      visible: true,
+      formatter: function(value) {
+        return value.join('<br />')
+      },
+    }, {
+      field: 'birthday',
+      title: 'Date de naissance',
+      searchable: false,
+      sortable: true,
+    }, {
+      field: 'phone',
+      title: 'Téléphone',
+      searchable: false,
+      sortable: false,
+    }, {
+      field: 'email',
+      title: 'Email',
+      searchable: false,
+      sortable: false,
+    }, {
+      field: 'name-responsible-1',
+      title: 'Responsable légal 1',
+      searchable: true,
+      sortable: true,
+      visible: false,
+    }, {
+      field: 'phone-responsible-1',
+      title: 'Tél 1',
+      searchable: false,
+      sortable: false,
+      visible: false,
+    }, {
+      field: 'email-responsible-1',
+      title: 'Email 1',
+      searchable: false,
+      sortable: false,
+      visible: false,
+    }, {
+      field: 'name-responsible-2',
+      title: 'Responsable légal 2',
+      searchable: true,
+      sortable: true,
+      visible: false,
+    }, {
+      field: 'phone-responsible-2',
+      title: 'Tél 2',
+      searchable: false,
+      sortable: false,
+      visible: false,
+    }, {
+      field: 'email-responsible-2',
+      title: 'Email 2',
+      searchable: false,
+      sortable: false,
+      visible: false,
+    }, {
+      field: 'name-emergency-1',
+      title: 'Contact urgence 1',
+      searchable: true,
+      sortable: true,
+      visible: false,
+    }, {
+      field: 'phone-emergency-1',
+      title: 'Tél urgence 1',
+      searchable: false,
+      sortable: false,
+      visible: false,
+    }, {
+      field: 'name-emergency-2',
+      title: 'Contact urgence 2',
+      searchable: true,
+      sortable: true,
+      visible: false,
+    }, {
+      field: 'phone-emergency-2',
+      title: 'Tél urgence 2',
+      searchable: false,
+      sortable: false,
+      visible: false,
+    }, {
+      field: 'documents.authorise_photos',
+      title: 'Autorisation photos',
+      searchable: false,
+      sortable: true,
+      visible: false,
+    }, {
+      field: 'documents.authorise_emergency',
+      title: 'Autorisation parentale',
+      searchable: false,
+      sortable: true,
+      visible: false,
+    }
+  ];
+  if (courseId > 0) {
+    columns.splice(5, 0, {
+      field: 'courses',
+      title: 'Autre cours',
+      searchable: true,
+      sortable: true,
+      visible: true,
+      formatter: function(value) {
+        return value.join('<br />')
+      },
+    }
+  );
+  }
   $('#data-table').bootstrapTable({
     ...COMMON_TABLE_PARAMS,
     showExport: true,
@@ -189,125 +313,19 @@ function buildMembersInfo(data) {
         return `adherents_${$('#season-select option:selected').text().substring(0,9)}_${suffix}`
       }
     },
-    columns: [
-      {
-        field: 'name',
-        title: 'Adhérent',
-        searchable: true,
-        sortable: true,
-      },
-      {
-        field: 'created',
-        title: 'Inscrit le',
-        searchable: false,
-        sortable: true,
-        visible: false,
-      }, {
-        field: 'status',
-        title: 'Statut',
-        searchable: true,
-        sortable: true,
-        visible: true,
-      }, {
-        field: 'phone',
-        title: 'Téléphone',
-        searchable: false,
-        sortable: false,
-      }, {
-        field: 'email',
-        title: 'Email',
-        searchable: false,
-        sortable: false,
-      }, {
-        field: 'name-responsible-1',
-        title: 'Responsable légal 1',
-        searchable: true,
-        sortable: true,
-        visible: false,
-      }, {
-        field: 'phone-responsible-1',
-        title: 'Tél 1',
-        searchable: false,
-        sortable: false,
-        visible: false,
-      }, {
-        field: 'email-responsible-1',
-        title: 'Email 1',
-        searchable: false,
-        sortable: false,
-        visible: false,
-      }, {
-        field: 'name-responsible-2',
-        title: 'Responsable légal 2',
-        searchable: true,
-        sortable: true,
-        visible: false,
-      }, {
-        field: 'phone-responsible-2',
-        title: 'Tél 2',
-        searchable: false,
-        sortable: false,
-        visible: false,
-      }, {
-        field: 'email-responsible-2',
-        title: 'Email 2',
-        searchable: false,
-        sortable: false,
-        visible: false,
-      }, {
-        field: 'name-emergency-1',
-        title: 'Contact urgence 1',
-        searchable: true,
-        sortable: true,
-      }, {
-        field: 'phone-emergency-1',
-        title: 'Tél urgence 1',
-        searchable: false,
-        sortable: false,
-      }, {
-        field: 'name-emergency-2',
-        title: 'Contact urgence 2',
-        searchable: true,
-        sortable: true,
-      }, {
-        field: 'phone-emergency-2',
-        title: 'Tél urgence 2',
-        searchable: false,
-        sortable: false,
-      }, {
-        field: 'courses',
-        title: 'Cours',
-        searchable: true,
-        sortable: true,
-        visible: false,
-        formatter: function(value) {
-          return value.join('<br />')
-        },
-      }, {
-        field: 'documents.authorise_photos',
-        title: 'Autorisation photos',
-        searchable: true,
-        sortable: true,
-        visible: false,
-      }, {
-        field: 'documents.authorise_emergency',
-        title: 'Autorisation parentale',
-        searchable: true,
-        sortable: true,
-        visible: false,
-      }],
+    columns: columns,
     data: data.map(m => {
       return {
         ...m,
-        status: m.is_validated ? 'Validé' : 'En attente',
+        status: courseId > 0 ? buildStatusOneCourse(m, courseId) : buildStatusAllCourses(m),
         created: (new Date(m.created)).toLocaleString('fr-FR'),
         name: `${m.last_name} ${m.first_name}`,
-        courses: m.active_courses.map(
-          (c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`
-        ).concat(m.waiting_courses.map(
-          (c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Liste d'attente)`)
-        ).concat(m.cancelled_courses.map(
-          (c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)
+        courses: m.active_courses.filter(c => c.id != courseId).map(
+          (c) => `${c.name}, ${WEEKDAY[c.weekday]}`
+        ).concat(m.waiting_courses.filter(c => c.id != courseId).map(
+          (c) => `${c.name}, ${WEEKDAY[c.weekday]} (Liste d'attente)`)
+        ).concat(m.cancelled_courses.filter(c => c.id != courseId).map(
+          (c) => `${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)
         ),
         documents: {
           ...m.documents,
@@ -318,6 +336,35 @@ function buildMembersInfo(data) {
       }
     })
   });
+}
+
+function buildStatusAllCourses(member) {
+  const active = member.active_courses.length > 0 ?
+    (member.is_validated ? '<u>Payé</u><br />' : '<u>Non payé</u><br />') + member.active_courses.map(
+      (c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`
+    ).join('<br />')
+    : undefined;
+  const waiting = member.waiting_courses.length > 0 ?
+    '<u>Sur liste d\'attente</u><br />' + member.waiting_courses.map(
+      (c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`
+    ).join('<br />')
+    : undefined;
+  const cancelled = member.cancelled_courses.length > 0 ?
+    '<u>Annulé</u><br />' + member.cancelled_courses.map(
+      (c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`
+    ).join('<br />')
+    : undefined;
+  return [active, waiting, cancelled]
+}
+
+function buildStatusOneCourse(member, courseId) {
+  if (member.waiting_courses.map(c => c.id.toString()).indexOf(courseId) >= 0) {
+    return ['Sur liste d\'attente']
+  }
+  if (member.cancelled_courses.map(c => c.id.toString()).indexOf(courseId) >= 0) {
+    return ['Annulé']
+  }
+  return [member.is_validated ? 'Payé' : 'Non payé']
 }
 
 function buildEmergencyInfo(data, courseId) {
@@ -363,10 +410,13 @@ function buildEmergencyInfo(data, courseId) {
         field: 'authorise_emergency',
         title: 'Autorisation parentale',
       }],
-    data: data.map(m => {
+    data: data.filter(m =>
+      m.active_courses.map(c => c.id.toString()).indexOf(courseId) >= 0
+    ).map(m => {
       return {
         ...m,
-				name: `${m.last_name} ${m.first_name}${m.cancelled_courses.map(c => c.id.toString()).indexOf(courseId) >= 0 ? ' (Annulé)' : ''}`,
+				name: `${m.last_name} ${m.first_name}`,
+        birthday:(new Date(m.birthday)).toLocaleDateString('fr-FR'),
         authorise_emergency: m.documents.authorise_emergency ? 'Oui': 'Non',
         ...buildContactsData(m.contacts),
       }

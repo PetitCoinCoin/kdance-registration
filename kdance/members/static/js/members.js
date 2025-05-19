@@ -133,7 +133,7 @@ function onSeasonChange(seasonId) {
   getMembers(seasonId);
 }
 
-function courseFormatter(value) {
+function statusFormatter(value) {
   return value.join('<br />')
 }
 
@@ -181,12 +181,7 @@ function getMembers(seasonId) {
             title: 'Statut',
             searchable: true,
             sortable: true,
-          }, {
-            field: 'courses',
-            title: 'Cours',
-            searchable: true,
-            sortable: true,
-            formatter: courseFormatter,
+            formatter: statusFormatter,
           }, {
             field: 'documents.authorise_photos',
             title: 'Autorisation photos',
@@ -237,14 +232,7 @@ function getMembers(seasonId) {
             return {
               ...m,
               name: `${m.last_name} ${m.first_name}`,
-              status: m.is_validated ? 'Validé' : 'En attente',
-              courses: m.active_courses.map(
-                (c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`
-              ).concat(m.waiting_courses.map(
-                (c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Liste d'attente)`)
-              ).concat(m.cancelled_courses.map(
-                (c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)
-              ),
+              status: buildStatus(m),
               solde: solde % 1 === 0 ? solde : solde.toFixed(2),
               documents: m.documents ? {
                 ...m.documents,
@@ -285,6 +273,25 @@ function getMembers(seasonId) {
       console.log(error);
     }
   });
+}
+
+function buildStatus(member) {
+  const active = member.active_courses.length > 0 ?
+    (member.is_validated ? '<u>Payé</u><br />' : '<u>Non payé</u><br />') + member.active_courses.map(
+      (c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`
+    ).join('<br />')
+    : undefined;
+  const waiting = member.waiting_courses.length > 0 ?
+    '<u>Sur liste d\'attente</u><br />' + member.waiting_courses.map(
+      (c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`
+    ).join('<br />')
+    : undefined;
+  const cancelled = member.cancelled_courses.length > 0 ?
+    '<u>Annulé</u><br />' + member.cancelled_courses.map(
+      (c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`
+    ).join('<br />')
+    : undefined;
+  return [active, waiting, cancelled]
 }
 
 function getMember(memberId) {
