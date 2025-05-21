@@ -88,6 +88,7 @@ def __identify_discounts(user, total_before_discount) -> list:
 @require_http_methods(["GET"])
 @login_required()
 def index(request: HttpRequest) -> HttpResponse:
+    current_season = Season.objects.filter(is_current=True).first()
     return render(
         request,
         "pages/index.html",
@@ -95,6 +96,8 @@ def index(request: HttpRequest) -> HttpResponse:
             "user": request.user,
             "is_teacher": _is_teacher(request),
             "allow_new_member": GeneralSettings.get_solo().allow_new_member,
+            "current_season": current_season,
+            "previous_season": current_season.previous_season if current_season else "",
         },
     )
 
@@ -319,6 +322,8 @@ def about(request: HttpRequest) -> HttpResponse:
 @login_required()
 def download_pdf(request: HttpRequest) -> HttpResponse:
     filename = request.GET.get("doc")
+    if not filename:
+        raise Http404
     file_path = Path(f"{settings.STATIC_ROOT}/pdf/{filename}.pdf")
     if file_path.exists():
         with file_path.open("rb") as f:

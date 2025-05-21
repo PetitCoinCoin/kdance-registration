@@ -9,7 +9,6 @@ $(document).ready(() => {
   });
 });
 
-
 function displayPwdToast() {
   if (window.location.hash === '#pwd_ok') {
     const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('pwd-success-toast'));
@@ -109,7 +108,9 @@ function getUser() {
       const cardTemplate = document.querySelector('#card-template');
       const memberBtnTemplate = document.querySelector('#member-btn-template');
       // Previous seasons members
-      const previousMembers = getPreviousMembers(data.members.filter((m) => !m.season.is_current));
+      const previousMembers = isPreSignupOngoing ?
+        data.members.filter((m) => m.season.year === previousSeason) :
+        getPreviousMembers(data.members.filter((m) => !m.season.is_current));
       let memberSelect = $('#copy-member-select');
       previousMembers.map((m) => {
         memberSelect.append($('<option>', { value: m.id, text: `${m.first_name} ${m.last_name}` }));
@@ -144,6 +145,19 @@ function getUser() {
           if (previousMembers.length == 0) {
             let copyBtn = memberBtnClone.querySelector('#copy-member-btn');
             copyBtn.remove();
+          } else {
+            if (isPreSignupOngoing) {
+              console.log("pre insc")
+              let addBtn = memberBtnClone.querySelector('#add-member-btn');
+              addBtn.disabled = true;
+            }
+            else if (!isSignupOngoing) {
+              console.log("rien")
+              let addBtn = memberBtnClone.querySelector('#add-member-btn');
+              let copyBtn = memberBtnClone.querySelector('#copy-member-btn');
+              addBtn.disabled = true;
+              copyBtn.disabled = true;
+            }
           }
           const btnParent = clone.querySelector('.season-btn-div');
           const notValidatedMembers = data.members.filter((member) => member.season.id == item.season.id && !member.is_validated);

@@ -104,6 +104,8 @@ DATABASES = {
         "PASSWORD": os.getenv("DB_PASSWORD"),
         "HOST": os.getenv("DB_HOST"),
         "PORT": 3306,
+        "CONN_HEALTH_CHECKS": True,
+        "CONN_MAX_AGE": 60,
     }
 }
 
@@ -162,6 +164,7 @@ BANK_IBAN = os.getenv("BANK_IBAN")
 BANK_BIC = os.getenv("BANK_BIC")
 
 # Other
+DATE_FORMAT = "%Y-%m-%d"
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "accounts.api.permissions.SuperUserPermission",

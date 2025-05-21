@@ -1,8 +1,11 @@
 from copy import deepcopy
-from datetime import time
+from datetime import date, time, timedelta
 from unittest.mock import patch
 
 import pytest
+
+from django.conf import settings
+from django.utils import timezone
 
 from members.emails import EmailEnum, EmailSender
 from members.models import Course, Season
@@ -16,6 +19,7 @@ COURSE = "Eveil"
 WEEKDAY = "Lundi"
 START = "12h12"
 URL = "www.plop.com"
+TODAY = date.today()
 
 
 class TestEmailSender:
@@ -145,6 +149,12 @@ Tech K'Dance
     def set_course(self):
         season, _ = Season.objects.get_or_create(
             year="1900-1901",
+            pre_signup_start=(timezone.now() - timedelta(days=2)).strftime(
+                settings.DATE_FORMAT
+            ),
+            pre_signup_end=(timezone.now() + timedelta(days=2)).strftime(
+                settings.DATE_FORMAT
+            ),
             ffd_a_amount=0,
             ffd_b_amount=0,
             ffd_c_amount=0,
@@ -197,8 +207,7 @@ Tech K'Dance
 <p>Bonjour,</p>
 <p>
   Vous venez d'inscrire {NAME} pour la saison {SEASON}.<br />
-  
-</p>
+  </p>
 <p>
   Cours choisi(s):<br />
   {COURSE}<br />
@@ -315,8 +324,7 @@ Tech K'Dance
 <p>Bonjour,</p>
 <p>
   Vous venez d'inscrire {NAME} pour la saison {SEASON}.<br />
-  
-</p>
+  </p>
 <p>
   Cours choisi(s):<br />
   {COURSE}<br />{COURSE}<br />
@@ -357,6 +365,34 @@ Tech K'Dance
 <p>
   L'adhérent {NAME} a été supprimé pour la saison {SEASON}.
   Si c'est une erreur, vous pouvez toujours refaire l'inscription ou contacter l'équipe K'Dance.
+</p>
+<p>
+  Bonne journée et à bientôt,<br />
+  Tech K'Dance
+</p>
+"""
+
+
+class TestEmailPreSignupWarning(TestEmailSender):
+    __test__ = True
+
+    email_sender = EmailSender(EmailEnum.PRE_SIGNUP_WARNING)
+    expected_kwargs = {"username": USERNAME, "full_name": NAME, "birthday": TODAY}
+    expected_subject = "Suspicion de pré-inscription frauduleuse: à vérifier"
+    expected_text = f"""
+Bonjour,
+
+L'utilisateur {USERNAME} a effectué une pré-inscription douteuse. L'adhérent suivant n'a pas été retrouvé dans les données de la saison précédente:
+{NAME}, né(e) le {TODAY}
+
+Bonne journée et à bientôt,
+Tech K'Dance
+"""
+    expected_html = f"""
+<p>Bonjour,</p>
+<p>
+  L'utilisateur {USERNAME} a effectué une pré-inscription douteuse. L'adhérent suivant n'a pas été retrouvé dans les données de la saison précédente:<br />
+  {NAME}, né(e) le {TODAY}
 </p>
 <p>
   Bonne journée et à bientôt,<br />

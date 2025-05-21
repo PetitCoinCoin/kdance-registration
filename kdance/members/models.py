@@ -1,6 +1,7 @@
 import logging
 
 from enum import Enum
+from datetime import date
 
 import stripe
 
@@ -44,6 +45,10 @@ class Season(models.Model):
         validators=[RegexValidator(r"\d{4}-\d{4}")],
     )
     is_current = models.BooleanField(null=False, blank=False, default=True)
+    pre_signup_start = models.DateField(null=False, blank=False)
+    pre_signup_end = models.DateField(null=False, blank=False)
+    signup_start = models.DateField(null=True)
+    signup_end = models.DateField(null=True)
     discount_percent = models.PositiveIntegerField(
         default=10,
         blank=False,
@@ -128,6 +133,45 @@ class Season(models.Model):
             setattr(self, f"ffd_{licence}_stripe_price_id", resp.get("id", ""))
             if previous_id:
                 stripe.Price.modify(previous_id, active=False)
+
+    @property
+    def previous_season(self) -> str:
+        previous_season = (
+            Season.objects.filter(year__lt=self.year).order_by("-year").first()
+        )
+        return previous_season.year if previous_season else ""
+
+    @property
+    def is_before_pre_signup(self) -> bool:
+        return date.today() <= self.pre_signup_end
+
+    @property
+    def is_pre_signup_ongoing(self) -> bool:
+        today = date.today()
+        return self.pre_signup_start <= today <= self.pre_signup_end
+
+    @property
+    def is_before_signup(self) -> bool:
+        return (
+            self.signup_start is not None
+            and self.signup_end is not None
+            and date.today() <= self.signup_end
+        )
+
+    @property
+    def is_signup_ongoing(self) -> bool:
+        if not self.signup_start or not self.signup_end:
+            return False
+        today = date.today()
+        return self.signup_start <= today <= self.signup_end
+
+    @property
+    def is_after_signup(self) -> bool:
+        return (
+            self.signup_start is not None
+            and self.signup_end is not None
+            and date.today() > self.signup_end
+        )
 
     def __repr__(self) -> str:
         return self.year
@@ -505,7 +549,7 @@ class ContactManager(models.Manager):
     def clean_orphan(self) -> None:
         """If contact is linked to no one, we delete it."""
         for contact in self.all():
-            if not contact.member_set.all():  # type:ignore[attr-defined]
+            if not contact.member_set.all():  # type: ignore[attr-defined]
                 contact.delete()
 
 

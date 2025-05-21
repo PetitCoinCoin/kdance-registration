@@ -1,8 +1,11 @@
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
 
+from django.conf import settings
 from django.contrib.auth.models import User
+from django.utils import timezone
 from parameterized import parameterized
 from members.models import (
     Course,
@@ -23,6 +26,12 @@ def test_delete_old_seasons():
     for i in range(Season.SEASON_COUNT):
         Season.objects.create(
             year=f"190{i}-190{i + 1}",
+            pre_signup_start=(timezone.now() - timedelta(days=2)).strftime(
+                settings.DATE_FORMAT
+            ),
+            pre_signup_end=(timezone.now() + timedelta(days=2)).strftime(
+                settings.DATE_FORMAT
+            ),
             ffd_a_amount=0,
             ffd_b_amount=0,
             ffd_c_amount=0,
@@ -32,6 +41,12 @@ def test_delete_old_seasons():
     assert Season.objects.first().year == "1900-1901"
     season = Season(
         year="2000-2001",
+        pre_signup_start=(timezone.now() - timedelta(days=2)).strftime(
+            settings.DATE_FORMAT
+        ),
+        pre_signup_end=(timezone.now() + timedelta(days=2)).strftime(
+            settings.DATE_FORMAT
+        ),
         ffd_a_amount=0,
         ffd_b_amount=0,
         ffd_c_amount=0,
@@ -50,6 +65,12 @@ def test_season_create_payment():
     assert not Payment.objects.count()
     Season.objects.create(
         year="1900-1901",
+        pre_signup_start=(timezone.now() - timedelta(days=2)).strftime(
+            settings.DATE_FORMAT
+        ),
+        pre_signup_end=(timezone.now() + timedelta(days=2)).strftime(
+            settings.DATE_FORMAT
+        ),
         ffd_a_amount=0,
         ffd_b_amount=0,
         ffd_c_amount=0,

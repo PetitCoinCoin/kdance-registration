@@ -3,12 +3,14 @@ import logging
 from enum import Enum
 from typing import Any
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.utils import IntegrityError
 from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework import serializers
 
+from members.emails import EmailEnum, EmailSender
 from members.models import (
     Ancv,
     Check,
@@ -42,6 +44,10 @@ class SeasonSerializer(serializers.ModelSerializer):
             "id",
             "year",
             "is_current",
+            "pre_signup_start",
+            "pre_signup_end",
+            "signup_start",
+            "signup_end",
             "discount_percent",
             "discount_limit",
             "pass_sport_amount",
@@ -59,6 +65,47 @@ class SeasonSerializer(serializers.ModelSerializer):
                 "On ne peut pas créer de saison dans le passé !"
             )
         return year
+
+    def validate(self, attr: dict) -> dict:
+        validated = super().validate(attr)
+        if (
+            validated.get("pre_signup_end")
+            and validated.get("pre_signup_end")
+            and validated.get("pre_signup_end") < validated.get("pre_signup_start")
+        ):
+            raise serializers.ValidationError(
+                {
+                    "pre_signup_end": [
+                        "La fin des pré-inscriptions ne peut être qu'après le début des pré-inscriptions."
+                    ]
+                }
+            )
+
+        if (
+            validated.get("signup_start")
+            and validated.get("pre_signup_end")
+            and validated.get("signup_start") < validated.get("pre_signup_end")
+        ):
+            raise serializers.ValidationError(
+                {
+                    "signup_start": [
+                        "Le début des inscriptions ne peut être qu'après la fin des pré-inscriptions."
+                    ]
+                }
+            )
+        if (
+            validated.get("signup_end")
+            and validated.get("signup_end")
+            and validated.get("signup_end") < validated.get("signup_start")
+        ):
+            raise serializers.ValidationError(
+                {
+                    "signup_end": [
+                        "La fin des inscriptions ne peut être qu'après le début des inscriptions."
+                    ]
+                }
+            )
+        return validated
 
 
 class TeacherSerializer(serializers.ModelSerializer):
@@ -337,12 +384,23 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
         )
         extra_kwargs = {"created": {"read_only": True}}
 
-    def validate_active_courses(self, courses: list) -> list:
+    @staticmethod
+    def validate_active_courses(courses: list) -> list:
         if not len(courses):
             raise serializers.ValidationError(
                 "Vous devez sélectionner au moins un cours."
             )
         return courses
+
+    @staticmethod
+    def validate_contacts(value: list) -> list:
+        if not len(
+            [contact for contact in value if contact["contact_type"] == "emergency"]
+        ):
+            raise serializers.ValidationError(
+                "Vous devez indiquer au moins un contact d'urgence."
+            )
+        return value
 
     def validate(self, attr: dict) -> dict:
         validated = super().validate(attr)
@@ -360,8 +418,23 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
         ]
         return validated
 
+    def check_presignup(self, username: str) -> None:
+        if not Member.objects.filter(
+            first_name=self.validated_data["first_name"],
+            last_name=self.validated_data["last_name"],
+            birthday=self.validated_data["birthday"],
+            season__year=self.validated_data["season"].previous_season,
+        ).exists():
+            email_sender = EmailSender(EmailEnum.PRE_SIGNUP_WARNING)
+            email_sender.send_email(
+                emails=[settings.DEFAULT_FROM_EMAIL, settings.SUPERUSER_EMAIL],
+                username=username,
+                full_name=f"{self.validated_data['first_name']} {self.validated_data['last_name']}",
+                birthday=self.validated_data["birthday"].strftime("%d/%m/%Y"),
+            )
+
     @transaction.atomic
-    def save(self, **kwargs: Member) -> Member:
+    def save(self, **kwargs: Any) -> Member:
         username = kwargs.get("user")
         self.validated_data["user"] = User.objects.get(username=username)
         contacts = self.validated_data.pop("contacts", None)
