@@ -229,6 +229,7 @@ function isMe(contact) {
 function postOrPatchMember(url, method, event) {
     $('.invalid-feedback').removeClass('d-inline');
     $('#message-error-contact').addClass('d-none');
+    $('#message-error-mandatory-contact').addClass('d-none');
     let data = {
       first_name: $('#member-firstname').val(),
       last_name: $('#member-lastname').val(),
@@ -272,14 +273,7 @@ function postOrPatchMember(url, method, event) {
           showToast('Une erreur est survenue lors de l\'enregistrement de l\'adhérent.');
         } else {
           const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('member-error-toast'));
-          let message = 'Certaines informations sont manquantes ou erronées. Veuillez vérifier les différents champs.';
-          if (error.responseJSON.error) {
-            message = error.responseJSON.error;
-          } else {
-            if (error.responseJSON.contacts) {
-              message += ' Il y a notamment un souci au niveau des contacts.';
-            }
-          }
+          const message = error.responseJSON.error ? error.responseJSON.error : 'Certaines informations sont manquantes ou erronées. Veuillez vérifier les différents champs.';
           $('#member-error-body').text(message);
           toast.show();
         }
@@ -324,7 +318,12 @@ function postOrPatchMember(url, method, event) {
           $('#invalid-member-courses').addClass('d-inline');
         }
         if (error.responseJSON && error.responseJSON.contacts) {
-          $('#message-error-contact').removeClass('d-none');
+          if (typeof(error.responseJSON.contacts[0]) === 'string') {
+            $('#message-error-mandatory-contact').html(error.responseJSON.contacts[0]);
+            $('#message-error-mandatory-contact').removeClass('d-none');
+          } else {
+            $('#message-error-contact').removeClass('d-none');
+          }
         }
       }
   });

@@ -384,12 +384,23 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
         )
         extra_kwargs = {"created": {"read_only": True}}
 
-    def validate_active_courses(self, courses: list) -> list:
+    @staticmethod
+    def validate_active_courses(courses: list) -> list:
         if not len(courses):
             raise serializers.ValidationError(
                 "Vous devez sélectionner au moins un cours."
             )
         return courses
+
+    @staticmethod
+    def validate_contacts(value: list) -> list:
+        if not len(
+            [contact for contact in value if contact["contact_type"] == "emergency"]
+        ):
+            raise serializers.ValidationError(
+                "Vous devez indiquer au moins un contact d'urgence."
+            )
+        return value
 
     def validate(self, attr: dict) -> dict:
         validated = super().validate(attr)
