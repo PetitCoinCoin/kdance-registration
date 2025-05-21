@@ -160,8 +160,6 @@ STATIC_ROOT = os.getenv("STATIC_ROOT")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
 STRIPE_ADHESION_ID = os.getenv("STRIPE_ADHESION_ID")
-BANK_IBAN = os.getenv("BANK_IBAN")
-BANK_BIC = os.getenv("BANK_BIC")
 
 # Other
 DATE_FORMAT = "%Y-%m-%d"

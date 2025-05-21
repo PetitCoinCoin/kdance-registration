@@ -39,10 +39,6 @@
 							role="tab" aria-controls="card" aria-selected="true">Par carte bancaire</button>
 					</li>
 					<li class="nav-item" role="presentation">
-						<button class="nav-link" id="transfer-tab" data-bs-toggle="tab" data-bs-target="#transfer" type="button"
-							role="tab" aria-controls="transfer" aria-selected="false">Virement</button>
-					</li>
-					<li class="nav-item" role="presentation">
 						<button class="nav-link" id="other-tab" data-bs-toggle="tab" data-bs-target="#other" type="button"
 							role="tab" aria-controls="other" aria-selected="false">Autre</button>
 					</li>
@@ -51,13 +47,6 @@
 				<div class="tab-content mt-3" id="payment-tabs-content">
 					<div class="tab-pane fade show active" id="card" role="tabpanel" aria-labelledby="card-tab">
 						<div id="checkout"></div>
-					</div>
-					<div class="tab-pane fade" id="transfer" role="tabpanel" aria-labelledby="transfer-tab">
-						<p class="fw-semibold">Vous pouvez effectuer un virement sur le compte de l'association.</p>
-						<p><strong>IBAN:</strong> {{bank_iban}}</p>
-						<p><strong>BIC:</strong> {{bank_bic}}</p>
-						<p>N'oubliez pas d'inscrire votre <strong>nom</strong> et <strong>prénom</strong> dans l'intitulé du
-							virement, ainsi que votre <strong>ID de compte K'Dance: {{ user.pk }}</strong></p>
 					</div>
 					<div class="tab-pane fade" id="other" role="tabpanel" aria-labelledby="other-tab">
 						<p class="fw-semibold">Vous pouvez venir déposer votre règlement à l'association, lors des permanences ou
