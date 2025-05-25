@@ -2,6 +2,7 @@ from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import render
@@ -58,12 +59,14 @@ def index(request: HttpRequest) -> HttpResponse:
 @login_required()
 def checkout(request: HttpRequest) -> HttpResponse:
     merchant_client = _create_cawl_client()
+    if isinstance(request.user, AnonymousUser):
+        raise Http404
 
     current_payment = Payment.objects.filter(
         user=request.user, season__is_current=True
     ).first()
     if not current_payment:
-        pass
+        raise Http404
 
     total_due = current_payment.due - current_payment.paid + current_payment.refund
     order_dict = {
