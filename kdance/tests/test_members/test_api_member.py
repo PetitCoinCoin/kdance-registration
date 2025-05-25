@@ -195,7 +195,14 @@ class TestMemberApiView(AuthTestCase):
                 "amount": 50,
             },
             "active_courses": [self._course.pk],
-            "contacts": [],
+            "contacts": [
+                {
+                    "first_name": "Plip",
+                    "last_name": "Plop",
+                    "phone": "0123456789",
+                    "contact_type": "emergency",
+                }
+            ],
             "documents": {
                 "authorise_photos": False,
                 "authorise_emergency": True,
@@ -234,6 +241,7 @@ class TestMemberApiView(AuthTestCase):
                 None,
                 None,
                 None,
+                None,
                 True,
                 "first_name",
                 "Cet adhérent existe déjà pour la saison.",
@@ -241,6 +249,7 @@ class TestMemberApiView(AuthTestCase):
             (
                 "plip",
                 "PLOP",
+                None,
                 None,
                 None,
                 None,
@@ -256,6 +265,7 @@ class TestMemberApiView(AuthTestCase):
                 None,
                 None,
                 None,
+                None,
                 True,
                 "first_name",
                 "Ce champ ne peut être vide.",
@@ -263,6 +273,7 @@ class TestMemberApiView(AuthTestCase):
             (
                 "Jean-Mich",
                 "",
+                None,
                 None,
                 None,
                 None,
@@ -278,6 +289,7 @@ class TestMemberApiView(AuthTestCase):
                 None,
                 None,
                 None,
+                None,
                 True,
                 "email",
                 "Saisissez une adresse e-mail valide.",
@@ -286,6 +298,7 @@ class TestMemberApiView(AuthTestCase):
                 None,
                 None,
                 "",
+                None,
                 None,
                 None,
                 None,
@@ -300,6 +313,7 @@ class TestMemberApiView(AuthTestCase):
                 "+331234",
                 None,
                 None,
+                None,
                 True,
                 "phone",
                 "Saisissez une valeur valide.",
@@ -311,6 +325,7 @@ class TestMemberApiView(AuthTestCase):
                 "",
                 None,
                 None,
+                None,
                 True,
                 "phone",
                 "Ce champ ne peut être vide.",
@@ -322,11 +337,13 @@ class TestMemberApiView(AuthTestCase):
                 None,
                 "",
                 None,
+                None,
                 True,
                 "address",
                 "Ce champ ne peut être vide.",
             ),
             (
+                None,
                 None,
                 None,
                 None,
@@ -344,6 +361,7 @@ class TestMemberApiView(AuthTestCase):
                 None,
                 None,
                 "24/12/2000",
+                None,
                 True,
                 "birthday",
                 "La date n'a pas le bon format. Utilisez un des formats suivants\xa0: YYYY-MM-DD.",
@@ -355,9 +373,22 @@ class TestMemberApiView(AuthTestCase):
                 None,
                 None,
                 "",
+                None,
                 True,
                 "birthday",
                 "La date n'a pas le bon format. Utilisez un des formats suivants\xa0: YYYY-MM-DD.",
+            ),
+            (
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                [],
+                True,
+                "contacts",
+                "Vous devez indiquer au moins un contact d'urgence.",
             ),
         ]
     )
@@ -369,6 +400,7 @@ class TestMemberApiView(AuthTestCase):
         phone,
         address,
         birthday,
+        contacts,
         courses,
         key,
         message,
@@ -385,7 +417,14 @@ class TestMemberApiView(AuthTestCase):
             "email": "j@m.com",
             "phone": "0987654321",
             "active_courses": [self._course.pk],
-            "contacts": [],
+            "contacts": [
+                {
+                    "first_name": "Plip",
+                    "last_name": "Plop",
+                    "phone": "0123456789",
+                    "contact_type": "emergency",
+                }
+            ],
             "documents": {
                 "authorise_photos": False,
                 "authorise_emergency": True,
@@ -404,6 +443,8 @@ class TestMemberApiView(AuthTestCase):
             data["address"] = address
         if birthday is not None:
             data["birthday"] = birthday
+        if contacts is not None:
+            data["contacts"] = contacts
         if not courses:
             data.pop("active_courses")
         self._kwargs = {}
