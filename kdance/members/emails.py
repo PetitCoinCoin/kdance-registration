@@ -14,6 +14,7 @@ class EmailEnum(Enum):
     UPDATE_USER_EMAIL = "email_user"
     CREATE_MEMBER = "create member"
     DELETE_MEMBER = "delete member"
+    PAYMENT_UNKNOWN = "payment_unknown"
     PRE_SIGNUP_WARNING = "pre signup warning"
     WAITING_TO_ACTIVE_COURSE = "waiting to active course"
     RESET_PWD = "reset_password"
@@ -56,6 +57,8 @@ class EmailSender:
                 return self.__subject_create_member
             case EmailEnum.DELETE_MEMBER:
                 return self.__subject_delete_member
+            case EmailEnum.PAYMENT_UNKNOWN:
+                return self.__subject_payment_unknown
             case EmailEnum.PRE_SIGNUP_WARNING:
                 return self.__subject_pre_signup_warning
             case EmailEnum.WAITING_TO_ACTIVE_COURSE:
@@ -77,6 +80,8 @@ class EmailSender:
                 return self.__build_text_create_member
             case EmailEnum.DELETE_MEMBER:
                 return self.__build_text_delete_member
+            case EmailEnum.PAYMENT_UNKNOWN:
+                return self.__build_text_payment_unknown
             case EmailEnum.PRE_SIGNUP_WARNING:
                 return self.__build_text_pre_signup_warning
             case EmailEnum.WAITING_TO_ACTIVE_COURSE:
@@ -98,6 +103,8 @@ class EmailSender:
                 return self.__build_html_create_member
             case EmailEnum.DELETE_MEMBER:
                 return self.__build_html_delete_member
+            case EmailEnum.PAYMENT_UNKNOWN:
+                return self.__build_html_payment_unknown
             case EmailEnum.PRE_SIGNUP_WARNING:
                 return self.__build_html_pre_signup_warning
             case EmailEnum.WAITING_TO_ACTIVE_COURSE:
@@ -148,6 +155,10 @@ class EmailSender:
     @staticmethod
     def __subject_reset_password(**_k) -> str:
         return "Réinitialisation du mot de passe K'Dance"
+
+    @staticmethod
+    def __subject_payment_unknown(**_k) -> str:
+        return "Statut de paiement inconnu"
 
     @staticmethod
     def __build_text_create_user(**kwargs) -> str:
@@ -289,6 +300,19 @@ Veuillez cliquer sur le lien suivant, ou le copier-coller dans votre navigateur:
 Ce lien restera valide 30 minutes.
 
 Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email, votre mot de passe restera inchangé.
+
+Bonne journée et à bientôt,
+Tech K'Dance
+"""
+
+    @staticmethod
+    def __build_text_payment_unknown(**kwargs) -> str:
+        if not kwargs.get("username"):
+            raise ValueError("Un argument username est nécessaire pour cet email")
+        return f"""
+Bonjour,
+
+Il semble que le paiement de {kwargs["username"]} soit revenu avec "STATUS_UNKNOWN". Merci d'investiguer.
 
 Bonne journée et à bientôt,
 Tech K'Dance
@@ -455,6 +479,21 @@ Tech K'Dance
 </p>
 <p>Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email, votre mot de passe restera
   inchangé.</p>
+<p>
+  Bonne journée et à bientôt,<br />
+  Tech K'Dance
+</p>
+"""
+
+    @staticmethod
+    def __build_html_payment_unknown(**kwargs) -> str:
+        if not kwargs.get("username"):
+            raise ValueError("Un argument username est nécessaire pour cet email")
+        return f"""
+<p>Bonjour,</p>
+<p>
+  Il semble que le paiement de {kwargs["username"]} soit revenu avec "STATUS_UNKNOWN". Merci d'investiguer.
+</p>
 <p>
   Bonne journée et à bientôt,<br />
   Tech K'Dance
