@@ -755,6 +755,11 @@ function getPayments() {
             sortable: true,
             footerFormatter: totalAmountFormatter,
           }, {
+            field: 'cb_payment',
+            title: 'En ligne',
+            sortable: true,
+            footerFormatter: totalAmountFormatter,
+          }, {
             field: 'check_count',
             title: 'Nb chèques',
             sortable: true,
@@ -823,6 +828,7 @@ function getPayments() {
           return {
             ...p,
             ancv: p.ancv || {amount: 0, count: 0},
+            cb_payment: p.cb_payment?.amount || 0,
             sport_coupon: p.sport_coupon || {amount: 0, count: 0},
             other_payment: p.other_payment || {amount: 0, comment: ''},
             check_count: p.check_payment.length,

@@ -24,6 +24,10 @@ function displayPayments() {
   cashSwitch.addEventListener('change', () => {
     $('#cash-div').attr('hidden', !$('#cash-switch').is(':checked'));
   });
+  const cbSwitch = document.querySelector('#cb-switch');
+  cbSwitch.addEventListener('change', () => {
+    $('#cb-div').attr('hidden', !$('#cb-switch').is(':checked'));
+  });
   const checkSwitch = document.querySelector('#check-switch');
   checkSwitch.addEventListener('change', () => {
     $('#check-div').attr('hidden', !$('#check-switch').is(':checked'));
@@ -316,6 +320,11 @@ function getMember(memberId) {
       const withCash = !(data.payment.cash === null || data.payment.cash === 0);
       $('#cash-div').attr('hidden', !withCash);
       $('#cash-switch').prop('checked', withCash);
+
+      $('#payment-cb').val(data.payment.cb_payment?.amount);
+      const withCb = !(data.payment.cb_payment?.amount === 0);
+      $('#cb-div').attr('hidden', !withCb);
+      $('#cb-switch').prop('checked', withCb);
 
       $('#payment-pass-code').val(data.sport_pass?.code || '');
       $('#payment-pass-amount').val(data.sport_pass?.amount || 50);

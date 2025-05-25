@@ -33,46 +33,43 @@
 						adhérents inscrits devra se faire auprès de l'équipe K'Dance. Il ne sera plus possible de supprimer un adhérent. L'adhésion restera dûe quoi qu'il arrive.
 					</strong>
 				</p>
-				<ul class="nav nav-tabs mt-4" id="payment-tabs" role="tablist">
-					<li class="nav-item" role="presentation">
-						<button class="nav-link active" id="card-tab" data-bs-toggle="tab" data-bs-target="#card" type="button"
-							role="tab" aria-controls="card" aria-selected="true">Par carte bancaire</button>
-					</li>
-					<li class="nav-item" role="presentation">
-						<button class="nav-link" id="transfer-tab" data-bs-toggle="tab" data-bs-target="#transfer" type="button"
-							role="tab" aria-controls="transfer" aria-selected="false">Virement</button>
-					</li>
-					<li class="nav-item" role="presentation">
-						<button class="nav-link" id="other-tab" data-bs-toggle="tab" data-bs-target="#other" type="button"
-							role="tab" aria-controls="other" aria-selected="false">Autre</button>
-					</li>
-				</ul>
 
-				<div class="tab-content mt-3" id="payment-tabs-content">
-					<div class="tab-pane fade show active" id="card" role="tabpanel" aria-labelledby="card-tab">
-						<div id="checkout"></div>
+				<div class="accordion" id="payment-accordion">
+					<div class="accordion-item">
+						<h2 class="accordion-header">
+						<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-card" aria-expanded="true" aria-controls="collapseOne">
+							<strong>Paiment en ligne</strong>
+						</button>
+						</h2>
+						<div id="accordion-card" class="accordion-collapse collapse show">
+						<div class="accordion-body">
+							Pour le paiement en ligne (carte, Paypal, Google Pay), merci de
+							<a href="{{cawl_redirection}}">cliquez ici</a>
+						</div>
+						</div>
 					</div>
-					<div class="tab-pane fade" id="transfer" role="tabpanel" aria-labelledby="transfer-tab">
-						<p class="fw-semibold">Vous pouvez effectuer un virement sur le compte de l'association.</p>
-						<p><strong>IBAN:</strong> {{bank_iban}}</p>
-						<p><strong>BIC:</strong> {{bank_bic}}</p>
-						<p>N'oubliez pas d'inscrire votre <strong>nom</strong> et <strong>prénom</strong> dans l'intitulé du
-							virement, ainsi que votre <strong>ID de compte K'Dance: {{ user.pk }}</strong></p>
-					</div>
-					<div class="tab-pane fade" id="other" role="tabpanel" aria-labelledby="other-tab">
-						<p class="fw-semibold">Vous pouvez venir déposer votre règlement à l'association, lors des permanences ou
-							dans la boite aux
-							lettres mise à disposition.</p>
-						<p>
-							Modes de paiement acceptés:<br />
-						<ul>
-							<li>Espèces,</li>
-							<li>Chèques: jusqu'à 6, encaissés du mois d'ocotobre au mois d'avril (sauf en décembre <i
-									class="bi-tree"></i>),</li>
-							<li>Chèques ANCV,</li>
-							<li>Coupons sport,</li>
-							<li>Pass Sport: à saisir directement dans votre espace.</li>
-						</ul>
+					<div class="accordion-item">
+						<h2 class="accordion-header">
+						<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-other" aria-expanded="false" aria-controls="collapseTwo">
+							<strong>Autres moyens de paiement</strong>
+						</button>
+						</h2>
+						<div id="accordion-other" class="accordion-collapse collapse">
+							<div class="accordion-body">
+								<p class="fw-semibold">Vous pouvez venir déposer votre règlement à l'association, lors des permanences ou
+									dans la boite aux lettres mise à disposition.</p>
+								<p>
+									Modes de paiement acceptés:<br />
+								<ul>
+									<li>Espèces,</li>
+									<li>Chèques: jusqu'à 6, encaissés du mois d'ocotobre au mois d'avril (sauf en décembre <i
+											class="bi-tree"></i>),</li>
+									<li>Chèques ANCV,</li>
+									<li>Coupons sport,</li>
+									<li>Pass Sport: à saisir directement dans votre espace.</li>
+								</ul>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -81,10 +78,8 @@
 	</section>
 	<script type="text/javascript">
 		const userMeUrl = "{% url 'api-user-me' %}";
-		const stripePk = "{{ stripe_pk }}";
 		const userEmail = "{{ user.email }}";
 	</script>
-	<script src="https://js.stripe.com/v3/"></script>
 	<script src="{% static 'js/checkout.js' %}"></script>
 </main>
 

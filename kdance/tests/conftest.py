@@ -1,3 +1,4 @@
+from unittest.mock import Mock
 import pytest
 
 from django.contrib.auth.models import User
@@ -15,26 +16,16 @@ from tests.data_tests import (
 )
 
 
+class CawlMock(Mock):
+    def merchant(*a, **k):
+        return Mock()
+
+
 @pytest.fixture(autouse=True)
-def mock_stripe(monkeypatch):
+def mock_cawl(monkeypatch):
     monkeypatch.setattr(
-        "stripe.Product.create", lambda *a, **k: {"id": "stripe_product_id"}
-    )
-    monkeypatch.setattr(
-        "stripe.Price.create", lambda *a, **k: {"id": "stripe_price_id"}
-    )
-    monkeypatch.setattr(
-        "stripe.Price.modify", lambda *a, **k: {"id": "stripe_other_price_id"}
-    )
-    monkeypatch.setattr(
-        "stripe.Coupon.create", lambda *a, **k: {"id": "stripe_coupon_id"}
-    )
-    monkeypatch.setattr(
-        "stripe.checkout.Session.create",
-        lambda *a, **k: {"client_secret": "session_secret"},
-    )
-    monkeypatch.setattr(
-        "stripe.Price.create", lambda *a, **k: {"id": "stripe_price_id"}
+        "onlinepayments.sdk.factory.Factory.create_client_from_configuration",
+        lambda *a, **k: CawlMock(*a, **k),
     )
 
 
