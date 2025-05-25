@@ -15,6 +15,7 @@ from onlinepayments.sdk.domain.create_hosted_checkout_request import (
 from onlinepayments.sdk.factory import Factory
 from onlinepayments.sdk.merchant.i_merchant_client import IMerchantClient
 
+from members.emails import EmailEnum, EmailSender
 from members.models import GeneralSettings, Payment, Season, CBPayment
 
 
@@ -108,7 +109,6 @@ def session_status(request: HttpRequest) -> HttpResponse:
     hosted_checkout_status = merchant_client.hosted_checkout().get_hosted_checkout(
         request.GET.get("hostedCheckoutId", "")
     )
-    # TODO: use webhook in case user never gets here
     status = hosted_checkout_status.created_payment_output.payment_status_category
     if status == "SUCCESSFUL":
         amount = (
@@ -127,6 +127,12 @@ def session_status(request: HttpRequest) -> HttpResponse:
                 payment=current_payment,
             ).save()
         current_payment.save()  # Only to validate members
+    elif status == "STATUS_UNKNOWN":
+        email_sender = EmailSender(EmailEnum.PAYEMENT_UNKNOWN)
+        email_sender.send_email(
+            emails=[settings.DEFAULT_FROM_EMAIL, settings.SUPERUSER_EMAIL],
+            username=request.user.username,
+        )
     return render(
         request,
         "pages/session_status.html",

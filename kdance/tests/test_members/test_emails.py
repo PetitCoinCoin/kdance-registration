@@ -468,3 +468,29 @@ Tech K'Dance
   Tech K'Dance
 </p>
 """
+
+
+class TestEmailPaymentUnknown(TestEmailSender):
+    __test__ = True
+
+    email_sender = EmailSender(EmailEnum.PAYMENT_UNKNOWN)
+    expected_kwargs = {"username": USERNAME}
+    expected_subject = "Statut de paiement inconnu"
+    expected_text = f"""
+Bonjour,
+
+Il semble que le paiement de {USERNAME} soit revenu avec "STATUS_UNKNOWN". Merci d'investiguer.
+
+Bonne journée et à bientôt,
+Tech K'Dance
+"""
+    expected_html = f"""
+<p>Bonjour,</p>
+<p>
+  Il semble que le paiement de {USERNAME} soit revenu avec "STATUS_UNKNOWN". Merci d'investiguer.
+</p>
+<p>
+  Bonne journée et à bientôt,<br />
+  Tech K'Dance
+</p>
+"""
