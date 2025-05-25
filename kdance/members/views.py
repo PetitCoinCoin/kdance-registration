@@ -120,7 +120,7 @@ def session_status(request: HttpRequest) -> HttpResponse:
         else:
             CBPayment(
                 amount=amount / 100,
-                transaction_type="stripe",
+                transaction_type="CAWL",
                 payment=current_payment,
             ).save()
         current_payment.save()  # Only to validate members

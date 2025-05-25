@@ -343,15 +343,6 @@
             "markers": "python_version >= '3.8'",
             "version": "==0.5.3"
         },
-        "stripe": {
-            "hashes": [
-                "sha256:1105bbceca8c0aead941c7c3ec676727610cb6437b6e8905379f2ccc370eeafd",
-                "sha256:1bc64192b6bd853fa75e2246ad553baa28e27e348eb2c3336b4d8b021d27aae5"
-            ],
-            "index": "pypi",
-            "markers": "python_version >= '3.6'",
-            "version": "==12.0.0"
-        },
         "typing-extensions": {
             "hashes": [
                 "sha256:a439e7c04b49fec3e5d3e2beaa21755cadbbdc391694e28ccdd36ca4a1408f8c",
