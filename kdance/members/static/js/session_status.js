@@ -3,11 +3,11 @@ $(document).ready(() => {
 });
 
 async function initialize() {
-	if (sessionStatus == 'complete') {
+	if (sessionStatus == 'SUCCESSFUL') {
 		$('#checkout-success').attr('hidden', false);
-		setTimeout(() => { location.href = '/'}, 10000);
+		setTimeout(() => { location.href = '/'}, 7000);
 	} else {
 		$('#checkout-failure').attr('hidden', false);
-		setTimeout(() => { location.href = '/checkout'}, 10000);
+		setTimeout(() => { location.href = '/checkout'}, 7000);
 	}
 }
