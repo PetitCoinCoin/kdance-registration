@@ -160,6 +160,10 @@ STATIC_ROOT = os.getenv("STATIC_ROOT")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
 STRIPE_ADHESION_ID = os.getenv("STRIPE_ADHESION_ID")
+CAWL_PSPID = os.getenv("CAWL_PSPID")
+CAWL_API_ID = os.getenv("CAWL_API_ID")
+CAWL_API_KEY = os.getenv("CAWL_API_KEY")
+CAWL_URL = os.getenv("CAWL_URL")
 
 # Other
 DATE_FORMAT = "%Y-%m-%d"

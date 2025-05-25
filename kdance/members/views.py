@@ -1,88 +1,40 @@
 from pathlib import Path
 
-import stripe
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.db.models import Count
-from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
+from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
+from django.urls import reverse
 from django.views.decorators.http import require_http_methods
+from onlinepayments.sdk.communicator_configuration import CommunicatorConfiguration
+from onlinepayments.sdk.domain.create_hosted_checkout_request import (
+    CreateHostedCheckoutRequest,
+)
+from onlinepayments.sdk.factory import Factory
+from onlinepayments.sdk.merchant.i_merchant_client import IMerchantClient
 
-from members.models import GeneralSettings, Member, Payment, Season, CBPayment
+from members.models import GeneralSettings, Payment, Season, CBPayment
 
 
 def _is_teacher(request: HttpRequest) -> bool:
     return request.user.groups.filter(name=settings.TEACHER_GROUP_NAME).exists()
 
 
-def __identify_products(user) -> tuple[list, int]:
-    total_to_pay = 0
-    adhesions = (
-        Member.objects.annotate(num_courses=Count("active_courses"))
-        .filter(
-            user=user, season__is_current=True, is_validated=False, num_courses__gt=0
-        )
-        .count()
+def _create_cawl_client() -> IMerchantClient:
+    communicator_configuration = CommunicatorConfiguration(
+        api_endpoint=settings.CAWL_URL,
+        api_key_id=settings.CAWL_API_ID,
+        secret_api_key=settings.CAWL_API_KEY,
+        authorization_type="v1HMAC",
+        integrator="K'Dance",
+        connect_timeout=5000,
+        socket_timeout=10000,
+        max_connections=10,
     )
-    line_items = (
-        [
-            {
-                "price": settings.STRIPE_ADHESION_ID,
-                "quantity": adhesions,
-            },
-        ]
-        if adhesions
-        else []
-    )
-    total_to_pay += 10 * adhesions
-    for member in user.member_set.filter(
-        season__is_current=True, is_validated=False
-    ).all():
-        # Courses
-        for course in member.active_courses.all():
-            line_items.append(
-                {
-                    "price": course.stripe_price_id,
-                    "quantity": 1,
-                }
-            )
-            total_to_pay += course.price
-        # Licenses
-        if member.ffd_license:
-            for licence in "abcd":
-                if member.ffd_license == getattr(
-                    member.season, f"ffd_{licence}_amount"
-                ):
-                    line_items.append(
-                        {
-                            "price": getattr(
-                                member.season, f"ffd_{licence}_stripe_price_id"
-                            ),
-                            "quantity": 1,
-                        }
-                    )
-                    total_to_pay += member.ffd_licence
-                    break
-    return line_items, total_to_pay
 
-
-def __identify_discounts(user, total_before_discount) -> list:
-    current_season = Season.objects.get(is_current=True)
-    current_payment = Payment.objects.get(season=current_season, user=user)
-    discount = total_before_discount - current_payment.due + current_payment.paid
-    if discount:
-        try:
-            coupon = stripe.Coupon.create(
-                duration="once",
-                amount_off=int(discount * 100),
-                currency="eur",
-            )
-            return [{"coupon": coupon.get("id", "")}]
-        except Exception:
-            return []
-    return []
+    client = Factory.create_client_from_configuration(communicator_configuration)
+    return client.merchant(settings.CAWL_PSPID)
 
 
 @require_http_methods(["GET"])
@@ -105,50 +57,61 @@ def index(request: HttpRequest) -> HttpResponse:
 @require_http_methods(["GET"])
 @login_required()
 def checkout(request: HttpRequest) -> HttpResponse:
+    merchant_client = _create_cawl_client()
+
+    current_payment = Payment.objects.filter(
+        user=request.user, season__is_current=True
+    ).first()
+    if not current_payment:
+        pass
+
+    total_due = current_payment.due - current_payment.paid + current_payment.refund
+    order_dict = {
+        "order": {
+            "amountOfMoney": {"currencyCode": "EUR", "amount": total_due * 100},
+            "references": {"merchantReference": request.user.email},
+        },
+        "hostedCheckoutSpecificInput": {
+            "locale": "fr_FR",
+            "returnUrl": request.build_absolute_uri(reverse("session_status")),
+            "showResultPage": False,
+        },
+    }
+
+    hosted_checkout_client = merchant_client.hosted_checkout()
+    hosted_checkout_request = CreateHostedCheckoutRequest()
+
+    hosted_checkout_request.from_dictionary(order_dict)
+
+    hosted_checkout_response = hosted_checkout_client.create_hosted_checkout(
+        hosted_checkout_request
+    )
+
     return render(
         request,
         "pages/checkout.html",
         context={
             "user": request.user,
             "season": Season.objects.get(is_current=True),
-            "stripe_pk": settings.STRIPE_PUBLIC_KEY,
+            "cawl_redirection": hosted_checkout_response.redirect_url,
         },
     )
-
-
-@csrf_exempt
-@login_required()
-@require_http_methods(["POST"])
-def create_checkout_session(request: HttpRequest) -> JsonResponse:
-    stripe.api_key = settings.STRIPE_SECRET_KEY
-    return_url = (
-        f"{request.scheme}://{request.get_host()}"
-        + "/session_status?session_id={CHECKOUT_SESSION_ID}"
-    )
-    line_items, total_before_discount = __identify_products(request.user)
-    coupons = __identify_discounts(request.user, total_before_discount)
-    try:
-        checkout_session = stripe.checkout.Session.create(
-            ui_mode="embedded",
-            line_items=line_items,
-            discounts=coupons,
-            currency="eur",
-            mode="payment",
-            customer_email=request.user.email,  # type: ignore[union-attr]
-            payment_method_types=["card"],
-            return_url=return_url,
-        )
-        return JsonResponse({"clientSecret": checkout_session["client_secret"]})
-    except Exception as e:
-        return JsonResponse({"error": str(e)})
 
 
 @login_required
 @require_http_methods(["GET"])
 def session_status(request: HttpRequest) -> HttpResponse:
-    session = stripe.checkout.Session.retrieve(request.GET.get("session_id", ""))
-    if session.status == "complete":
-        amount = session.amount_total or 0
+    merchant_client = _create_cawl_client()
+    hosted_checkout_status = merchant_client.hosted_checkout().get_hosted_checkout(
+        request.GET.get("hostedCheckoutId", "")
+    )
+    # TODO: use webhook in case user never gets here
+    status = hosted_checkout_status.created_payment_output.payment_status_category
+    if status == "SUCCESSFUL":
+        amount = (
+            hosted_checkout_status.created_payment_output.payment.payment_output.amount_of_money.amount
+            or 0
+        )
         current_season = Season.objects.get(is_current=True)
         current_payment = Payment.objects.get(season=current_season, user=request.user)  # type: ignore [misc]
         if hasattr(current_payment, "cb_payment"):
@@ -166,7 +129,7 @@ def session_status(request: HttpRequest) -> HttpResponse:
         "pages/session_status.html",
         context={
             "user": request.user,
-            "status": session.status,
+            "status": status,
         },
     )
 
