@@ -114,14 +114,18 @@
         <div class="mb-3">
           {% if current_season.is_before_pre_signup %}
             <div class="border border-warning border-5 rounded px-2 pt-2 mb-2">
-              <h5>Pré-inscriptions</h5>
-              <p>Uniquement pour les adhérents <span class="border-bottom border-danger">inscrits la saison précédente</span>: <strong>du {{ current_season.pre_signup_start }} au {{ current_season.pre_signup_end }}.</strong></p>
+              <h5>Inscriptions anticipées</h5>
+              <p>
+              Uniquement pour les adhérents <span class="border-bottom border-danger">inscrits la saison précédente</span>: <strong>du {{ current_season.pre_signup_start }} au {{ current_season.pre_signup_end }}.</strong><br/>
+              N'hésitez pas à vous inscrire sur un cours complet: cela nous permettra d'envisager de dédoubler certains créneaux.
+              </p>
+              <p class="main-red fw-semibold">L'inscription ne sera valide que si le <span class="border-bottom border-danger">paiement est effectué avant le {{ current_season.pre_signup_end }}</span>.</p>
             </div>
           {% endif %}
           {% if current_season.is_before_signup %}
             <div class="border border-warning border-5 rounded px-2 pt-2 mb-2">
               <h5>Inscriptions</h5>
-              <p>Les inscriptions en ligne pour cette saison auront lieu <strong>du {{ current_season.signup_start }} au {{ current_season.signup_end }}.</strong> Elles sont ouvertes à toutes et à tous.</p>
+              <p>Les inscriptions en ligne pour cette saison auront lieu <strong>du {{ current_season.signup_start }} au {{ current_season.signup_end }}.</strong> Elles sont ouvertes à toutes et à tous, et le paiement validera l'inscription.</p>
             </div>
           {% elif current_season.is_after_signup %}
             <div class="border border-warning border-5 rounded px-2 pt-2 mb-2">
