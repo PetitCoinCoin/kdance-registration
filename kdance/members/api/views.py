@@ -1,6 +1,8 @@
+from members.emails import EmailEnum, EmailSender
 from members.models import (
     Check,
     Course,
+    GeneralSettings,
     Member,
     Payment,
     Season,
@@ -11,6 +13,7 @@ from members.api.serializers import (
     CourseCopySeasonSerializer,
     CourseRetrieveSerializer,
     CourseSerializer,
+    GeneralSettingsSerializer,
     MemberCoursesActionsEnum,
     MemberCoursesSerializer,
     MemberRetrieveSerializer,
@@ -36,6 +39,19 @@ from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework import serializers
 from rest_framework.viewsets import GenericViewSet
+
+
+class GeneralSettingsViewSet(
+    RetrieveModelMixin,
+    UpdateModelMixin,
+    GenericViewSet,
+):
+    queryset = GeneralSettings.objects.all()
+    serializer_class = GeneralSettingsSerializer
+    http_method_names = ["get", "put"]
+
+    def get_object(self) -> GeneralSettings:
+        return GeneralSettings.get_solo()
 
 
 class SeasonViewSet(
@@ -171,7 +187,9 @@ class MemberViewSet(
             queryset = queryset.filter(season__id=season)
         if course:
             queryset = queryset.filter(
-                Q(active_courses__id=course) | Q(cancelled_courses__id=course)
+                Q(active_courses__id=course)
+                | Q(cancelled_courses__id=course)
+                | Q(waiting_courses__id=course)
             )
         if with_pass:
             queryset = queryset.filter(
@@ -213,10 +231,36 @@ class MemberViewSet(
         return Response(serializer.data)
 
     def create(self, request: Request, *a, **k) -> Response:
+        SIGNUP_ERROR = "Les inscriptions ne sont pas ouvertes. Vous ne pouvez pas ajouter d'adhérent pour le moment."
+        if not GeneralSettings.get_solo().allow_new_member:
+            return Response(
+                status=status.HTTP_405_METHOD_NOT_ALLOWED, data={"error": SIGNUP_ERROR}
+            )
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(user=self.request.user)
+        current_season = Season.objects.filter(is_current=True).first()
+        if not current_season or str(request.data["season"]) != str(current_season.id):
+            return Response(
+                status=status.HTTP_405_METHOD_NOT_ALLOWED, data={"error": SIGNUP_ERROR}
+            )
+        if current_season.is_pre_signup_ongoing:
+            serializer.check_presignup(self.request.user)  # type: ignore[attr-defined]
+        else:
+            if not current_season.is_signup_ongoing:
+                return Response(
+                    status=status.HTTP_405_METHOD_NOT_ALLOWED,
+                    data={"error": SIGNUP_ERROR},
+                )
+        member = serializer.save(user=self.request.user.username)
         headers = self.get_success_headers(serializer.data)
+        email_sender = EmailSender(EmailEnum.CREATE_MEMBER)
+        email_sender.send_email(
+            emails=[request.user.username, member.email],
+            full_name=f"{member.first_name} {member.last_name}",
+            season_year=member.season.year,
+            active_courses=member.active_courses.all(),
+            waiting_courses=member.waiting_courses.all(),
+        )
         return Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
@@ -233,11 +277,20 @@ class MemberViewSet(
         user = self.get_object().user
         serializer.save(user=user)
 
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
+    def destroy(self, request, *args, **kwargs) -> Response:
+        instance: Member = self.get_object()
         if not request.user.is_superuser and instance.user != request.user:
             return Response(status=status.HTTP_403_FORBIDDEN)
+        email = instance.email
+        name = f"{instance.first_name} {instance.last_name}"
+        season = instance.season.year
         self.perform_destroy(instance)
+        email_sender = EmailSender(EmailEnum.DELETE_MEMBER)
+        email_sender.send_email(
+            emails=[request.user.username, email],
+            full_name=name,
+            season_year=season,
+        )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(

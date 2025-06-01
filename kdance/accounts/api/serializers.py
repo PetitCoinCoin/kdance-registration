@@ -1,7 +1,6 @@
 import logging
 import re
 
-from contextlib import suppress
 from datetime import timedelta
 from hashlib import sha512
 from secrets import token_urlsafe
@@ -9,12 +8,12 @@ from typing import Any
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
-from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.utils import timezone
 from rest_framework import serializers
 
 from accounts.models import Profile, ResetPassword
+from members.emails import EmailEnum, EmailSender
 from members.models import Member, Payment, Season
 from members.api.serializers import (
     MemberRetrieveSerializer,
@@ -35,7 +34,7 @@ class EmailNotSentException(Exception):
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ("address", "phone")
+        fields = ("address", "postal_code", "city", "phone")
 
     @staticmethod
     def validate_phone(phone: str) -> str:
@@ -115,34 +114,39 @@ class UserBaseSerializer(serializers.ModelSerializer):
             previous_phone = self.instance.profile.phone  # type: ignore
         if (
             self.instance
-            and self.instance.profile.address  # type: ignore[union-attr]
+            and self.instance.profile.full_address  # type: ignore[union-attr]
             and profile_data
-            and profile_data.get("address")
+            and (
+                profile_data.get("address")
+                or profile_data.get("postal_code")
+                or profile_data.get("city")
+            )
         ):
-            previous_address = self.instance.profile.address  # type: ignore
+            previous_address = self.instance.profile.full_address  # type: ignore
         user: User = super().save(**kwargs)
         if profile_data:
             profile, _ = Profile.objects.get_or_create(user=user)
             profile.address = profile_data.get("address")
+            profile.postal_code = profile_data.get("postal_code")
+            profile.city = profile_data.get("city")
             profile.phone = profile_data.get("phone")
             profile.save()
         for member in user.member_set.all():
             updated = False
             if previous_email and member.email == previous_email:
-                _logger.info("mail")
                 member.email = self.validated_data.get("email")
                 updated = True
             if previous_phone and member.phone == previous_phone:
                 member.phone = profile_data.get("phone")
                 updated = True
-            if previous_address and member.address == previous_address:
-                _logger.info("address")
+            if previous_address and member.full_address == previous_address:
                 member.address = profile_data.get("address")
+                member.postal_code = profile_data.get("postal_code")
+                member.city = profile_data.get("city")
                 updated = True
             if updated:
-                _logger.info("update")
+                _logger.debug("update")
                 member.save()
-
         return user
 
 
@@ -151,6 +155,16 @@ class UserCreateSerializer(UserBaseSerializer):
         required=True,
         allow_blank=False,
         source="profile.address",
+    )
+    city = serializers.CharField(
+        required=True,
+        allow_blank=False,
+        source="profile.city",
+    )
+    postal_code = serializers.CharField(
+        required=True,
+        allow_blank=False,
+        source="profile.postal_code",
     )
     phone = serializers.CharField(
         required=True,
@@ -167,6 +181,8 @@ class UserCreateSerializer(UserBaseSerializer):
             "first_name",
             "last_name",
             "address",
+            "city",
+            "postal_code",
             "phone",
         )
         extra_kwargs = {
@@ -193,58 +209,6 @@ class UserCreateSerializer(UserBaseSerializer):
             payment = Payment(user=user, season=Season.objects.get(is_current=True))
             payment.save()
         return user
-
-    @classmethod
-    def send_email(cls, username: str) -> None:
-        with suppress(User.DoesNotExist):
-            user: User = User.objects.get(username=username)
-            _logger.info("Envoi d'un email de création de compte")
-            _logger.debug(f"Envoi vers {user.email}")
-            mail = EmailMultiAlternatives(
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[user.email],
-                reply_to=[settings.DEFAULT_FROM_EMAIL],
-                subject="Création d'un compte K'Dance",
-                body=cls.__build_text(username),
-            )
-            mail.attach_alternative(cls.__build_html(username), "text/html")
-            sent = mail.send()
-            if not sent:
-                _logger.warning(
-                    "Echec de l'envoi du mail de créataion de compte pour %s", username
-                )
-
-    @classmethod
-    def __build_text(cls, username: str) -> str:
-        message = f"""
-Bonjour
-
-Vous venez de créer votre compte K'Dance! Utilisez votre email ({username}) comme identifiant pour vous connecter.
-Vous pouvez désormais ajouter et gérer les adhérents de votre famille pour chaque nouvelle saison.
-N'oubliez pas d'utiliser également cet espace pour mettre à jour vos coordonnées en cas de changement.
-
-Bonne journée et à bientôt
-Tech K'Dance
-"""
-        return message
-
-    @classmethod
-    def __build_html(cls, username: str) -> str:
-        message = f"""
-<p>Bonjour</p>
-<p>
-  Vous venez de créer votre compte K'Dance! Utilisez votre email ({username}) comme identifiant pour vous connecter.
-  Vous pouvez désormais ajouter et gérer les adhérents de votre famille pour chaque nouvelle saison.
-</p>
-<p>
-  N'oubliez pas d'utiliser également cet espace pour mettre à jour vos coordonnées en cas de changement.
-</p>
-<p>
-  Bonne journée et à bientôt<br />
-  Tech K'Dance
-</p>
-"""
-        return message
 
 
 class UserSerializer(UserBaseSerializer):
@@ -405,57 +369,11 @@ class UserResetPwdSerializer(serializers.Serializer):
             reset_pwd.save()
         _logger.info("Envoi d'un email de réinitialisation de mot de passe")
         _logger.debug(f"Envoi vers {user.email}")
-        mail = EmailMultiAlternatives(
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[user.email],
-            reply_to=[settings.DEFAULT_FROM_EMAIL],
-            subject="Réinitialisation du mot de passe K'Dance",
-            body=self.__build_text(path + "pwd_new?token=" + token),
+        email_sender = EmailSender(EmailEnum.RESET_PWD)
+        email_sender.send_email(
+            emails=[user.email],
+            url=f"{path}pwd_new?token={token}",
         )
-        mail.attach_alternative(
-            self.__build_html(path + "pwd_new?token=" + token), "text/html"
-        )
-        sent = mail.send()
-        if not sent:
-            raise EmailNotSentException(
-                f"Email de ré-initialisation non envoyé à {user.email}"
-            )
-
-    @classmethod
-    def __build_text(cls, url: str) -> str:
-        message = f"""
-Bonjour
-
-Vous venez de faire une demande de réinitialisation de mot de passe pour votre compte K'Dance ?
-Veuillez cliquer sur le lien suivant, ou le copier-coller dans votre navigateur: {url}
-Ce lien restera valide 30 minutes.
-
-Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email, votre mot de passe restera inchangé.
-
-Bonne journée et à bientôt
-Tech K'Dance
-"""
-        return message
-
-    @classmethod
-    def __build_html(cls, url: str) -> str:
-        message = f"""
-<p>Bonjour</p>
-<p>
-  Vous venez de faire une demande de réinitialisation de mot de passe pour votre compte K'Dance ?
-  Veuillez cliquer sur le lien suivant, qui restera valide pendant 30 minutes:
-  <a href="{url}">
-    {url}
-  </a>
-</p>
-<p>Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email, votre mot de passe restera
-  inchangé.</p>
-<p>
-  Bonne journée et à bientôt<br />
-  Tech K'Dance
-</p>
-"""
-        return message
 
 
 class UserNewPwdSerializer(serializers.Serializer):

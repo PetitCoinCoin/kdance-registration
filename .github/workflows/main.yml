@@ -1,4 +1,4 @@
-on: 
+on:
     push:
       tags:
         - release.v**
@@ -16,4 +16,3 @@ jobs:
           server: ftp.jeta2726.odns.fr
           username: adherents-prod@adherents.association-kdance.fr
           password: ${{ secrets.prod_ftp_password }}
-  

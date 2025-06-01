@@ -28,7 +28,7 @@
           </div>
           <form id="form-season" name="form-season">
             <div class="modal-body">
-              <div class="form-outline mb-4">
+              <div class="form-outline mb-2">
                 <label class="form-label required" for="season-year">Saison (format XXXX-YYYY)</label>
                 <input type="text" id="season-year" class="form-control" maxlength="9" required />
                 <div id="invalid-season-year" class="invalid-feedback"></div>
@@ -46,6 +46,79 @@
               <div class="form-outline mb-4">
                 <label class="form-label" for="season-discount-limit">Réduction à partir de .. cours</label>
                 <input type="number" id="season-discount-limit" class="form-control" min="0" value="2" />
+              </div>
+              <div class="form-outline mb-4">
+                <label class="form-label" for="season-pass-sport-amount">Montant du Pass Sport pour la saison</label>
+                <input type="number" id="season-pass-sport-amount" class="form-control" min="0" value="50" />
+              </div>
+              <div class="form-outline mb-4">
+                <h6>Pré-inscriptions</h6>
+                <div class="row">
+                  <label class="form-label required col-2" for="pre-signup-start">Du</label>
+                  <div class="col-10">
+                    <input type="date" id="pre-signup-start" class="form-control" />
+                    <div id="invalid-pre-signup-start" class="invalid-feedback"></div>
+                  </div>
+                </div>
+                <div class="row">
+                  <label class="form-label required col-2" for="pre-signup-end">au</label>
+                  <div class="col-10">
+                    <input type="date" id="pre-signup-end" class="form-control" />
+                    <div id="invalid-pre-signup-end" class="invalid-feedback"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="form-outline mb-4">
+                <h6>Inscriptions</h6>
+                <div class="row">
+                  <label class="form-label required col-2" for="signup-start">Du</label>
+                  <div class="col-10">
+                    <input type="date" id="signup-start" class="form-control" />
+                    <div id="invalid-signup-start" class="invalid-feedback"></div>
+                  </div>
+                </div>
+                <div class="row">
+                  <label class="form-label required col-2" for="signup-end">au</label>
+                  <div class="col-10">
+                    <input type="date" id="signup-end" class="form-control" />
+                    <div id="invalid-signup-end" class="invalid-feedback"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="form-outline mb-4">
+                <h6>Tarifs FFD</h6>
+                <div class="row align-items-center">
+                  <div class="col-8">
+                    <label class="form-label" for="season-ffd-a-amount">Licence A Loisir</label>
+                  </div>
+                  <div class="col-4">
+                    <input type="number" id="season-ffd-a-amount" class="form-control" min="0" value="0" />
+                  </div>
+                </div>
+                <div class="row align-items-center">
+                  <div class="col-8">
+                    <label class="form-label" for="season-ffd-b-amount">Licence B Compétiteur</label>
+                  </div>
+                  <div class="col-4">
+                    <input type="number" id="season-ffd-b-amount" class="form-control" min="0" value="0" />
+                  </div>
+                </div>
+                <div class="row align-items-center">
+                  <div class="col-8">
+                    <label class="form-label" for="season-ffd-c-amount">Licence C Compétiteur national</label>
+                  </div>
+                  <div class="col-4">
+                    <input type="number" id="season-ffd-c-amount" class="form-control" min="0" value="0" />
+                  </div>
+                </div>
+                <div class="row align-items-center">
+                  <div class="col-8">
+                    <label class="form-label" for="season-ffd-d-amount">Licence D Compétiteur international</label>
+                  </div>
+                  <div class="col-4">
+                    <input type="number" id="season-ffd-d-amount" class="form-control" min="0" value="0" />
+                  </div>
+                </div>
               </div>
             </div>
             <div class="modal-footer">
@@ -139,10 +212,16 @@
                 </div>
               </div>
               <div class="row">
-                <div class="col-8">
+                <div class="col-4">
                   <div class="form-outline mb-4">
                     <label class="form-label" for="course-teacher">Professeur</label>
                     <select id="course-teacher" class="form-select"></select>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="form-outline mb-4">
+                    <label class="form-label required" for="course-capacity">Nombre de places</label>
+                    <input type="number" id="course-capacity" class="form-control" required />
                   </div>
                 </div>
                 <div class="col-4">
@@ -194,6 +273,7 @@
               <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="{% url 'member_mgmt' %}">Gérer les adhérents</a></li>
                 <li><a class="dropdown-item" href="{% url 'admin_mgmt' %}">Gérer les admins</a></li>
+                <li><a class="dropdown-item" href="{% url 'site_mgmt' %}">Gérer le site</a></li>
                 <li><a class="dropdown-item" href="{% url 'list_dl' %}">Listes et téléchargements</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="{% url 'super_index' %}">Admin</a></li>
@@ -204,7 +284,7 @@
         </ol>
       </nav>
       <div class="container mt-3">
-        <div class="d-flex justify-content-between mb-3">
+        <div id="course-header" class="mb-3">
           <select id="season-select" class="form-select max-w-300">
           </select>
           <div>

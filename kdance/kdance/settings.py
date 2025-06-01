@@ -104,6 +104,8 @@ DATABASES = {
         "PASSWORD": os.getenv("DB_PASSWORD"),
         "HOST": os.getenv("DB_HOST"),
         "PORT": 3306,
+        "CONN_HEALTH_CHECKS": True,
+        "CONN_MAX_AGE": 60,
     }
 }
 
@@ -154,7 +156,17 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = (os.path.join(BASE_DIR, os.getenv("STATICFILES_DIRS", "")),)
 STATIC_ROOT = os.getenv("STATIC_ROOT")
 
+# Payment
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
+STRIPE_ADHESION_ID = os.getenv("STRIPE_ADHESION_ID")
+CAWL_PSPID = os.getenv("CAWL_PSPID")
+CAWL_API_ID = os.getenv("CAWL_API_ID")
+CAWL_API_KEY = os.getenv("CAWL_API_KEY")
+CAWL_URL = os.getenv("CAWL_URL")
+
 # Other
+DATE_FORMAT = "%Y-%m-%d"
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "accounts.api.permissions.SuperUserPermission",

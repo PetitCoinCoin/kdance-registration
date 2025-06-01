@@ -1,5 +1,6 @@
 """Tests related to Member API view."""
-from datetime import datetime, time, timezone
+
+from datetime import datetime, timezone
 
 import pytest
 
@@ -23,37 +24,13 @@ class TestMemberApiView(AuthTestCase):
 
     _member: Member | None = None
     _season: Season | None = None
+    _course: Course | None = None
 
     @pytest.fixture(autouse=True)
-    def set_member(self):
-        season, _ = Season.objects.get_or_create(year="1900-1901")
-        self._season = season
-        doc, _ = Documents.objects.get_or_create(
-            authorise_photos=False,
-            authorise_emergency=False,
-        )
-        member, _ = Member.objects.get_or_create(
-            user=self.testuser,
-            season=season,
-            first_name="Plip",
-            last_name="Plop",
-            birthday=datetime(1900, 5, 1, tzinfo=timezone.utc),
-            address="Par ici",
-            email="plip@plop.fr",
-            phone="0987654321",
-            documents=doc,
-        )
-        self._member = member
-
-    def setup_course(self) -> Course:
-        return Course.objects.create(
-            name="Cha cha cha",
-            season=self._season,
-            price=10,
-            weekday=0,
-            start_hour=time(10, 0),
-            end_hour=time(11, 0),
-        )
+    def set_member(self, mock_season, mock_member, mock_course):
+        self._season = mock_season
+        self._member = mock_member
+        self._course = mock_course
 
     @property
     def view_url(self):
@@ -62,14 +39,16 @@ class TestMemberApiView(AuthTestCase):
             kwargs=self._kwargs,
         )
 
-    @parameterized.expand([
-        ("get", 200, 200, False),
-        ("get", 200, 200, True),
-        ("post", 400, 400, False),
-        ("put", 403, 405, True),
-        ("patch", 200, 200, True),
-        # delete
-    ])
+    @parameterized.expand(
+        [
+            ("get", 200, 200, False),
+            ("get", 200, 200, True),
+            ("post", 400, 400, False),
+            ("put", 403, 405, True),
+            ("patch", 200, 200, True),
+            # delete
+        ]
+    )
     def test_permissions(self, method, user_status, superuser_status, with_pk):
         self._kwargs = {"pk": self._member.pk} if with_pk else {}
         assert self.users_have_permission(
@@ -78,23 +57,27 @@ class TestMemberApiView(AuthTestCase):
             superuser_status=superuser_status,
         )
 
-    @parameterized.expand([
-        ("get", False),
-        ("get", True),
-        ("post", False),
-        ("put", True),
-        ("patch", True),
-        ("delete", True),
-    ])
+    @parameterized.expand(
+        [
+            ("get", False),
+            ("get", True),
+            ("post", False),
+            ("put", True),
+            ("patch", True),
+            ("delete", True),
+        ]
+    )
     def test_authentication_mandatory(self, method, with_pk):
         self._kwargs = {"pk": self._member.pk} if with_pk else {}
         assert self.anonymous_has_permission(method, 403)
 
-    @parameterized.expand([
-        (200, False, False),
-        (200, True, False),
-        (403, False, True),
-    ])
+    @parameterized.expand(
+        [
+            (200, False, False),
+            (200, True, False),
+            (403, False, True),
+        ]
+    )
     def test_get_permissions_limitations(self, status_code, with_pk, with_super_pk):
         """Tests that GET requests are allowed for simple user, but with limited results."""
         super_member, _ = Member.objects.get_or_create(
@@ -124,10 +107,12 @@ class TestMemberApiView(AuthTestCase):
                 else:
                     assert response_json["id"] == self._member.pk
 
-    @parameterized.expand([
-        (200, True, False),
-        (403, False, True),
-    ])
+    @parameterized.expand(
+        [
+            (200, True, False),
+            (403, False, True),
+        ]
+    )
     def test_patch_permissions_limitations(self, status_code, with_pk, with_super_pk):
         """Tests that PATCH request are allowed for simple user, but only for their members."""
         super_member, _ = Member.objects.get_or_create(
@@ -146,17 +131,23 @@ class TestMemberApiView(AuthTestCase):
         if with_super_pk:
             self._kwargs["pk"] = super_member.pk
         with AuthenticatedAction(self.client, self.testuser):
-            response = self.client.patch(self.view_url, data={"first_name": "Plup"}, content_type="application/json")
+            response = self.client.patch(
+                self.view_url,
+                data={"first_name": "Plup"},
+                content_type="application/json",
+            )
             assert response.status_code == status_code, response
             if status_code == 200:
                 response_json = response.json()
                 assert response_json["id"] == self._member.pk
                 assert response_json["first_name"] == "Plup"
 
-    @parameterized.expand([
-        (204, True, False),
-        (403, False, True),
-    ])
+    @parameterized.expand(
+        [
+            (204, True, False),
+            (403, False, True),
+        ]
+    )
     def test_delete_permissions_limitations(self, status_code, with_pk, with_super_pk):
         """Tests that DELETE request are allowed for simple user, but only for their members."""
         super_member, _ = Member.objects.get_or_create(
@@ -178,39 +169,53 @@ class TestMemberApiView(AuthTestCase):
             response = self.client.delete(self.view_url)
             assert response.status_code == status_code, response
 
-    @parameterized.expand([
-        ("Jean-Mich", "Jean-Mich", "Pouet", "Pouet", "j@m.com", "j@m.com"),
-        ("jean-mich", "Jean-Mich", "pouet", "Pouet", "J@M.com", "j@m.com"),
-        ("JEAN-MICH", "Jean-Mich", "POUET", "Pouet", "J@M.COM", "j@m.com"),
-    ])
-    def test_post(self, first_name, exp_first_name, last_name, exp_last_name, email, exp_email):
+    @parameterized.expand(
+        [
+            ("Jean-Mich", "Jean-Mich", "Pouet", "Pouet", "j@m.com", "j@m.com"),
+            ("jean-mich", "Jean-Mich", "pouet", "Pouet", "J@M.com", "j@m.com"),
+            ("JEAN-MICH", "Jean-Mich", "POUET", "Pouet", "J@M.COM", "j@m.com"),
+        ]
+    )
+    def test_post(
+        self, first_name, exp_first_name, last_name, exp_last_name, email, exp_email
+    ):
         """Tests creation with data formating."""
-        course = self.setup_course()
         data = {
             "season": self._season.pk,
             "first_name": first_name,
             "last_name": last_name,
             "birthday": "1900-12-24",
             "address": "Par ici",
+            "city": "Loin",
+            "postal_code": "31000",
             "email": email,
             "phone": "0987654321",
             "sport_pass": {
                 "code": "AZE-AZE-AZE",
                 "amount": 50,
             },
-            "active_courses": [course.pk],
-            "contacts": [],
+            "active_courses": [self._course.pk],
+            "contacts": [
+                {
+                    "first_name": "Plip",
+                    "last_name": "Plop",
+                    "phone": "0123456789",
+                    "contact_type": "emergency",
+                }
+            ],
             "documents": {
                 "authorise_photos": False,
                 "authorise_emergency": True,
                 "medical_document": "Manquant",
-            }
+            },
         }
         self._kwargs = {}
         assert Member.objects.count() == 1
         with AuthenticatedAction(self.client, self.testuser):
-            response = self.client.post(self.view_url, data=data, content_type="application/json")
-            assert response.status_code == 201, response
+            response = self.client.post(
+                self.view_url, data=data, content_type="application/json"
+            )
+            assert response.status_code == 201, response.json()
             response_json = response.json()
             assert response_json["first_name"] == exp_first_name
             assert response_json["last_name"] == exp_last_name
@@ -227,22 +232,179 @@ class TestMemberApiView(AuthTestCase):
         assert Documents.objects.count() == 2
         assert Documents.objects.filter(member__id=new_member.pk)
 
-    @parameterized.expand([
-        ("Plip", "Plop", None, None, None, None, True, "first_name", "Cet adhérent existe déjà pour la saison."),
-        ("plip", "PLOP", None, None, None, None, True, "last_name", "Cet adhérent existe déjà pour la saison."),
-        ("", "Pouet", None, None, None, None, True, "first_name", "Ce champ ne peut être vide."),
-        ("Jean-Mich", "", None, None, None, None, True, "last_name", "Ce champ ne peut être vide."),
-        (None, None, "jm.com", None, None, None, True, "email", "Saisissez une adresse e-mail valide."),
-        (None, None, "", None, None, None, True, "email", "Ce champ ne peut être vide."),
-        (None, None, None, "+331234", None, None, True, "phone", "Saisissez une valeur valide."),
-        (None, None, None, "", None, None, True, "phone", "Ce champ ne peut être vide."),
-        (None, None, None, None, "", None, True, "address", "Ce champ ne peut être vide."),
-        (None, None, None, None, None, None, False, "active_courses", "Vous devez sélectionner au moins un cours."),
-        (None, None, None, None, None, "24/12/2000", True, "birthday", "La date n'a pas le bon format. Utilisez un des formats suivants\xa0: YYYY-MM-DD."),
-        (None, None, None, None, None, "", True, "birthday", "La date n'a pas le bon format. Utilisez un des formats suivants\xa0: YYYY-MM-DD."),
-    ])
-    def test_post_payload_error(self, first_name, last_name, email, phone, address, birthday, courses, key, message):
-        course = self.setup_course()
+    @parameterized.expand(
+        [
+            (
+                "Plip",
+                "Plop",
+                None,
+                None,
+                None,
+                None,
+                None,
+                True,
+                "first_name",
+                "Cet adhérent existe déjà pour la saison.",
+            ),
+            (
+                "plip",
+                "PLOP",
+                None,
+                None,
+                None,
+                None,
+                None,
+                True,
+                "last_name",
+                "Cet adhérent existe déjà pour la saison.",
+            ),
+            (
+                "",
+                "Pouet",
+                None,
+                None,
+                None,
+                None,
+                None,
+                True,
+                "first_name",
+                "Ce champ ne peut être vide.",
+            ),
+            (
+                "Jean-Mich",
+                "",
+                None,
+                None,
+                None,
+                None,
+                None,
+                True,
+                "last_name",
+                "Ce champ ne peut être vide.",
+            ),
+            (
+                None,
+                None,
+                "jm.com",
+                None,
+                None,
+                None,
+                None,
+                True,
+                "email",
+                "Saisissez une adresse e-mail valide.",
+            ),
+            (
+                None,
+                None,
+                "",
+                None,
+                None,
+                None,
+                None,
+                True,
+                "email",
+                "Ce champ ne peut être vide.",
+            ),
+            (
+                None,
+                None,
+                None,
+                "+331234",
+                None,
+                None,
+                None,
+                True,
+                "phone",
+                "Saisissez une valeur valide.",
+            ),
+            (
+                None,
+                None,
+                None,
+                "",
+                None,
+                None,
+                None,
+                True,
+                "phone",
+                "Ce champ ne peut être vide.",
+            ),
+            (
+                None,
+                None,
+                None,
+                None,
+                "",
+                None,
+                None,
+                True,
+                "address",
+                "Ce champ ne peut être vide.",
+            ),
+            (
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                False,
+                "active_courses",
+                "Vous devez sélectionner au moins un cours.",
+            ),
+            (
+                None,
+                None,
+                None,
+                None,
+                None,
+                "24/12/2000",
+                None,
+                True,
+                "birthday",
+                "La date n'a pas le bon format. Utilisez un des formats suivants\xa0: YYYY-MM-DD.",
+            ),
+            (
+                None,
+                None,
+                None,
+                None,
+                None,
+                "",
+                None,
+                True,
+                "birthday",
+                "La date n'a pas le bon format. Utilisez un des formats suivants\xa0: YYYY-MM-DD.",
+            ),
+            (
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                [],
+                True,
+                "contacts",
+                "Vous devez indiquer au moins un contact d'urgence.",
+            ),
+        ]
+    )
+    def test_post_payload_error(
+        self,
+        first_name,
+        last_name,
+        email,
+        phone,
+        address,
+        birthday,
+        contacts,
+        courses,
+        key,
+        message,
+    ):
         data = {
             "user": self.testuser.pk,
             "season": self._season.pk,
@@ -250,15 +412,24 @@ class TestMemberApiView(AuthTestCase):
             "last_name": "Pouet",
             "birthday": "1900-12-24",
             "address": "Par ici",
+            "city": "Loin",
+            "postal_code": "31000",
             "email": "j@m.com",
             "phone": "0987654321",
-            "active_courses": [course.pk],
-            "contacts": [],
+            "active_courses": [self._course.pk],
+            "contacts": [
+                {
+                    "first_name": "Plip",
+                    "last_name": "Plop",
+                    "phone": "0123456789",
+                    "contact_type": "emergency",
+                }
+            ],
             "documents": {
                 "authorise_photos": False,
                 "authorise_emergency": True,
                 "medical_document": "Manquant",
-            }
+            },
         }
         if first_name is not None:
             data["first_name"] = first_name
@@ -272,25 +443,39 @@ class TestMemberApiView(AuthTestCase):
             data["address"] = address
         if birthday is not None:
             data["birthday"] = birthday
+        if contacts is not None:
+            data["contacts"] = contacts
         if not courses:
             data.pop("active_courses")
         self._kwargs = {}
         assert Member.objects.count() == 1
 
         with AuthenticatedAction(self.client, self.testuser):
-            response = self.client.post(self.view_url, data=data, content_type="application/json")
+            response = self.client.post(
+                self.view_url, data=data, content_type="application/json"
+            )
             assert response.status_code == 400, response
             response_json = response.json()
             assert message in response_json[key]
         assert Member.objects.count() == 1
 
-    @parameterized.expand([
-        ("Jean", "Mich", "j@m.com", "0123456789", "Par là", "2000-01-31", "Certificat"),
-        ("Jean", "Mich", None, None, None, None, None),
-        (None, None, "j@m.com", "0123456789", "Par là", None, None),
-        (None, None, None, None, None, "2000-01-31", None),
-        (None, None, None, None, None, None, "Attestation"),
-    ])
+    @parameterized.expand(
+        [
+            (
+                "Jean",
+                "Mich",
+                "j@m.com",
+                "0123456789",
+                "Par là",
+                "2000-01-31",
+                "Certificat",
+            ),
+            ("Jean", "Mich", None, None, None, None, None),
+            (None, None, "j@m.com", "0123456789", "Par là", None, None),
+            (None, None, None, None, None, "2000-01-31", None),
+            (None, None, None, None, None, None, "Attestation"),
+        ]
+    )
     def test_patch(self, first_name, last_name, email, phone, address, birthday, doc):
         data = {}
         if first_name is not None:
@@ -311,7 +496,9 @@ class TestMemberApiView(AuthTestCase):
         assert Member.objects.count() == 1
 
         with AuthenticatedAction(self.client, self.testuser):
-            response = self.client.patch(self.view_url, data=data, content_type="application/json")
+            response = self.client.patch(
+                self.view_url, data=data, content_type="application/json"
+            )
             assert response.status_code == 200, response
         assert Member.objects.count() == 1
         if first_name is not None:
@@ -325,22 +512,91 @@ class TestMemberApiView(AuthTestCase):
         if address is not None:
             assert Member.objects.filter(address=address).exists()
         if birthday is not None:
-            assert Member.objects.filter(birthday=datetime.strptime(birthday, "%Y-%m-%d")).exists()
+            assert Member.objects.filter(
+                birthday=datetime.strptime(birthday, "%Y-%m-%d")
+            ).exists()
         if doc is not None:
             assert Member.objects.filter(documents__medical_document=doc).exists()
 
-    @parameterized.expand([
-        ("", "Pouet", None, None, None, None, "first_name", "Ce champ ne peut être vide."),
-        ("Jean-Mich", "", None, None, None, None, "last_name", "Ce champ ne peut être vide."),
-        (None, None, "jm.com", None, None, None, "email", "Saisissez une adresse e-mail valide."),
-        (None, None, "", None, None, None, "email", "Ce champ ne peut être vide."),
-        (None, None, None, "+331234", None, None, "phone", "Saisissez une valeur valide."),
-        (None, None, None, "", None, None, "phone", "Ce champ ne peut être vide."),
-        (None, None, None, None, "", None, "address", "Ce champ ne peut être vide."),
-        (None, None, None, None, None, "24/12/2000", "birthday", "La date n'a pas le bon format. Utilisez un des formats suivants\xa0: YYYY-MM-DD."),
-        (None, None, None, None, None, "", "birthday", "La date n'a pas le bon format. Utilisez un des formats suivants\xa0: YYYY-MM-DD."),
-    ])
-    def test_patch_payload_error(self, first_name, last_name, email, phone, address, birthday, key, message):
+    @parameterized.expand(
+        [
+            (
+                "",
+                "Pouet",
+                None,
+                None,
+                None,
+                None,
+                "first_name",
+                "Ce champ ne peut être vide.",
+            ),
+            (
+                "Jean-Mich",
+                "",
+                None,
+                None,
+                None,
+                None,
+                "last_name",
+                "Ce champ ne peut être vide.",
+            ),
+            (
+                None,
+                None,
+                "jm.com",
+                None,
+                None,
+                None,
+                "email",
+                "Saisissez une adresse e-mail valide.",
+            ),
+            (None, None, "", None, None, None, "email", "Ce champ ne peut être vide."),
+            (
+                None,
+                None,
+                None,
+                "+331234",
+                None,
+                None,
+                "phone",
+                "Saisissez une valeur valide.",
+            ),
+            (None, None, None, "", None, None, "phone", "Ce champ ne peut être vide."),
+            (
+                None,
+                None,
+                None,
+                None,
+                "",
+                None,
+                "address",
+                "Ce champ ne peut être vide.",
+            ),
+            (
+                None,
+                None,
+                None,
+                None,
+                None,
+                "24/12/2000",
+                "birthday",
+                "La date n'a pas le bon format. Utilisez un des formats suivants\xa0: YYYY-MM-DD.",
+            ),
+            (
+                None,
+                None,
+                None,
+                None,
+                None,
+                "",
+                "birthday",
+                "La date n'a pas le bon format. Utilisez un des formats suivants\xa0: YYYY-MM-DD.",
+            ),
+        ]
+    )
+    def test_patch_payload_error(
+        self, first_name, last_name, email, phone, address, birthday, key, message
+    ):
         data = {}
         if first_name is not None:
             data["first_name"] = first_name
@@ -358,7 +614,9 @@ class TestMemberApiView(AuthTestCase):
         assert Member.objects.count() == 1
 
         with AuthenticatedAction(self.client, self.testuser):
-            response = self.client.patch(self.view_url, data=data, content_type="application/json")
+            response = self.client.patch(
+                self.view_url, data=data, content_type="application/json"
+            )
             assert response.status_code == 400, response
             response_json = response.json()
             assert message in response_json[key]
@@ -380,45 +638,28 @@ class TestMembersCoursesApiView(AuthTestCase):
 
     _member: Member | None = None
     _season: Season | None = None
+    _course: Course | None = None
 
     @pytest.fixture(autouse=True)
-    def set_member(self):
-        season, _ = Season.objects.get_or_create(year="1900-1901")
-        self._season = season
-        member, _ = Member.objects.get_or_create(
-            user=self.testuser,
-            season=season,
-            first_name="Plip",
-            last_name="Plop",
-            birthday=datetime(1900, 5, 1, tzinfo=timezone.utc),
-            address="Par ici",
-            email="plip@plop.fr",
-            phone="0987654321",
-        )
-        self._member = member
-
-    def set_course(self):
-        return Course.objects.create(
-            name="Cha cha cha",
-            season=self._season,
-            price=10,
-            weekday=0,
-            start_hour=time(10, 0),
-            end_hour=time(11, 0),
-        )
+    def set_member(self, mock_season, mock_member, mock_course):
+        self._season = mock_season
+        self._member = mock_member
+        self._course = mock_course
 
     @property
     def view_url(self):
         self._kwargs["pk"] = self._member.pk
         return reverse("api-members-courses", kwargs=self._kwargs)
 
-    @parameterized.expand([
-        ("get", 405, 405),
-        ("post", 405, 405),
-        ("put", 403, 200),
-        ("patch", 405, 405),
-        ("delete", 405, 405),
-    ])
+    @parameterized.expand(
+        [
+            ("get", 405, 405),
+            ("post", 405, 405),
+            ("put", 403, 200),
+            ("patch", 405, 405),
+            ("delete", 405, 405),
+        ]
+    )
     def test_permissions(self, method, user_status, superuser_status):
         self._kwargs["action"] = "add"
         assert self.users_have_permission(
@@ -435,9 +676,7 @@ class TestMembersCoursesApiView(AuthTestCase):
             content_type="application/json",
         )
 
-    @parameterized.expand([
-        "get", "post", "put", "patch", "delete"
-    ])
+    @parameterized.expand(["get", "post", "put", "patch", "delete"])
     def test_authentication_mandatory(self, method):
         self._kwargs["action"] = "add"
         assert self.anonymous_has_permission(method, 403)
@@ -445,46 +684,59 @@ class TestMembersCoursesApiView(AuthTestCase):
         assert self.anonymous_has_permission(method, 403)
 
     def test_add(self):
-        course = self.set_course()
         self._kwargs["action"] = "add"
         with AuthenticatedAction(self.client, self.super_testuser):
             response = self.client.put(
                 self.view_url,
-                data={"courses": [course.pk]},
+                data={"courses": [self._course.pk]},
                 content_type="application/json",
             )
             assert response.status_code == 200, response
         self._member.refresh_from_db()
-        assert course in self._member.active_courses.all()
+        assert self._course in self._member.active_courses.all()
 
     def test_remove(self):
-        course = self.set_course()
-        self._member.active_courses.add(course)
+        self._member.active_courses.add(self._course)
         self._member.refresh_from_db()
         assert len(self._member.active_courses.all()) == 1
         self._kwargs["action"] = "remove"
         with AuthenticatedAction(self.client, self.super_testuser):
             response = self.client.put(
                 self.view_url,
-                data={"courses": [course.pk], "cancel_refund": 5},
+                data={"courses": [self._course.pk], "cancel_refund": 5},
                 content_type="application/json",
             )
             assert response.status_code == 200, response
         self._member.refresh_from_db()
         assert not len(self._member.active_courses.all())
-        assert course in self._member.cancelled_courses.all()
+        assert self._course in self._member.cancelled_courses.all()
 
-    @parameterized.expand([
-        (1000000, None, "add", "courses", 400, "l'objet n'existe pas."),
-        (1000000, None, "remove", "courses", 400, "l'objet n'existe pas."),
-        (None, 10, "add", "cancel_refund", 400, "Ce champ ne doit pas être modifié pour ajouter un cours."),
-        (None, None, "remove", "cancel_refund", 400, "Ce champ est obligatoire pour retirer un cours."),
-        (None, None, "blob", "", 404, ""),
-    ])
+    @parameterized.expand(
+        [
+            (1000000, None, "add", "courses", 400, "l'objet n'existe pas."),
+            (1000000, None, "remove", "courses", 400, "l'objet n'existe pas."),
+            (
+                None,
+                10,
+                "add",
+                "cancel_refund",
+                400,
+                "Ce champ ne doit pas être modifié pour ajouter un cours.",
+            ),
+            (
+                None,
+                None,
+                "remove",
+                "cancel_refund",
+                400,
+                "Ce champ est obligatoire pour retirer un cours.",
+            ),
+            (None, None, "blob", "", 404, ""),
+        ]
+    )
     def test_action_error(self, course_pk, refund, action, key, status_code, message):
-        course = self.set_course()
         data = {
-            "courses": [course_pk or course.pk],
+            "courses": [course_pk or self._course.pk],
         }
         if refund is not None:
             data["cancel_refund"] = refund

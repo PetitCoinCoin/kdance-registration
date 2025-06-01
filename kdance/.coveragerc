@@ -1,5 +1,5 @@
 [run]
-omit = 
+omit =
     */migrations/*.py,
     *apps.py,
     *settings*.py,

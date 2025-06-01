@@ -7,7 +7,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -18,12 +17,41 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="Contact",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("first_name", models.CharField(max_length=25)),
                 ("last_name", models.CharField(max_length=35)),
-                ("email", models.CharField(max_length=150, validators=[django.core.validators.EmailValidator()])),
-                ("phone", models.CharField(max_length=10, validators=[django.core.validators.RegexValidator("\\d{10}")])),
-                ("contact_type", models.CharField(choices=[("responsible", "Responsable légal"), ("emergency", "Contact d'urgence")], max_length=17)),
+                (
+                    "email",
+                    models.CharField(
+                        max_length=150,
+                        validators=[django.core.validators.EmailValidator()],
+                    ),
+                ),
+                (
+                    "phone",
+                    models.CharField(
+                        max_length=10,
+                        validators=[django.core.validators.RegexValidator("\\d{10}")],
+                    ),
+                ),
+                (
+                    "contact_type",
+                    models.CharField(
+                        choices=[
+                            ("responsible", "Responsable légal"),
+                            ("emergency", "Contact d'urgence"),
+                        ],
+                        max_length=17,
+                    ),
+                ),
             ],
             options={
                 "abstract": False,
@@ -32,34 +60,96 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="Documents",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("authorise_photos", models.BooleanField()),
                 ("authorise_emergency", models.BooleanField()),
-                ("medical_document", models.CharField(choices=[("Manquant", "Manquant"), ("Certificat", "Certificat"), ("Attestation", "Attestation")], default="Manquant", max_length=11)),
+                (
+                    "medical_document",
+                    models.CharField(
+                        choices=[
+                            ("Manquant", "Manquant"),
+                            ("Certificat", "Certificat"),
+                            ("Attestation", "Attestation"),
+                        ],
+                        default="Manquant",
+                        max_length=11,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
             name="OtherPayment",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("amount", models.FloatField(validators=[django.core.validators.MinValueValidator(0)])),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "amount",
+                    models.FloatField(
+                        validators=[django.core.validators.MinValueValidator(0)]
+                    ),
+                ),
                 ("comment", models.CharField(max_length=100)),
             ],
         ),
         migrations.CreateModel(
             name="Season",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("year", models.CharField(max_length=9, validators=[django.core.validators.RegexValidator("\\d{4}-\\d{4}")])),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "year",
+                    models.CharField(
+                        max_length=9,
+                        validators=[
+                            django.core.validators.RegexValidator("\\d{4}-\\d{4}")
+                        ],
+                    ),
+                ),
                 ("is_current", models.BooleanField(default=True)),
-                ("discount_percent", models.PositiveIntegerField(default=10, validators=[django.core.validators.MaxValueValidator(100)])),
+                (
+                    "discount_percent",
+                    models.PositiveIntegerField(
+                        default=10,
+                        validators=[django.core.validators.MaxValueValidator(100)],
+                    ),
+                ),
                 ("discount_limit", models.PositiveIntegerField(default=2)),
             ],
         ),
         migrations.CreateModel(
             name="SportPass",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("amount", models.PositiveIntegerField(default=50)),
                 ("code", models.CharField(max_length=50)),
             ],
@@ -67,55 +157,192 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="Teacher",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("name", models.CharField(max_length=30, unique=True)),
             ],
         ),
         migrations.CreateModel(
             name="Payment",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("cash", models.FloatField(default=0.0, validators=[django.core.validators.MinValueValidator(0)])),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "cash",
+                    models.FloatField(
+                        default=0.0,
+                        validators=[django.core.validators.MinValueValidator(0)],
+                    ),
+                ),
                 ("comment", models.CharField(blank=True, default="", max_length=700)),
-                ("refund", models.FloatField(default=0.0, validators=[django.core.validators.MinValueValidator(0)])),
-                ("special_discount", models.FloatField(default=0.0, validators=[django.core.validators.MinValueValidator(0)])),
-                ("other_payment", models.OneToOneField(null=True, on_delete=django.db.models.deletion.SET_NULL, to="members.otherpayment")),
-                ("user", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
-                ("season", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="members.season")),
+                (
+                    "refund",
+                    models.FloatField(
+                        default=0.0,
+                        validators=[django.core.validators.MinValueValidator(0)],
+                    ),
+                ),
+                (
+                    "special_discount",
+                    models.FloatField(
+                        default=0.0,
+                        validators=[django.core.validators.MinValueValidator(0)],
+                    ),
+                ),
+                (
+                    "other_payment",
+                    models.OneToOneField(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="members.otherpayment",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "season",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="members.season"
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
             name="Check",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("number", models.PositiveIntegerField()),
                 ("name", models.CharField(max_length=100)),
                 ("bank", models.CharField(max_length=100)),
-                ("amount", models.FloatField(validators=[django.core.validators.MinValueValidator(0)])),
-                ("month", models.PositiveIntegerField(choices=[(1, "Janvier"), (2, "Février"), (3, "Mars"), (4, "Avril"), (5, "Mai"), (6, "Juin"), (7, "Juillet"), (8, "Aout"), (9, "Septembre"), (10, "Octobre"), (11, "Novembre"), (12, "Décembre")])),
-                ("payment", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name="check_payment", to="members.payment")),
+                (
+                    "amount",
+                    models.FloatField(
+                        validators=[django.core.validators.MinValueValidator(0)]
+                    ),
+                ),
+                (
+                    "month",
+                    models.PositiveIntegerField(
+                        choices=[
+                            (1, "Janvier"),
+                            (2, "Février"),
+                            (3, "Mars"),
+                            (4, "Avril"),
+                            (5, "Mai"),
+                            (6, "Juin"),
+                            (7, "Juillet"),
+                            (8, "Aout"),
+                            (9, "Septembre"),
+                            (10, "Octobre"),
+                            (11, "Novembre"),
+                            (12, "Décembre"),
+                        ]
+                    ),
+                ),
+                (
+                    "payment",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="check_payment",
+                        to="members.payment",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
             name="Ancv",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("amount", models.PositiveIntegerField()),
                 ("count", models.PositiveIntegerField()),
-                ("payment", models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to="members.payment")),
+                (
+                    "payment",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="members.payment",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
             name="Course",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("name", models.CharField(max_length=150)),
                 ("price", models.PositiveIntegerField()),
-                ("weekday", models.PositiveIntegerField(choices=[(0, "Lundi"), (1, "Mardi"), (2, "Mercredi"), (3, "Jeudi"), (4, "Vendredi"), (5, "Samedi"), (6, "Dimanche")])),
+                (
+                    "weekday",
+                    models.PositiveIntegerField(
+                        choices=[
+                            (0, "Lundi"),
+                            (1, "Mardi"),
+                            (2, "Mercredi"),
+                            (3, "Jeudi"),
+                            (4, "Vendredi"),
+                            (5, "Samedi"),
+                            (6, "Dimanche"),
+                        ]
+                    ),
+                ),
                 ("start_hour", models.TimeField()),
                 ("end_hour", models.TimeField()),
-                ("season", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="members.season")),
-                ("teacher", models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to="members.teacher")),
+                (
+                    "season",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="members.season"
+                    ),
+                ),
+                (
+                    "teacher",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="members.teacher",
+                    ),
+                ),
             ],
             options={
                 "unique_together": {("name", "season", "weekday", "start_hour")},
@@ -124,33 +351,119 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="SportCoupon",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("amount", models.PositiveIntegerField()),
                 ("count", models.PositiveIntegerField()),
-                ("payment", models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name="sport_coupon", to="members.payment")),
+                (
+                    "payment",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="sport_coupon",
+                        to="members.payment",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
             name="Member",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("first_name", models.CharField(max_length=25)),
                 ("last_name", models.CharField(max_length=35)),
-                ("email", models.CharField(max_length=150, validators=[django.core.validators.EmailValidator()])),
-                ("phone", models.CharField(max_length=10, validators=[django.core.validators.RegexValidator("\\d{10}")])),
+                (
+                    "email",
+                    models.CharField(
+                        max_length=150,
+                        validators=[django.core.validators.EmailValidator()],
+                    ),
+                ),
+                (
+                    "phone",
+                    models.CharField(
+                        max_length=10,
+                        validators=[django.core.validators.RegexValidator("\\d{10}")],
+                    ),
+                ),
                 ("created", models.DateTimeField(auto_now_add=True)),
                 ("birthday", models.DateField()),
                 ("address", models.CharField(max_length=500)),
-                ("cancel_refund", models.FloatField(default=0.0, validators=[django.core.validators.MinValueValidator(0)])),
-                ("ffd_license", models.PositiveIntegerField(choices=[(0, "Aucune"), (19, "Licence A Loisir"), (21, "Licence B Compétiteur"), (38, "Licence C Compétiteur national"), (50, "Licence D Compétiteur international")], default=0)),
+                (
+                    "cancel_refund",
+                    models.FloatField(
+                        default=0.0,
+                        validators=[django.core.validators.MinValueValidator(0)],
+                    ),
+                ),
+                (
+                    "ffd_license",
+                    models.PositiveIntegerField(
+                        choices=[
+                            (0, "Aucune"),
+                            (19, "Licence A Loisir"),
+                            (21, "Licence B Compétiteur"),
+                            (38, "Licence C Compétiteur national"),
+                            (50, "Licence D Compétiteur international"),
+                        ],
+                        default=0,
+                    ),
+                ),
                 ("is_validated", models.BooleanField(default=False)),
-                ("active_courses", models.ManyToManyField(related_name="members", to="members.course")),
-                ("cancelled_courses", models.ManyToManyField(related_name="members_cancelled", to="members.course")),
+                (
+                    "active_courses",
+                    models.ManyToManyField(related_name="members", to="members.course"),
+                ),
+                (
+                    "cancelled_courses",
+                    models.ManyToManyField(
+                        related_name="members_cancelled", to="members.course"
+                    ),
+                ),
                 ("contacts", models.ManyToManyField(to="members.contact")),
-                ("documents", models.OneToOneField(null=True, on_delete=django.db.models.deletion.SET_NULL, to="members.documents")),
-                ("user", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
-                ("season", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="members.season")),
-                ("sport_pass", models.OneToOneField(null=True, on_delete=django.db.models.deletion.SET_NULL, to="members.sportpass")),
+                (
+                    "documents",
+                    models.OneToOneField(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="members.documents",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "season",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="members.season"
+                    ),
+                ),
+                (
+                    "sport_pass",
+                    models.OneToOneField(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="members.sportpass",
+                    ),
+                ),
             ],
             options={
                 "unique_together": {("first_name", "last_name", "user", "season")},

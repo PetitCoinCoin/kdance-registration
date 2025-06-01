@@ -1,4 +1,5 @@
 """Tests related to accounts views."""
+
 from urllib.parse import urlencode
 
 from django.contrib.auth.models import User
@@ -18,13 +19,15 @@ class TestLoginView(AuthTestCase):
     view_url = reverse("login")
     view_function = login_view
 
-    @parameterized.expand([
-        ("get", 200),
-        ("post", 200),
-        ("put", 405),
-        ("patch", 405),
-        ("delete", 405),
-    ])
+    @parameterized.expand(
+        [
+            ("get", 200),
+            ("post", 200),
+            ("put", 405),
+            ("patch", 405),
+            ("delete", 405),
+        ]
+    )
     def test_permissions(self, method, status):
         assert self.users_have_permission(
             method=method,
@@ -36,12 +39,14 @@ class TestLoginView(AuthTestCase):
     def test_authentication_not_mandatory(self, method):
         assert self.anonymous_has_permission(method=method, status=200)
 
-    @parameterized.expand([
-        (True, True),
-        (True, False),
-        (False, True),
-        (False, False),
-        ])
+    @parameterized.expand(
+        [
+            (True, True),
+            (True, False),
+            (False, True),
+            (False, False),
+        ]
+    )
     def test_post_login_user_anonymous(self, is_superuser, remember_me):
         username = "plip"
         email = "plip@plop.fr"
@@ -60,7 +65,9 @@ class TestLoginView(AuthTestCase):
             data=data,
         )
         assert response.status_code == 302
-        assert response.url == reverse("super_index") if is_superuser else reverse("index")
+        assert (
+            response.url == reverse("super_index") if is_superuser else reverse("index")
+        )
 
     def test_post_login_user_authenticated(self):
         """Tests that if a login request is made by authenticated user, them will be logged out."""
@@ -83,20 +90,25 @@ class TestLoginView(AuthTestCase):
     def test_post_login_wrong_credentials(self):
         response = self.client.post(self.view_url)
         assert response.status_code == 200, response
-        assert response.context["error"] == "Utilisateur et/ou mot de passe incorrect(s). La connexion a échoué."
+        assert (
+            response.context["error"]
+            == "Utilisateur et/ou mot de passe incorrect(s). La connexion a échoué."
+        )
 
 
 class TestSignUpView(AuthTestCase):
     view_url = reverse("signup")
     view_function = signup_view
 
-    @parameterized.expand([
-        ("get", 200),
-        ("post", 405),
-        ("put", 405),
-        ("patch", 405),
-        ("delete", 405),
-    ])
+    @parameterized.expand(
+        [
+            ("get", 200),
+            ("post", 405),
+            ("put", 405),
+            ("patch", 405),
+            ("delete", 405),
+        ]
+    )
     def test_permissions(self, method, status):
         assert self.users_have_permission(
             method=method,
@@ -112,13 +124,15 @@ class TestPasswordResetView(AuthTestCase):
     view_url = reverse("pwd_reset")
     view_function = password_reset_view
 
-    @parameterized.expand([
-        ("get", 200),
-        ("post", 405),
-        ("put", 405),
-        ("patch", 405),
-        ("delete", 405),
-    ])
+    @parameterized.expand(
+        [
+            ("get", 200),
+            ("post", 405),
+            ("put", 405),
+            ("patch", 405),
+            ("delete", 405),
+        ]
+    )
     def test_permissions(self, method, status):
         response = getattr(self.client, method)(self.view_url)
         assert response.status_code == status
@@ -138,13 +152,15 @@ class TestPasswordNewView(AuthTestCase):
     view_url = f"{reverse('pwd_new')}?{urlencode({'token': 'token'})}"
     view_function = password_new_view
 
-    @parameterized.expand([
-        ("get", 200),
-        ("post", 405),
-        ("put", 405),
-        ("patch", 405),
-        ("delete", 405),
-    ])
+    @parameterized.expand(
+        [
+            ("get", 200),
+            ("post", 405),
+            ("put", 405),
+            ("patch", 405),
+            ("delete", 405),
+        ]
+    )
     def test_permissions(self, method, status):
         assert self.users_have_permission(
             method=method,

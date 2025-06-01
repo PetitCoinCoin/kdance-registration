@@ -1,16 +1,20 @@
 """Tests related to Payment and Check API views."""
 
+from datetime import timedelta
 from urllib.parse import urlencode
 
 import pytest
 
+from django.conf import settings
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
+from django.utils import timezone
 from parameterized import parameterized
 
 from members.api.views import CheckViewSet, PaymentViewSet
 from members.models import Check, Payment, Season
 from tests.authentication import AuthenticatedAction, AuthTestCase
+from tests.data_tests import SEASON
 
 
 @pytest.mark.django_db
@@ -19,8 +23,34 @@ class TestCheckApiView(AuthTestCase):
     view_function = CheckViewSet
 
     def setup_list(self) -> tuple[Season]:
-        season_1 = Season.objects.create(year="1900-1901", is_current=False)
-        season_2 = Season.objects.create(year="2000-2001", is_current=True)
+        season_1 = Season.objects.create(
+            year="1900-1901",
+            is_current=False,
+            pre_signup_start=(timezone.now() - timedelta(days=2)).strftime(
+                settings.DATE_FORMAT
+            ),
+            pre_signup_end=(timezone.now() + timedelta(days=2)).strftime(
+                settings.DATE_FORMAT
+            ),
+            ffd_a_amount=0,
+            ffd_b_amount=0,
+            ffd_c_amount=0,
+            ffd_d_amount=0,
+        )
+        season_2 = Season.objects.create(
+            year="2000-2001",
+            is_current=True,
+            pre_signup_start=(timezone.now() - timedelta(days=2)).strftime(
+                settings.DATE_FORMAT
+            ),
+            pre_signup_end=(timezone.now() + timedelta(days=2)).strftime(
+                settings.DATE_FORMAT
+            ),
+            ffd_a_amount=0,
+            ffd_b_amount=0,
+            ffd_c_amount=0,
+            ffd_d_amount=0,
+        )
         for i, season in enumerate([season_1, season_2]):
             payment = self.testuser.payment_set.filter(season=season).first()
             for val in range(1, 4):
@@ -97,10 +127,9 @@ class TestPaymentApiView(AuthTestCase):
     _season: Season | None = None
 
     @pytest.fixture(autouse=True)
-    def set_season(self):
+    def set_season(self, mock_season):
         # It automatically created Payment for existing users
-        season, _ = Season.objects.get_or_create(year="1900-1901", is_current=False)
-        self._season = season
+        self._season = mock_season
 
     @property
     def view_url(self):
@@ -148,7 +177,10 @@ class TestPaymentApiView(AuthTestCase):
         self.testuser.save()
         self.super_testuser.last_name = "Superuser"
         self.super_testuser.save()
-        new_season = Season.objects.create(year="2000-2001", is_current=True)
+        new_season = Season.objects.create(
+            **SEASON,
+            year="2000-2001",
+        )
         for p in Payment.objects.all():
             p.comment = p.user.username
             p.save()

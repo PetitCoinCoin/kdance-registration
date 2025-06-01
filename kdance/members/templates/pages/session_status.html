@@ -1,0 +1,36 @@
+{% extends 'layouts/base.html' %}
+
+{% load static %}
+
+{% block content %}
+
+<main>
+  <section>
+		<div class="container">
+			{% if user.is_authenticated %}
+			<div class="container mt-5">
+        <div id="checkout-success" hidden>
+          <h4>Merci !</h4>
+          <p>Votre paiement a bien été pris en compte. Vous allez maintenant être redirigé vers <a href="/">votre compte</a> dans quelques secondes...</p>
+        </div>
+        <div id="checkout-unknown" hidden>
+          <h4>Mmh...</h4>
+          <p>Le statut de votre paiement est inconnu, un email a été envoyé au bureau K'Dance pour investigation. N'hésitez pas à nous recontacter si vous n'avez pas de nouvelles d'ici quelques jours.<br/>
+            Vous allez maintenant être redirigé vers <a href="/">votre compte</a> dans quelques secondes...</p>
+        </div>
+        <div id="checkout-failure" hidden>
+          <h4>Oups !</h4>
+          <p>Il semble qu'il y ait eu un souci avec le paiement. Vous allez automatiquement être redirigé vers la <a href="/checkout">page de paiement</a> dans quelques secondes...</p>
+          <p>N'hésitez pas à contacter <a href="mailto:tech@association-kdance.fr">tech@association-kdance.fr</a> si le problème persiste.</p>
+        </div>
+			</div>
+			{% endif %}
+		</div>
+  </section>
+	<script type="text/javascript">
+		const sessionStatus = "{{ status }}";
+	</script>
+	<script src="{% static 'js/session_status.js' %}"></script>
+</main>
+
+{% endblock content %}

@@ -1,0 +1,43 @@
+{% extends 'layouts/base.html' %}
+
+{% load static %}
+
+{% block content %}
+
+<main>
+  <section>
+    <!-- Toasts -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      <div id="user-delete-error-toast" class="toast align-items-center bg-alert" role="alert" aria-live="assertive"
+        aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body fw-semibold" id="user-delete-error-body"></div>
+          <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    {% csrf_token %}
+    <div class="container">
+      <div class="text-center">
+        <h1 class="display-4 mb-3">Supprimer mon compte K'Dance</h1>
+      </div>
+      {% if user.is_authenticated %}
+      <div class="container">
+        <p>Etes-vous sur.e de vouloir supprimer votre compte ainsi que tous les adhérents associés ?</p>
+        <p>Vous pourrez toujours recréer un compte par la suite. Mais toutes les données précédemment entrées seront perdues.</p>
+        <button type="button" class="btn btn-secondary" onclick="window.location='/'">Annuler</button>
+        <button id="user-delete-btn" type="submit" class="btn btn-danger">Supprimer</button>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+  <script type="text/javascript">
+    const userMeUrl = "{% url 'api-user-me' %}";
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  </script>
+  <script src="{% static 'js/user_delete.js' %}"></script>
+</main>
+
+{% endblock content %}

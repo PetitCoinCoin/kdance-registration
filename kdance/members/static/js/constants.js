@@ -18,17 +18,8 @@ const MONTH = {
   11: 'Novembre',
 }
 
-const LICENSES = {
-  0: 'Aucune',
-  24: 'Licence A Loisir',
-  26: 'Licence B Compétiteur',
-  43: 'Licence C Compétiteur national',
-  55: 'Licence D Compétiteur international',
-}
-
 const CHECK_NUMBER = 8;
-const CONTACT_CUSTOM_NUMBER = 2;
-const CONTACT_ALL_NUMBER = CONTACT_CUSTOM_NUMBER + 1; // Plus user
+const CONTACT_NUMBER = 2;
 
 const CONTACT_MAPPING = {
   'responsible': 'Responsable légal',

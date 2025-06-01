@@ -31,280 +31,6 @@
 
     <!-- Modal -->
     {% csrf_token %}
-    <div class="modal fade" id="edit-me-modal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title">Modifier mes informations</h4>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <form id="form-me" name="form-me">
-            <div class="modal-body">
-              <div class="row">
-                <div class="col-6">
-                  <div class="form-outline mb-4">
-                    <label class="form-label required" for="edit-me-firstname">Prénom</label>
-                    <input type="text" id="edit-me-firstname" class="form-control" required />
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="form-outline mb-4">
-                    <label class="form-label required" for="edit-me-lastname">Nom de famille</label>
-                    <input type="text" id="edit-me-lastname" class="form-control" required />
-                  </div>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-6">
-                  <div class="form-outline mb-4">
-                    <label class="form-label required" for="edit-me-phone">Téléphone</label>
-                    <input type="text" id="edit-me-phone" class="form-control" maxlength="10" required />
-                    <div id="invalid-edit-me-phone" class="invalid-feedback"></div>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="form-outline mb-4">
-                    <label class="form-label required" for="edit-me-email">Email</label>
-                    <input type="text" id="edit-me-email" class="form-control" required />
-                    <div id="invalid-edit-me-email" class="invalid-feedback"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="form-outline mb-4">
-                <label class="form-label required" for="edit-me-address">Adresse</label>
-                <textarea class="form-control" id="edit-me-address" rows="3" required></textarea>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-              <button type="submit" class="btn btn-info">Enregistrer</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal fade" id="member-modal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title" id="member-modal-title"></h4>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <form id="form-member" name="form-member">
-            <div class="modal-body">
-              <div class="row">
-                <div class="mb-4 fst-italic">
-                  <i class="bi-info-circle main-red"></i>
-                  Toute inscription est définitive, et l'adhésion restera dûe, même en cas de demande d'annulation de
-                  cours.
-                </div>
-                <div class="accordion" id="modal-accordion">
-                  <div class="accordion-item">
-                    <h2 class="accordion-header">
-                      <button class="accordion-button" type="button" data-bs-toggle="collapse" aria-expanded="true"
-                        data-bs-target="#member-info-section" aria-controls="member-info-section">
-                        <span>Informations de l'adhérent</span>
-                      </button>
-                    </h2>
-                    <div id="member-info-section" class="accordion-collapse collapse show template-data"
-                      data-bs-parent="#modal-accordion">
-                      <div class="accordion-body">
-                        <div class="row align-items-baseline">
-                          <div class="col-6">
-                            <div class="form-check form-switch mb-3">
-                              <input class="form-check-input" type="checkbox" role="switch" id="me-switch">
-                              <label class="form-check-label" for="me-switch">Utiliser mes informations: adresse, email,
-                                téléphone</label>
-                            </div>
-                          </div>
-                          <div class="col-6">
-                            <div class="form-outline mb-4 d-flex align-items-baseline">
-                              <label class="form-label me-2" for="member-season">Saison</label>
-                              <select id="member-season" class="form-select" disabled></select>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="row">
-                          <div class="col-4">
-                            <div class="form-outline mb-4">
-                              <label class="form-label required" for="member-firstname">Prénom</label>
-                              <input type="text" id="member-firstname" class="form-control" />
-                              <div id="invalid-member-first-name" class="invalid-feedback"></div>
-                            </div>
-                          </div>
-                          <div class="col-4">
-                            <div class="form-outline mb-4">
-                              <label class="form-label required" for="member-lastname">Nom de famille</label>
-                              <input type="text" id="member-lastname" class="form-control" />
-                              <div id="invalid-member-last-name" class="invalid-feedback"></div>
-                            </div>
-                          </div>
-                          <div class="col-4">
-                            <div class="form-outline mb-4">
-                              <label class="form-label required" for="member-birthday">Date de naissance</label>
-                              <input type="date" id="member-birthday" class="form-control" />
-                              <div id="invalid-member-birthday" class="invalid-feedback"></div>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="row">
-                          <div class="col-4">
-                            <div class="row">
-                              <div class="form-outline mb-1">
-                                <label class="form-label required" for="member-phone">Téléphone</label>
-                                <input type="text" id="member-phone" class="form-control" maxlength="10" />
-                                <div id="invalid-member-phone" class="invalid-feedback"></div>
-                              </div>
-                            </div>
-                            <div class="row">
-                              <div class="form-outline mb-4">
-                                <label class="form-label required" for="member-email">Email</label>
-                                <input type="text" id="member-email" class="form-control" />
-                                <div id="invalid-member-email" class="invalid-feedback"></div>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="col-8">
-                            <div class="form-outline mb-4">
-                              <label class="form-label required" for="member-address">Adresse</label>
-                              <textarea class="form-control" id="member-address" rows="4"></textarea>
-                              <div id="invalid-member-address" class="invalid-feedback"></div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div class="form-check form-switch mb-2">
-                          <input class="form-check-input" type="checkbox" role="switch" id="pass-switch">
-                          <label class="form-check-label" for="pass-switch">J'ai un code Pass Sport</label>
-                        </div>
-                        <div id="pass-div" hidden>
-                          <div class="row align-items-end">
-                            <div class="col form-outline mb-2">
-                              <label class="form-label required" for="member-pass-code">Code</label>
-                              <input type="text" id="member-pass-code" class="form-control" maxlength="20" />
-                            </div>
-                            <div class="col form-outline mb-2">
-                              <label class="form-label" for="member-pass-amount">Montant (€)</label>
-                              <input type="number" id="member-pass-amount" class="form-control" min="0" value="50"
-                                disabled />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="accordion-item">
-                    <h2 class="accordion-header">
-                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                        aria-expanded="false" data-bs-target="#member-contact-section"
-                        aria-controls="member-contact-section">
-                        <span>Contacts</span>
-                      </button>
-                    </h2>
-                    <div id="member-contact-section" class="accordion-collapse collapse collapsed template-data"
-                      data-bs-parent="#modal-accordion">
-                      <div class="accordion-body">
-                        <div id="contact-responsible-div" class="d-none">
-                          <h6 class="border-bottom mb-3 fw-semibold">Responsables de l'adhérent(e)</h6>
-                          <div class="form-check form-switch mb-1">
-                            <input class="form-check-input" type="checkbox" role="switch" id="responsible-me-switch"
-                              checked>
-                            <label class="form-check-label" for="responsible-me-switch">Je suis un représentant légal de
-                              cet(te) adhérent(e)</label>
-                          </div>
-                          <p class="mt-3 mb-0 fst-italic">Autres responsables:</p>
-                        </div>
-                        <div id="contact-emergency-div">
-                          <h6 class="border-bottom mb-3 fw-semibold">Contacts d'urgence (même pour les adultes)</h5>
-                            <div class="form-check form-switch mb-1">
-                              <input class="form-check-input" type="checkbox" role="switch" id="emergency-me-switch"
-                                checked>
-                              <span class="d-inline-block" tabindex="0" data-bs-toggle="popover"
-                                data-bs-trigger="hover focus" data-bs-content="Impossible pour soi-même !"
-                                data-bs-placement="bottom">
-                                <label class="form-check-label" for="emergency-me-switch">Je suis contact d'urgence pour
-                                  cet(te) adhérent(e)</label>
-                              </span>
-                            </div>
-                            <p class="mt-3 mb-0 fst-italic">Autres contacts d'urgence:</p>
-                        </div>
-                        <div id="message-error-contact" class="p-3 mb-2 bg-danger-subtle text-danger-emphasis d-none">
-                          Tous les champs d'un contact sont obligatoires.<br />
-                          Format attendu pour le téléphone: 0123456789.<br />
-                          Pour les responsables légaux (si besoin), vérifiez également que l'adresse email a un format
-                          valide.
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="accordion-item" id="member-courses-accordion">
-                    <h2 class="accordion-header">
-                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                        aria-expanded="false" data-bs-target="#member-courses-section"
-                        aria-controls="member-courses-section">
-                        <span>Cours</span>
-                      </button>
-                    </h2>
-                    <div id="member-courses-section" class="accordion-collapse collapse collapsed template-data"
-                      data-bs-parent="#modal-accordion">
-                      <div class="accordion-body">
-                        <div class="form-outline mb-2" id="form-member-courses">
-                          <div class="d-flex mb-3 align-items-center">
-                            <label class="form-label min-w-fit me-3" for="member-courses">License FFD</label>
-                            <select id="member-license" class="form-select"></select>
-                          </div>
-                          <div id="member-courses"></div>
-                          <div id="invalid-member-courses" class="invalid-feedback"></div>
-                          <p class="mb-2 mt-2"><strong>Adhésion à l'association:</strong> 10€</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="accordion-item">
-                    <h2 class="accordion-header">
-                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                        aria-expanded="false" data-bs-target="#member-authorise-section"
-                        aria-controls="member-authorise-section">
-                        <span>Autorisations</span>
-                      </button>
-                    </h2>
-                    <div id="member-authorise-section" class="accordion-collapse collapse collapsed template-data"
-                      data-bs-parent="#modal-accordion">
-                      <div class="accordion-body">
-                        <div class="form-check mb-2">
-                          <input class="form-check-input" type="checkbox" value="" id="authorise-photos" checked>
-                          <label class="form-check-label" for="authorise-photos">
-                            J'autorise l'association K'dance à utiliser les photos et/ou vidéos réalisées dans le cadre
-                            de ses
-                            activités à des fins promotionnelles y compris sur les réseaux sociaux de K’dance.
-                          </label>
-                        </div>
-                        <div class="form-check mb-4 d-none" id="emergency">
-                          <input class="form-check-input" type="checkbox" value="" id="authorise-emergency" checked>
-                          <label class="form-check-label" for="authorise-emergency">
-                            En tant que responsable légal de cet adhérent mineur, j'autorise l’encadrant de la section
-                            danse ou un
-                            membre du Conseil d’Administration à prendre, en cas d’accident, toutes mesures urgentes
-                            tant
-                            médicales que chirurgicales, y compris l’hospitalisation.
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-              <button type="submit" class="btn btn-info">Enregistrer</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
     <div class="modal fade" id="copy-member-modal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -320,61 +46,8 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-            <button id="copy-btn" type="button" class="btn btn-info" data-bs-toggle="modal"
-              data-bs-target="#member-modal">Renouveler</button>
+            <button id="copy-btn" type="button" class="btn btn-info" {% if not allow_new_member %} disabled {% endif %}>Renouveler</button>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal fade" id="edit-pwd-modal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title">Changer mon mot de passe</h4>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <form id="form-pwd" name="form-pwd">
-            <div class="modal-body">
-              <div class="form-group mb-4">
-                <label class="form-label required" for="password-old">Ancien mot de passe</label>
-                <div class="input-group">
-                  <input type="password" id="password-old" class="form-control" required />
-                  <span class="input-group-text">
-                    <i class="bi bi-eye" id="toggle-password-old"></i>
-                  </span>
-                </div>
-                <div id="invalid-pwd-old" class="invalid-feedback"></div>
-              </div>
-              <div class="form-group mb-4">
-                <label class="form-label required" for="password">Nouveau mot de passe</label>
-                <div class="input-group">
-                  <input type="password" id="password" class="form-control" required />
-                  <span class="input-group-text">
-                    <i class="bi bi-eye" id="toggle-password"></i>
-                  </span>
-                </div>
-                <div id="invalid-pwd" class="invalid-feedback"></div>
-              </div>
-              <div class="form-group mb-4">
-                <label class="form-label required" for="password-confirmation">Confirmation du mot de passe</label>
-                <div class="input-group">
-                  <input type="password" id="password-confirmation" class="form-control" required />
-                  <span class="input-group-text">
-                    <i class="bi bi-eye" id="toggle-password-confirmation"></i>
-                  </span>
-                </div>
-                <div id="invalid-pwd-confirmation" class="invalid-feedback">Le mot de passe ne correspond pas !</div>
-              </div>
-              <div id="message-error-edit-pwd" class="p-3 mb-2 bg-danger-subtle text-danger-emphasis d-none">
-                Une erreur est survenue. Veuillez ré-essayer plus tard ou contacter K'Dance.
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-              <button type="submit" class="btn btn-info">Modifier</button>
-            </div>
-          </form>
         </div>
       </div>
     </div>
@@ -383,46 +56,13 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h4 class="modal-title" id="delete-modal-title"></h4>
+            <h4 class="modal-title" id="delete-modal-title">Supprimer un adhérent</h4>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body"></div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
             <button id="delete-btn" type="submit" class="btn btn-danger">Supprimer</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal fade" id="validate-modal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title">Valider mes inscriptions pour la saison</h4>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body text-justify">
-            <p>
-              Après validation de votre inscription, toute modification, ajout, ou suppression de cours pour les
-              adhérents inscrits devra se faire auprès de l'équipe K'Dance. Il ne sera plus possible de supprimer un
-              adhérent.
-            </p>
-            <p>
-              La validation définitive se fera à réception du paiement. A ce jour, le paiement en ligne n'est pas encore
-              possible, mais vous pouvez voir facilement un statut de votre compte pour la saison en cours, et faire
-              passer
-              votre règlement à K'Dance lors du forum des associations ou des permanences qui auront lieu fin septembre.
-            </p>
-            <p>
-              Le document médical, attestation sur l'honneur ou certificat, sera à remettre dès que possible de la même
-              façon,
-              ou auprès des professeurs.
-            </p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-            <button id="validate-btn" type="submit" class="btn btn-success">Valider</button>
           </div>
         </div>
       </div>
@@ -435,57 +75,78 @@
       </div>
       {% if user.is_authenticated %}
       <div class="container">
-        <div class="row mb-3">
-          <div class="col-2">
-            <img id="desc-picture" src="" class="img-thumbnail" alt="thumbs">
-          </div>
-          <div class="col">
+        <div class="row">
+          <div class="col-10 col-sm">
             <dl class="row">
-              <dt class="col-sm-5">Email:</dt>
-              <dd id="desc-email" class="col-sm-7"></dd>
-              <dt class="col-sm-5">Prénom:</dt>
-              <dd id="desc-firstname" class="col-sm-7"></dd>
-              <dt class="col-sm-5">Nom:</dt>
-              <dd id="desc-lastname" class="col-sm-7"></dd>
-              <dt class="col-sm-5">Téléphone:</dt>
-              <dd id="desc-phone" class="col-sm-7"></dd>
-              <dt class="col-sm-5">Adresse:</dt>
-              <dd id="desc-address" class="col-sm-7"></dd>
+              <dt class="col-sm-3">Email:</dt>
+              <dd id="desc-email" class="col-sm-9"></dd>
+              <dt class="col-sm-3">Prénom:</dt>
+              <dd id="desc-firstname" class="col-sm-9"></dd>
+              <dt class="col-sm-3">Nom:</dt>
+              <dd id="desc-lastname" class="col-sm-9"></dd>
+              <dt class="col-sm-3">Téléphone:</dt>
+              <dd id="desc-phone" class="col-sm-9"></dd>
+              <dt class="col-sm-3">Adresse:</dt>
+              <dd id="desc-address" class="col-sm-9"></dd>
             </dl>
           </div>
           <div class="col-1">
             <span class="d-inline-block" tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus"
               data-bs-content="Modifier mes infos" data-bs-placement="left">
-              <button class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#edit-me-modal">
+              <button class="btn btn-outline-info" type="button" onclick="window.location='/user_edit'">
                 <i class="bi-pencil-fill"></i>
               </button>
             </span>
             <span class="d-inline-block" tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus"
               data-bs-content="Modifier mon mot de passe" data-bs-placement="left">
-              <button class="btn btn-outline-warning" type="button" data-bs-toggle="modal"
-                data-bs-target="#edit-pwd-modal">
+              <button class="btn btn-outline-warning" type="button" onclick="window.location='/user_edit_pwd'">
                 <i class="bi-lock-fill"></i>
               </button>
             </span>
             <span class="d-inline-block" tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus"
               data-bs-content="Supprimer mon compte" data-bs-placement="left">
-              <button id="delete-me-btn" class="btn btn-outline-danger" type="button" data-bs-toggle="modal"
-                data-bs-target="#delete-modal">
+              <button id="delete-me-btn" class="btn btn-outline-danger" type="button" onclick="window.location='/user_delete'">
                 <i class="bi-trash3-fill"></i>
               </button>
             </span>
           </div>
         </div>
-        <div class="mb-4">
-          <p>Pour commencer l'inscription, cliquez sur <span class="main-blue fst-italic">Ajouter un nouvel
-              adhérent</span> dans la
-            saison en cours. Recommencez pour chaque adhérent de la famille.<br />
-            Lorsque tout le monde est inscrit et que les cours sont choisis, vous pourrez <span
-              class="main-green fst-italic">Valider les inscriptions</span>.
-          </p>
-          <p class="fst-italic">Pour en savoir un peu plus sur ce nouvel outil, <a href="/about">cliquez ici</a>.</p>
-          <!-- TODO: Moduler selon la gestion des inscriptions -->
-          <p>Les inscriptions sont terminées pour cette année. <strong>Vous ne pouvez plus ajouter d'adhérent.</strong></p>
+        <div class="mb-3">
+          {% if current_season.is_before_pre_signup %}
+            <div class="border border-warning border-5 rounded px-2 pt-2 mb-2">
+              <h5>Inscriptions anticipées</h5>
+              <p>
+              Uniquement pour les adhérents <span class="border-bottom border-danger">inscrits la saison précédente</span>: <strong>du {{ current_season.pre_signup_start }} au {{ current_season.pre_signup_end }}.</strong><br/>
+              N'hésitez pas à vous inscrire sur un cours complet: cela nous permettra d'envisager de dédoubler certains créneaux.
+              </p>
+              <p class="main-red fw-semibold">L'inscription ne sera valide que si le <span class="border-bottom border-danger">paiement est effectué avant le {{ current_season.pre_signup_end }}</span>.</p>
+            </div>
+          {% endif %}
+          {% if current_season.is_before_signup %}
+            <div class="border border-warning border-5 rounded px-2 pt-2 mb-2">
+              <h5>Inscriptions</h5>
+              <p>Les inscriptions en ligne pour cette saison auront lieu <strong>du {{ current_season.signup_start }} au {{ current_season.signup_end }}.</strong> Elles sont ouvertes à toutes et à tous, et le paiement validera l'inscription.</p>
+            </div>
+          {% elif current_season.is_after_signup %}
+            <div class="border border-warning border-5 rounded px-2 pt-2 mb-2">
+              <h5>Inscriptions</h5>
+              <p>Les inscriptions sont terminées pour cette année depuis le {{ current_season.signup_end }}. <strong>Vous ne pouvez plus ajouter d'adhérent.</strong></p>
+            </div>
+          {% endif %}
+          <details>
+            <summary class="main-blue mb-1"><i class="bi-info-circle"> Comment ça marche ?</i> </summary>
+            <p>
+              Pour commencer l'inscription, cliquez sur <span class="main-blue fst-italic">Ajouter un nouvel adhérent</span> dans la saison en cours.
+              Recommencez pour chaque adhérent de la famille.<br />
+              Pour une ré-inscription, vous pouvez également cliquer sur <span class="main-blue fst-italic">Ajouter un adhérent d'une saison précédente</span>.<br />
+              L'inscription sera validée à réception du paiement.
+            </p>
+            <p class="fst-italic">Pour en savoir un peu plus sur cet espace, <a href="/about">cliquez ici</a>.</p>
+          </details>
+          {% if not allow_new_member and not current_season.is_after_signup  %}
+            <p>Les inscriptions sont impossibles pour le moment. N'hésitez pas à contacter le bureau K'Dance par <a
+              href="mailto:kdance31340@gmail.com">email</a> ou par téléphone au 0768294811.</p>
+          {% endif %}
         </div>
         <div class="row">
           <div class="accordion" id="member-accordion">
@@ -503,8 +164,8 @@
           </h2>
           <div class="accordion-collapse collapse show template-data">
             <div class="accordion-body">
-              <div class="d-flex justify-content-between mb-3">
-                <div>
+              <div class="row mb-3">
+                <div class="col-12 col-sm-8">
                   <dl class="d-flex mb-0">
                     <dt class="me-2">Total dû:</dt>
                     <dd class="payment">€</dd>
@@ -518,8 +179,25 @@
                     <dd class="payment">€</dd>
                   </dl>
                 </div>
-                <div class="season-btn-div d-flex flex-column"></div>
+                <div class="season-btn-div d-flex flex-column col-12 col-sm-4"></div>
               </div>
+
+          <div class="col-12 col-sm-8 mb-3 dropdown medical-dropdown">
+            <b>Ai-je besoin d'un certificat médical ?</b><br/>
+            <p>
+              Téléchargez l'auto-questionnaire correspondant à votre situation. Si vous répondez au moins une fois "oui", vous avez besoin d'un certificat.
+              Sinon, vous pouvez télécharger et remplir l'attestation sur l'honneur disponible.
+            </p>
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Télécharger un document
+            </button>
+            <ul class="dropdown-menu">
+              <li><button class="dropdown-item" type="button" onclick="window.open('download-pdf/?doc=auto-questionnaire-sante-mineurs')">Auto-questionnaire enfant</button></li>
+              <li><button class="dropdown-item" type="button" onclick="window.open('download-pdf?doc=auto-questionnaire-sante-adultes')">Auto-questionnaire adulte</button></li>
+              <li><button class="dropdown-item" type="button" onclick="window.open('download-pdf?doc=attestation-sur-honneur-kdance')">Attestation sur l'honneur</button></li>
+            </ul>
+          </div>
+
             </div>
           </div>
         </div>
@@ -533,8 +211,7 @@
               <span></span>
             </div>
             <div>
-              <button class="btn btn-outline-info m-edit-btn" type="button" data-bs-toggle="modal"
-                data-bs-target="#member-modal">
+              <button class="btn btn-outline-info m-edit-btn" type="button">
                 <i class="bi-pencil-fill"></i>
               </button>
               <button class="btn btn-outline-danger m-delete-btn" type="button" data-bs-toggle="modal"
@@ -544,6 +221,9 @@
             </div>
           </div>
           <div class="card-body">
+            <p class="bg-warning" hidden>
+              <i class="bi bi-exclamation-triangle"></i>
+              Certains cours sont complets et vous êtes sur liste d’attente. Vous serez informé.e par email si une place se libère ou que le cours est dédoublé.</p>
             <ul></ul>
           </div>
         </div>
@@ -551,21 +231,19 @@
 
       <template id="member-btn-template">
         <button class="btn btn-info mb-1" type="button" data-bs-toggle="modal" data-bs-target="#copy-member-modal"
-          id="copy-member-btn">
+          id="copy-member-btn" {% if not allow_new_member %} disabled {% endif %}>
           <i class="bi-plus-square"></i>
           Ajouter un adhérent d'une saison précédente
         </button>
-        <!-- TODO: Réactiver proprement pour mettre en place le mécanisme de blocage. -->
-        <button class="btn btn-info mb-1" type="button" data-bs-toggle="modal" data-bs-target="#member-modal"
-          id="add-member-btn" disabled>
+        <button class="btn btn-info mb-1" type="button" onclick="window.location='/member'"
+          id="add-member-btn" {% if not allow_new_member %} disabled {% endif %}>
           <i class="bi-plus-square"></i>
           Ajouter un nouvel adhérent
         </button>
-
-        <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#validate-modal"
-          id="validate-members-btn">
-          <i class="bi-file-earmark-check-fill"></i>
-          Valider les inscriptions
+        <button class="btn btn-success mb-1" type="button" onclick="window.location='/checkout'"
+          id="checkout-btn" {% if not allow_new_member %} disabled {% endif %}>
+          <i class="bi-currency-euro"></i>
+          Payer l'inscription
         </button>
       </template>
 
@@ -582,65 +260,17 @@
         </li>
       </template>
 
-      <template id="contact-template">
-        <div>
-          <div class="row flex-wrap align-items-end">
-            <div class="col">
-              <div class="form-outline mb-4">
-                <label class="form-label required" for="firstname-">Prénom</label>
-                <input type="text" id="firstname-" class="form-control" />
-              </div>
-            </div>
-            <div class="col">
-              <div class="form-outline mb-4">
-                <label class="form-label required" for="lastname-">Nom de famille</label>
-                <input type="text" id="lastname-" class="form-control" />
-              </div>
-            </div>
-            <div class="col-3">
-              <div class="form-outline mb-4">
-                <label class="form-label required" for="phone-">Téléphone</label>
-                <input type="text" id="phone-" maxlength="10" class="form-control" />
-                <div id="invalid-phone-" class="invalid-feedback"></div>
-              </div>
-            </div>
-            <div class="col-3">
-              <div class="form-outline mb-4">
-                <label class="form-label required" for="email-">Email</label>
-                <input type="text" id="email-" class="form-control" />
-                <div id="invalid-email-" class="invalid-feedback"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </template>
-
-      <template id="add-contact-template">
-        <div class="col-1 mb-4">
-          <button class="btn btn-outline-info" type="button">
-            <i class="bi-plus-square"></i>
-          </button>
-        </div>
-      </template>
-
-      <template id="remove-contact-template">
-        <div class="col-1 mb-4">
-          <button class="btn btn-outline-danger" type="button">
-            <i class="bi-trash3-fill"></i>
-          </button>
-        </div>
-      </template>
-
       {% endif %}
     </div>
   </section>
   <script type="text/javascript">
     const userMeUrl = "{% url 'api-user-me' %}";
-    const userMePwdUrl = "{% url 'api-user-me-password' %}";
     const userMeValidateUrl = "{% url 'api-user-me-validate' %}";
-    const coursesUrl = "{% url 'api-courses-list' %}";
     const membersUrl = "{% url 'api-members-list' %}";
-    const seasonsUrl = "{% url 'api-seasons-list' %}";
+    const settingsUrl = "{% url 'api-settings-detail' %}";
+    const previousSeason = "{{ current_season.previous_season }}";
+    const isPreSignupOngoing = "{{ current_season.is_pre_signup_ongoing }}".toLowerCase() === "true";
+    const isSignupOngoing = "{{ current_season.is_signup_ongoing }}".toLowerCase() === "true";
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
   </script>
   <script src="{% static 'js/user.js' %}"></script>

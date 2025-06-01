@@ -28,6 +28,8 @@ from accounts.api.serializers import (
     UserSerializer,
     UserTeacherActionSerializer,
 )
+from members.emails import EmailEnum, EmailSender
+from members.models import GeneralSettings
 
 
 class UsersApiViewSet(
@@ -62,6 +64,8 @@ class UsersApiViewSet(
         return UserSerializer
 
     def create(self, request, *args, **kwargs) -> Response:
+        if not GeneralSettings.get_solo().allow_signup:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
         response = super().create(request, *args, **kwargs)
         username = request.data.get("username")
         password = request.data.get("password")
@@ -69,7 +73,11 @@ class UsersApiViewSet(
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
-        UserCreateSerializer.send_email(username)
+        email_sender = EmailSender(EmailEnum.CREATE_USER)
+        email_sender.send_email(
+            emails=[username],
+            username=username,
+        )
         return response
 
     def destroy(self, request, *args, **kwargs):
@@ -77,6 +85,11 @@ class UsersApiViewSet(
         if instance.username == settings.SUPERUSER_EMAIL:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         self.perform_destroy(instance)
+        email_sender = EmailSender(EmailEnum.DELETE_USER)
+        email_sender.send_email(
+            emails=[self.request.user.username],
+            username=self.request.user.username,
+        )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=["put"])
@@ -141,13 +154,28 @@ class UserMeApiViewSet(
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
+        email_update = ""
         if request.data.get("username", "").lower() == instance.username.lower():
             request.data.pop("username")
         if request.data.get("email", "").lower() == instance.email.lower():
             request.data.pop("email")
+        else:
+            email_update = request.data.get("email", "").lower()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+        if email_update:
+            email_sender = EmailSender(EmailEnum.UPDATE_USER_EMAIL)
+            email_sender.send_email(
+                emails=[settings.DEFAULT_FROM_EMAIL, settings.SUPERUSER_EMAIL],
+                username=[email_update],
+                members=[
+                    f"{member.first_name} {member.last_name}"
+                    for member in request.user.member_set.filter(
+                        season__is_current=True
+                    )
+                ],
+            )
         return Response(serializer.data)
 
     @action(detail=False, methods=["put"])

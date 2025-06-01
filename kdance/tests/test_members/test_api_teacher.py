@@ -1,4 +1,5 @@
 """Tests related to Teacher API view."""
+
 import pytest
 
 from django.urls import reverse
@@ -28,14 +29,16 @@ class TestTeacherApiView(AuthTestCase):
             kwargs=self._kwargs,
         )
 
-    @parameterized.expand([
-        ("get", 200, 200, False),
-        ("get", 200, 200, True),
-        ("post", 403, 400, False),
-        ("put", 403, 405, True),
-        ("patch", 403, 200, True),
-        ("delete", 403, 204, True),
-    ])
+    @parameterized.expand(
+        [
+            ("get", 200, 200, False),
+            ("get", 200, 200, True),
+            ("post", 403, 400, False),
+            ("put", 403, 405, True),
+            ("patch", 403, 200, True),
+            ("delete", 403, 204, True),
+        ]
+    )
     def test_permissions(self, method, user_status, superuser_status, with_pk):
         self._kwargs = {"pk": self._teacher.pk} if with_pk else {}
         assert self.users_have_permission(
@@ -44,14 +47,16 @@ class TestTeacherApiView(AuthTestCase):
             superuser_status=superuser_status,
         )
 
-    @parameterized.expand([
-        ("get", False),
-        ("get", True),
-        ("post", False),
-        ("put", True),
-        ("patch", True),
-        ("delete", True),
-    ])
+    @parameterized.expand(
+        [
+            ("get", False),
+            ("get", True),
+            ("post", False),
+            ("put", True),
+            ("patch", True),
+            ("delete", True),
+        ]
+    )
     def test_authentication_mandatory(self, method, with_pk):
         self._kwargs = {"pk": self._teacher.pk} if with_pk else {}
         assert self.anonymous_has_permission(method, 403)
@@ -92,10 +97,12 @@ class TestTeacherApiView(AuthTestCase):
             assert response.status_code == 201, response
             assert response.json()["name"] == "Chip"
 
-    @parameterized.expand([
-        ("Globule", "Un objet teacher avec ce champ name existe déjà."),
-        ("gloBule", "Ce professeur existe déjà."),
-    ])
+    @parameterized.expand(
+        [
+            ("Globule", "Un objet teacher avec ce champ name existe déjà."),
+            ("gloBule", "Ce professeur existe déjà."),
+        ]
+    )
     def test_post_payload_error(self, name, message):
         self._kwargs = {}
         with AuthenticatedAction(self.client, self.super_testuser):
@@ -133,7 +140,10 @@ class TestTeacherApiView(AuthTestCase):
                 content_type="application/json",
             )
             assert response.status_code == 400, response
-            assert "Un objet teacher avec ce champ name existe déjà." in response.json()["name"]
+            assert (
+                "Un objet teacher avec ce champ name existe déjà."
+                in response.json()["name"]
+            )
 
     def test_delete(self):
         self._kwargs = {"pk": self._teacher.pk}

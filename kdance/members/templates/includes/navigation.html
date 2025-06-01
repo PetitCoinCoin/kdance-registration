@@ -3,7 +3,7 @@
 <header class="header-global">
   <nav id="navbar-main" aria-label="Primary navigation" class="d-flex">
     <a href="/">
-      <img src="{% static 'img/logo-kdance.png' %}" height="100" alt="K'Dance Logo">
+      <img src="{% static 'img/logo-kdance.png' %}" alt="K'Dance Logo">
     </a>
     <div class="d-flex">
       {% if user.is_superuser or is_teacher%}
@@ -13,10 +13,8 @@
           <button class="btn btn-outline-info me-2" type="button" onclick="location.href = '/';">Mon compte</button>
         {% endif %}
       {% else %}
-        {% if request.path == "/about" %}
-          {% if user.is_authenticated %}
+        {% if user.is_authenticated and not request.path == "/" %}
             <button class="btn btn-outline-info me-2" type="button" onclick="location.href = '/';">Mon compte</button>
-          {% endif %}
         {% else %}
           <button class="btn btn-outline-info me-2" type="button" onclick="location.href = '/about';">A propos</button>
         {% endif %}

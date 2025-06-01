@@ -1,4 +1,5 @@
 """Tests related to Password API view."""
+
 import pytest
 
 from datetime import datetime, timedelta, timezone
@@ -19,16 +20,18 @@ from tests.data_tests import TESTUSER_EMAIL, SUPERTESTUSER_EMAIL
 
 @pytest.mark.django_db
 class TestPasswordResetView(AuthTestCase):
-    view_url = reverse('api-password-reset')
+    view_url = reverse("api-password-reset")
     view_function = PasswordApiViewSet
 
-    @parameterized.expand([
-        ("get", 405, 405),
-        ("post", 400, 400),
-        ("put", 405, 405),
-        ("patch", 405, 405),
-        ("delete", 405, 405),
-    ])
+    @parameterized.expand(
+        [
+            ("get", 405, 405),
+            ("post", 400, 400),
+            ("put", 405, 405),
+            ("patch", 405, 405),
+            ("delete", 405, 405),
+        ]
+    )
     def test_permissions(self, method, user_status, superuser_status):
         assert self.users_have_permission(
             method=method,
@@ -36,12 +39,14 @@ class TestPasswordResetView(AuthTestCase):
             superuser_status=superuser_status,
         )
 
-    @parameterized.expand([
-        (TESTUSER_EMAIL, False),
-        (SUPERTESTUSER_EMAIL, False),
-        ("TesT@KDance.COM", False),
-        (TESTUSER_EMAIL, True),
-    ])
+    @parameterized.expand(
+        [
+            (TESTUSER_EMAIL, False),
+            (SUPERTESTUSER_EMAIL, False),
+            ("TesT@KDance.COM", False),
+            (TESTUSER_EMAIL, True),
+        ]
+    )
     def test_reset_password(self, email, exists_already):
         assert ResetPassword.objects.count() == 0
         if exists_already:
@@ -55,11 +60,13 @@ class TestPasswordResetView(AuthTestCase):
         assert email_sent.subject == "Réinitialisation du mot de passe K'Dance"
         assert list(email_sent.to) == [email.lower()]
 
-    @parameterized.expand([
-        (None, "Ce champ est obligatoire."),
-        ("", "Ce champ ne peut être vide."),
-        ("plop@plip.com", "Email incorrect, cet utilisateur n'existe pas."),
-    ])
+    @parameterized.expand(
+        [
+            (None, "Ce champ est obligatoire."),
+            ("", "Ce champ ne peut être vide."),
+            ("plop@plip.com", "Email incorrect, cet utilisateur n'existe pas."),
+        ]
+    )
     def test_reset_password_error(self, email, message):
         data = {}
         if email is not None:
@@ -74,7 +81,7 @@ class TestPasswordResetView(AuthTestCase):
 
 @pytest.mark.django_db
 class TestPasswordNewView(AuthTestCase):
-    view_url = reverse('api-password-new')
+    view_url = reverse("api-password-new")
     view_function = PasswordApiViewSet
     _token: str
 
@@ -89,13 +96,15 @@ class TestPasswordNewView(AuthTestCase):
         self._token = token
         assert ResetPassword.objects.count() == 1
 
-    @parameterized.expand([
-        ("get", 405, 405),
-        ("post", 400, 400),
-        ("put", 405, 405),
-        ("patch", 405, 405),
-        ("delete", 405, 405),
-    ])
+    @parameterized.expand(
+        [
+            ("get", 405, 405),
+            ("post", 400, 400),
+            ("put", 405, 405),
+            ("patch", 405, 405),
+            ("delete", 405, 405),
+        ]
+    )
     def test_permissions(self, method, user_status, superuser_status):
         assert self.users_have_permission(
             method=method,
@@ -112,7 +121,6 @@ class TestPasswordNewView(AuthTestCase):
                 "email": email,
                 "password": new_pwd,
                 "token": self._token,
-
             },
         )
         assert response.status_code == 200, response
@@ -120,15 +128,45 @@ class TestPasswordNewView(AuthTestCase):
         self.testuser.refresh_from_db()
         assert self.testuser.check_password(new_pwd)
 
-    @parameterized.expand([
-        ("plip@plop.fr", "SuperMotDePasse0", True, "email", "Email incorrect, cet utilisateur n'existe pas."),
-        (SUPERTESTUSER_EMAIL, "SuperMotDePasse0", True, "email", "Email incorrect, aucune demande de réinitialisation trouvée."),
-        (TESTUSER_EMAIL, "SuperMotDePasse0", False, "token", "Lien de réinitialisation incorrect pour cet utilisateur."),
-        (TESTUSER_EMAIL, "nul", True, "password", "Votre mot de passe doit contenir au moins 12 caractères."),
-    ])
+    @parameterized.expand(
+        [
+            (
+                "plip@plop.fr",
+                "SuperMotDePasse0",
+                True,
+                "email",
+                "Email incorrect, cet utilisateur n'existe pas.",
+            ),
+            (
+                SUPERTESTUSER_EMAIL,
+                "SuperMotDePasse0",
+                True,
+                "email",
+                "Email incorrect, aucune demande de réinitialisation trouvée.",
+            ),
+            (
+                TESTUSER_EMAIL,
+                "SuperMotDePasse0",
+                False,
+                "token",
+                "Lien de réinitialisation incorrect pour cet utilisateur.",
+            ),
+            (
+                TESTUSER_EMAIL,
+                "nul",
+                True,
+                "password",
+                "Votre mot de passe doit contenir au moins 12 caractères.",
+            ),
+        ]
+    )
     def test_new_password_payload_error(
         self,
-        email, password, token, error_key, message,
+        email,
+        password,
+        token,
+        error_key,
+        message,
     ):
         response = self.client.post(
             self.view_url,
@@ -136,7 +174,6 @@ class TestPasswordNewView(AuthTestCase):
                 "email": email,
                 "password": password,
                 "token": self._token if token else "plop",
-
             },
         )
         assert response.status_code == 400, response
@@ -153,10 +190,12 @@ class TestPasswordNewView(AuthTestCase):
                 "email": TESTUSER_EMAIL,
                 "password": "SuperMotdePasse0",
                 "token": self._token,
-
             },
         )
         assert response.status_code == 400, response
         assert "token" in response.json().keys()
-        assert "Lien de réinitialisation expiré. Veuillez refaire une demande de réinitialisation." in response.json()["token"]
+        assert (
+            "Lien de réinitialisation expiré. Veuillez refaire une demande de réinitialisation."
+            in response.json()["token"]
+        )
         assert ResetPassword.objects.count() == 1

@@ -55,6 +55,15 @@ function getSeason(season) {
       $('#season-current').prop('checked', data.is_current);
       $('#season-discount-percent').val(data.discount_percent);
       $('#season-discount-limit').val(data.discount_limit);
+      $('#season-pass-sport-amount').val(data.pass_sport_amount);
+      $('#pre-signup-start').val(data.pre_signup_start);
+      $('#pre-signup-end').val(data.pre_signup_end);
+      $('#signup-start').val(data.signup_start);
+      $('#signup-end').val(data.signup_end);
+      $('#season-ffd-a-amount').val(data.ffd_a_amount);
+      $('#season-ffd-b-amount').val(data.ffd_b_amount);
+      $('#season-ffd-c-amount').val(data.ffd_c_amount);
+      $('#season-ffd-d-amount').val(data.ffd_d_amount);
     },
     error: (error) => {
       showToast('Impossible de récupérer les informations de la saison.');
@@ -89,16 +98,28 @@ function createUpdateSeason() {
 
 function postOrPatchSeason(url, method) {
   $('#form-season').submit((event) => {
+    $('.invalid-feedback').removeClass('d-inline');
     event.preventDefault();
     const data = {
       year: $('#season-year').val(),
       is_current: $('#season-current').is(':checked'),
+      pre_signup_start: $('#pre-signup-start').val() !== '' ? $('#pre-signup-start').val() : undefined,
+      pre_signup_end: $('#pre-signup-end').val() !== '' ? $('#pre-signup-end').val() : undefined,
+      signup_start: $('#signup-start').val() !== '' ? $('#signup-start').val() : undefined,
+      signup_end: $('#signup-end').val() !== '' ? $('#signup-end').val() : undefined,
+      ffd_a_amount: $('#season-ffd-a-amount').val(),
+      ffd_b_amount: $('#season-ffd-b-amount').val(),
+      ffd_c_amount: $('#season-ffd-c-amount').val(),
+      ffd_d_amount: $('#season-ffd-d-amount').val(),
     };
     if ($('#season-discount-percent').val() !== '') {
       data['discount_percent'] = $('#season-discount-percent').val();
     }
     if ($('#season-discount-limit').val() !== '') {
       data['discount_limit'] = $('#season-discount-limit').val();
+    }
+    if ($('#season-pass-sport-amount').val() !== '') {
+      data['pass_sport_amount'] = $('#season-pass-sport-amount').val();
     }
     $.ajax({
       url: url,
@@ -119,6 +140,22 @@ function postOrPatchSeason(url, method) {
         if (error.responseJSON.year) {
           $('#invalid-season-year').html(error.responseJSON.year[0] + ' Format attendu: XXXX-YYYY');
           $('#invalid-season-year').addClass('d-inline');
+        }
+        if (error.responseJSON.pre_signup_start) {
+          $('#invalid-pre-signup-start').html(error.responseJSON.pre_signup_start[0]);
+          $('#invalid-pre-signup-start').addClass('d-inline');
+        }
+        if (error.responseJSON.pre_signup_end) {
+          $('#invalid-pre-signup-end').html(error.responseJSON.pre_signup_end[0]);
+          $('#invalid-pre-signup-end').addClass('d-inline');
+        }
+        if (error.responseJSON.signup_start) {
+          $('#invalid-signup-start').html(error.responseJSON.signup_start[0]);
+          $('#invalid-signup-start').addClass('d-inline');
+        }
+        if (error.responseJSON.signup_end) {
+          $('#invalid-signup-end').html(error.responseJSON.signup_end[0]);
+          $('#invalid-signup-end').addClass('d-inline');
         }
       }
     });
@@ -197,6 +234,11 @@ function getCourses(seasonId) {
           ...COMMON_TABLE_PARAMS,
           showFullscreen: false,
           showColumns: false,
+          rowStyle: function (row, index) {
+            return {
+              classes: row.waiting > 0 ? 'bg-alert' : 'bg-info'
+            };
+          },
           columns: [{
             field: 'name',
             title: 'Nom',
@@ -207,6 +249,27 @@ function getCourses(seasonId) {
             title: 'Professeur',
             searchable: true,
             sortable: true,
+          }, {
+            field: 'capacity',
+            title: 'Capacité',
+            searchable: false,
+            sortable: false,
+          }, {
+            field: 'is_complete',
+            title: 'Complet',
+            searchable: true,
+            sortable: true,
+            cellStyle: function (value) {
+              return {
+                classes: value == 'Oui' ? 'bg-warning' : ''
+              };
+            },
+          }, {
+            field: 'waiting',
+            title: 'En attente',
+            searchable: false,
+            sortable: true,
+            cellStyle: { css: { 'background-color': 'inherit !important' } },
           }, {
             field: 'slot',
             title: 'Créneau',
@@ -230,6 +293,7 @@ function getCourses(seasonId) {
             return {
               ...c,
               price: c.price + '€',
+              is_complete: c.is_complete ? 'Oui' : 'Non',
               slot: `${WEEKDAY[c.weekday]}, ${startHour[0]}h${startHour[1]}-${endHour[0]}h${endHour[1]}`
             }
           })
@@ -376,6 +440,7 @@ function getCourse(course, deleteModalBody) {
       $('#course-weekday').val(data.weekday);
       $('#course-start').val(data.start_hour.substring(0, 5));
       $('#course-end').val(data.end_hour.substring(0, 5));
+      $('#course-capacity').val(data.capacity);
     },
     error: (error) => {
       showToast('Impossible de récupérer les informations du cours.');
@@ -398,6 +463,7 @@ function postOrPatchCourse(course) {
       weekday: $('#course-weekday').val(),
       start_hour: $('#course-start').val(),
       end_hour: $('#course-end').val(),
+      capacity: $('#course-capacity').val(),
     }
     $.ajax({
       url: url,

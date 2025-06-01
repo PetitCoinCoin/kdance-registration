@@ -1,6 +1,6 @@
 services:
   backend:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     container_name: kdance_backend
@@ -14,7 +14,7 @@ services:
       - .env
     depends_on:
       db:
-        condition: service_healthy 
+        condition: service_healthy
 
   db:
     image: mysql:8
@@ -34,6 +34,6 @@ services:
       interval: 5s
       timeout: 10s
       retries: 10
-  
+
 volumes:
   mysql_data:

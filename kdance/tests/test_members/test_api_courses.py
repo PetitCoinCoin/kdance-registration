@@ -1,4 +1,5 @@
 """Tests related to Course API view."""
+
 from datetime import time
 
 import pytest
@@ -12,6 +13,7 @@ from members.models import (
     Season,
 )
 from tests.authentication import AuthenticatedAction, AuthTestCase
+from tests.data_tests import SEASON
 
 
 @pytest.mark.django_db
@@ -23,16 +25,9 @@ class TestCourseApiView(AuthTestCase):
     _season: Season | None = None
 
     @pytest.fixture(autouse=True)
-    def set_course(self):
-        self._season, _ = Season.objects.get_or_create(year="1900-1901")
-        self._course, _ = Course.objects.get_or_create(
-            name="Cha cha cha",
-            season=self._season,
-            price=10,
-            weekday=0,
-            start_hour=time(10, 0),
-            end_hour=time(11, 0),
-        )
+    def set_course(self, mock_season, mock_course):
+        self._season = mock_season
+        self._course = mock_course
 
     @property
     def view_url(self):
@@ -41,14 +36,16 @@ class TestCourseApiView(AuthTestCase):
             kwargs=self._kwargs,
         )
 
-    @parameterized.expand([
-        ("get", 200, 200, False),
-        ("get", 200, 200, True),
-        ("post", 403, 400, False),
-        ("put", 403, 405, True),
-        ("patch", 403, 200, True),
-        ("delete", 403, 204, True),
-    ])
+    @parameterized.expand(
+        [
+            ("get", 200, 200, False),
+            ("get", 200, 200, True),
+            ("post", 403, 400, False),
+            ("put", 403, 405, True),
+            ("patch", 403, 200, True),
+            ("delete", 403, 204, True),
+        ]
+    )
     def test_permissions(self, method, user_status, superuser_status, with_pk):
         self._kwargs = {"pk": self._course.pk} if with_pk else {}
         assert self.users_have_permission(
@@ -57,14 +54,16 @@ class TestCourseApiView(AuthTestCase):
             superuser_status=superuser_status,
         )
 
-    @parameterized.expand([
-        ("get", False),
-        ("get", True),
-        ("post", False),
-        ("put", True),
-        ("patch", True),
-        ("delete", True),
-    ])
+    @parameterized.expand(
+        [
+            ("get", False),
+            ("get", True),
+            ("post", False),
+            ("put", True),
+            ("patch", True),
+            ("delete", True),
+        ]
+    )
     def test_authentication_mandatory(self, method, with_pk):
         self._kwargs = {"pk": self._course.pk} if with_pk else {}
         assert self.anonymous_has_permission(method, 403)
@@ -81,17 +80,26 @@ class TestCourseApiView(AuthTestCase):
         self._kwargs = {}
         assert Course.objects.count() == 1
         with AuthenticatedAction(self.client, self.super_testuser):
-            response = self.client.post(self.view_url, data=data, content_type="application/json")
+            response = self.client.post(
+                self.view_url, data=data, content_type="application/json"
+            )
             assert response.status_code == 201, response
             response_json = response.json()
             assert response_json["name"] == "Chenille"
         assert Course.objects.count() == 2
 
-    @parameterized.expand([
-        (10, True, "n'est pas un choix valide.", "weekday"),  # invalid weekday
-        (6, False, "l'objet n'existe pas.", "season"),  # invalid season
-        (0, True, "doivent former un ensemble unique.", "non_field_errors"),  # duplicate course
-    ])
+    @parameterized.expand(
+        [
+            (10, True, "n'est pas un choix valide.", "weekday"),  # invalid weekday
+            (6, False, "l'objet n'existe pas.", "season"),  # invalid season
+            (
+                0,
+                True,
+                "doivent former un ensemble unique.",
+                "non_field_errors",
+            ),  # duplicate course
+        ]
+    )
     def test_post_payload_error(self, weekday, season, message, key):
         data = {
             "name": "Cha cha cha",
@@ -104,18 +112,22 @@ class TestCourseApiView(AuthTestCase):
         self._kwargs = {}
         assert Course.objects.count() == 1
         with AuthenticatedAction(self.client, self.super_testuser):
-            response = self.client.post(self.view_url, data=data, content_type="application/json")
+            response = self.client.post(
+                self.view_url, data=data, content_type="application/json"
+            )
             assert response.status_code == 400, response
             response_json = response.json()
             assert message in response_json[key][0]
         assert Course.objects.count() == 1
 
-    @parameterized.expand([
-        ("Chenille", None, None, None),
-        (None, 6, None, None),
-        (None, None, 20, None),
-        (None, None, None, 1000),
-    ])
+    @parameterized.expand(
+        [
+            ("Chenille", None, None, None),
+            (None, 6, None, None),
+            (None, None, 20, None),
+            (None, None, None, 1000),
+        ]
+    )
     def test_patch(self, name, weekday, start, price):
         data = {}
         if name:
@@ -130,7 +142,9 @@ class TestCourseApiView(AuthTestCase):
         assert Course.objects.count() == 1
 
         with AuthenticatedAction(self.client, self.super_testuser):
-            response = self.client.patch(self.view_url, data=data, content_type="application/json")
+            response = self.client.patch(
+                self.view_url, data=data, content_type="application/json"
+            )
             assert response.status_code == 200, response
         assert Course.objects.count() == 1
         self._course.refresh_from_db()
@@ -146,7 +160,9 @@ class TestCourseApiView(AuthTestCase):
     def test_patch_payload_error(self):
         data = {"weekday": 10}
         with AuthenticatedAction(self.client, self.super_testuser):
-            response = self.client.patch(self.view_url, data=data, content_type="application/json")
+            response = self.client.patch(
+                self.view_url, data=data, content_type="application/json"
+            )
             assert response.status_code == 400, response
             assert "n'est pas un choix valide." in response.json()["weekday"][0]
 
@@ -168,24 +184,19 @@ class TestCoursesCopyApiView(AuthTestCase):
     _season: Season | None = None
 
     @pytest.fixture(autouse=True)
-    def set_course(self):
-        self._season, _ = Season.objects.get_or_create(year="1900-1901")
-        self._course, _ = Course.objects.get_or_create(
-            name="Cha cha cha",
-            season=self._season,
-            price=10,
-            weekday=0,
-            start_hour=time(10, 0),
-            end_hour=time(11, 0),
-        )
+    def set_course(self, mock_season, mock_course):
+        self._season = mock_season
+        self._course = mock_course
 
-    @parameterized.expand([
-        ("get", 405, 405),
-        ("post", 403, 400),
-        ("put", 403, 405),
-        ("patch", 403, 405),
-        ("delete", 403, 405),
-    ])
+    @parameterized.expand(
+        [
+            ("get", 405, 405),
+            ("post", 403, 400),
+            ("put", 403, 405),
+            ("patch", 403, 405),
+            ("delete", 403, 405),
+        ]
+    )
     def test_permissions(self, method, user_status, superuser_status):
         assert self.users_have_permission(
             method=method,
@@ -197,14 +208,19 @@ class TestCoursesCopyApiView(AuthTestCase):
         assert self.anonymous_has_permission("put", 403)
 
     def test_copy_season(self):
-        new_season = Season.objects.create(year="2000-2001")
+        new_season = Season.objects.create(
+            **SEASON,
+            year="2000-2001",
+        )
         data = {
             "from_season": self._season.pk,
             "to_season": new_season.pk,
         }
         assert Course.objects.count() == 1
         with AuthenticatedAction(self.client, self.super_testuser):
-            response = self.client.post(self.view_url, data=data, content_type="application/json")
+            response = self.client.post(
+                self.view_url, data=data, content_type="application/json"
+            )
             assert response.status_code == 200, response
         assert Course.objects.count() == 2
         new_course = Course.objects.last()
@@ -226,7 +242,12 @@ class TestCoursesCopyApiView(AuthTestCase):
         }
         assert Course.objects.count() == 1
         with AuthenticatedAction(self.client, self.super_testuser):
-            response = self.client.post(self.view_url, data=data, content_type="application/json")
+            response = self.client.post(
+                self.view_url, data=data, content_type="application/json"
+            )
             assert response.status_code == 400, response
-            assert "Cette saison n'existe pas." in response.json()["to_season" if is_from_ok else "from_season"][0]
+            assert (
+                "Cette saison n'existe pas."
+                in response.json()["to_season" if is_from_ok else "from_season"][0]
+            )
         assert Course.objects.count() == 1
