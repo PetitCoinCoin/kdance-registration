@@ -500,9 +500,14 @@ class Contact(PersonModel):
     objects = ContactManager()
 
 
+class MemberManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(user__isnull=False)
+
+
 class Member(PersonModel):
     created = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
     active_courses = models.ManyToManyField(Course, related_name="members")
     waiting_courses = models.ManyToManyField(Course, related_name="members_waiting")
     cancelled_courses = models.ManyToManyField(Course, related_name="members_cancelled")
@@ -532,6 +537,8 @@ class Member(PersonModel):
     ffd_license = models.PositiveIntegerField(default=0)
     is_validated = models.BooleanField(default=False, null=False)
     created = models.DateTimeField(auto_now_add=True)
+
+    objects = MemberManager()
 
     class Meta:
         unique_together = ("first_name", "last_name", "user", "season")
