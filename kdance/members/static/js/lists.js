@@ -71,7 +71,7 @@ function getCourses(seasonId, mainValue) {
     url: coursesUrl + `?season=${seasonId}`,
     type: 'GET',
     success: (data) => {
-      $('#menu-2-select').append($('<option>', { value: '0', text: mainValue === '6' || mainValue === '7' ? '-' : 'Tous les cours', selected: true }));
+      $('#menu-2-select').append($('<option>', { value: '0', text: mainValue === '6' ? '-' : 'Tous les cours', selected: true }));
       for (let i = 0; i < data.length; i++) {
         const startHour = data[i].start_hour.split(':');
         const label = `${data[i].name}, ${WEEKDAY[data[i].weekday]} ${startHour[0]}h${startHour[1]}`;
@@ -129,7 +129,7 @@ function getMembersPerCourse(mainValue) {
       url = `${membersUrl}?season=${$('#season-select').val()}&${filter}=true`;
       break
     case '0':
-      if (mainValue === '6' || mainValue === '7') {
+      if (mainValue === '6') {
         const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('list-error-toast'));
         $('#list-error-body').text('Veuillez sélectionner un cours.');
         toast.show();
@@ -409,15 +409,27 @@ function buildEmergencyInfo(data, courseId) {
       }, {
         field: 'authorise_emergency',
         title: 'Autorisation parentale',
+      }, {
+        field: 'courses',
+        title: 'Cours',
+        visible: false,
+        searchable: true,
+        sortable: true,
+        formatter: function(value) {
+          return value.join('<br />')
+        },
       }],
     data: data.filter(m =>
-      m.active_courses.map(c => c.id.toString()).indexOf(courseId) >= 0
+      courseId > 0
+      ? m.active_courses.map(c => c.id.toString()).indexOf(courseId) >= 0
+      : m.active_courses.length > 0
     ).map(m => {
       return {
         ...m,
 				name: `${m.last_name} ${m.first_name}`,
         birthday:(new Date(m.birthday)).toLocaleDateString('fr-FR'),
         authorise_emergency: m.documents.authorise_emergency ? 'Oui': 'Non',
+        courses: m.active_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`),
         ...buildContactsData(m.contacts),
       }
     })
@@ -478,7 +490,7 @@ function buildContactInfo(data) {
       return {
         ...m,
         suffix: '',
-        courses: m.active_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`).concat(m.cancelled_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)),
+        courses: m.active_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`).concat(m.cancelled_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)).concat(m.waiting_courses.map((c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (En attente)`)),
       }
     }).concat(data.map(m => buildResponsibleContactData(m.contacts, m.first_name, m.last_name)).flat())
   });
@@ -486,7 +498,6 @@ function buildContactInfo(data) {
 
 function buildResponsibleContactData(data, memberFirstname, memberLastname) {
   return data.filter(c => c.contact_type === 'responsible').map(c => {
-    // Technically, we could have 3 contacts per type. But this is higly unusual
     return {
       first_name: c.first_name,
       last_name: c.last_name,
