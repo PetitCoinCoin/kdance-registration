@@ -152,20 +152,19 @@ function getUser() {
           medicalDocDropdown.remove();
         } else {
           const memberBtnClone = memberBtnTemplate.content.cloneNode(true);
+          if (!isSignupOngoing) {
+            let addBtn = memberBtnClone.querySelector('#add-member-btn');
+            let copyBtn = memberBtnClone.querySelector('#copy-member-btn');
+            addBtn.disabled = true;
+            copyBtn.disabled = true;
+          }
+          if (isPreSignupOngoing) {
+            let copyBtn = memberBtnClone.querySelector('#copy-member-btn');
+            copyBtn.disabled = false;
+          }
           if (previousMembers.length == 0) {
             let copyBtn = memberBtnClone.querySelector('#copy-member-btn');
             copyBtn.disabled = true;
-          } else {
-            if (isPreSignupOngoing) {
-              let addBtn = memberBtnClone.querySelector('#add-member-btn');
-              addBtn.disabled = true;
-            }
-            else if (!isSignupOngoing) {
-              let addBtn = memberBtnClone.querySelector('#add-member-btn');
-              let copyBtn = memberBtnClone.querySelector('#copy-member-btn');
-              addBtn.disabled = true;
-              copyBtn.disabled = true;
-            }
           }
           const btnParent = clone.querySelector('.season-btn-div');
           const notValidatedMembers = data.members.filter((member) => member.season.id == item.season.id && !member.is_validated);
