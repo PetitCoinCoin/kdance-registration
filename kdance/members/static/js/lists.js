@@ -217,6 +217,12 @@ function buildMembersInfo(data, courseId) {
       searchable: false,
       sortable: false,
     }, {
+      field: 'city',
+      title: 'Ville',
+      searchable: true,
+      sortable: true,
+      visible: false,
+    }, {
       field: 'name-responsible-1',
       title: 'Responsable légal 1',
       searchable: true,
