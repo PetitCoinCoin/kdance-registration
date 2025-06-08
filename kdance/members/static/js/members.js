@@ -172,9 +172,9 @@ function getMembers(seasonId) {
     pagination: true,
     sidePagination: 'server',
     url: membersUrl + `?season=${seasonId}&without_details=true`,
-    pageSize: '10',
+    pageSize: '25',
     pageNumber: '1',
-    pageList: '[1, 5, 10, 25, 50, 100, Tous]',
+    pageList: '[10, 25, 50, 100, All]',
     columns: [{
       field: 'name',
       title: 'Adhérent',
