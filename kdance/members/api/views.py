@@ -45,7 +45,7 @@ from rest_framework.viewsets import GenericViewSet
 class StandardPagination(PageNumberPagination):
     page_query_param = "offset"
     page_size_query_param = "limit"
-    max_page_size = 300
+    max_page_size = 500
 
     def get_page_size(self, request):
         return super().get_page_size(request) or self.max_page_size
@@ -54,7 +54,7 @@ class StandardPagination(PageNumberPagination):
         page_number = request.query_params.get(self.page_query_param, 0)
         if page_number in self.last_page_strings:
             page_number = paginator.num_pages
-        return int(page_number) + 1
+        return int(page_number) // self.get_page_size(request) + 1
 
 
 class GeneralSettingsViewSet(
