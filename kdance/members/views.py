@@ -70,6 +70,10 @@ def checkout(request: HttpRequest) -> HttpResponse:
         raise Http404
 
     total_due = current_payment.due - current_payment.paid + current_payment.refund
+
+    if total_due <= 0:
+        return render(request, "403.html", status=403)
+
     order_dict = {
         "order": {
             "amountOfMoney": {"currencyCode": "EUR", "amount": total_due * 100},
