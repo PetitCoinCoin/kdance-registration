@@ -167,71 +167,66 @@ function actionFormatter(value, row, index) {
 }
 
 function getMembers(seasonId) {
-  $.ajax({
+  $('#members-table').bootstrapTable({
+    ...COMMON_TABLE_PARAMS,
+    pagination: true,
+    sidePagination: 'server',
     url: membersUrl + `?season=${seasonId}&without_details=true`,
-    type: 'GET',
-    success: (data) => {
-      // Bootstrap table not initialised
-      if (document.querySelector('#members-table').className === '') {
-        $('#members-table').bootstrapTable({
-          ...COMMON_TABLE_PARAMS,
-          columns: [{
-            field: 'name',
-            title: 'Adhérent',
-            searchable: true,
-            sortable: true,
-          }, {
-            field: 'status',
-            title: 'Statut',
-            searchable: true,
-            sortable: true,
-            formatter: statusFormatter,
-          }, {
-            field: 'documents.authorise_photos',
-            title: 'Autorisation photos',
-            searchable: true,
-            sortable: true,
-            visible: false,
-          }, {
-            field: 'documents.authorise_emergency',
-            title: 'Autorisation parentale',
-            searchable: true,
-            sortable: true,
-            visible: false,
-          }, {
-            field: 'documents.medical_document',
-            title: 'Doc médical',
-            searchable: true,
-            sortable: true,
-            cellStyle: function (value) {
-              return {
-                classes: value == 'Manquant' ? 'bg-alert' : 'bg-info'
-              };
-            }
-          }, {
-            field: 'solde',
-            title: 'Solde dû (€)',
-            searchable: true,
-            sortable: true,
-            cellStyle: function (value) {
-              return {
-                classes: value > 0 ? 'bg-alert' : value < 0 ? 'bg-warning' : 'bg-info'
-              };
-            }
-          }, {
-            field: 'payment.comment',
-            title: 'Commentaire',
-            searchable: true,
-            sortable: false,
-            visible: false,
-          }, {
-            field: 'operate',
-            title: 'Mettre à jour',
-            align: 'center',
-            clickToSelect: false,
-            formatter: actionFormatter,
-          }],
-          data: data.map((m) => {
+    pageSize: '10',
+    pageNumber: '1',
+    pageList: '[1, 5, 10, 25, 50, 100, Tous]',
+    columns: [{
+      field: 'name',
+      title: 'Adhérent',
+      searchable: true,
+      sortable: true,
+    }, {
+      field: 'status',
+      title: 'Statut',
+      formatter: statusFormatter,
+    }, {
+      field: 'documents.authorise_photos',
+      title: 'Autorisation photos',
+      sortable: true,
+      visible: false,
+    }, {
+      field: 'documents.authorise_emergency',
+      title: 'Autorisation parentale',
+      sortable: true,
+      visible: false,
+    }, {
+      field: 'documents.medical_document',
+      title: 'Doc médical',
+      sortable: true,
+      cellStyle: function (value) {
+        return {
+          classes: value == 'Manquant' ? 'bg-alert' : 'bg-info'
+        };
+      }
+    }, {
+      field: 'solde',
+      title: 'Solde dû (€)',
+      sortable: true,
+      cellStyle: function (value) {
+        return {
+          classes: value > 0 ? 'bg-alert' : value < 0 ? 'bg-warning' : 'bg-info'
+        };
+      }
+    }, {
+      field: 'payment.comment',
+      title: 'Commentaire',
+      visible: false,
+    }, {
+      field: 'operate',
+      title: 'Mettre à jour',
+      align: 'center',
+      clickToSelect: false,
+      formatter: actionFormatter,
+    }],
+    responseHandler: function(res) {
+        return {
+          total: res.count,
+          rows: res.results.map((m) => {
             const solde = Number(m.payment.due - m.payment.paid + m.payment.refund);
             return {
               ...m,
@@ -245,38 +240,11 @@ function getMembers(seasonId) {
               } : null,
             }
           })
-        });
-        $('input[type=search]').attr('placeholder', 'Rechercher');
-        // Already initialised
-      } else {
-        $('#members-table').bootstrapTable('load', data.map((m) => {
-          const solde = Number(m.payment.due - m.payment.paid + m.payment.refund);
-          return {
-            ...m,
-            name: `${m.last_name} ${m.first_name}`,
-            status: m.is_validated ? 'Validé' : 'En attente',
-            courses: m.active_courses.map(
-              (c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`
-            ).concat(m.waiting_courses.map(
-              (c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Liste d'attente)`)
-            ).concat(m.cancelled_courses.map(
-              (c) => `- ${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)
-            ),
-            solde: solde % 1 === 0 ? solde : solde.toFixed(2),
-            documents: m.documents ? {
-              ...m.documents,
-              authorise_photos: m.documents.authorise_photos ? 'Oui' : 'Non',
-              authorise_emergency: m.documents.authorise_emergency ? 'Oui' : 'Non',
-            } : null,
-          }
-        }));
-      }
-    },
-    error: (error) => {
-      showToast('Impossible de récupérer les adhérents de la saison.');
-      console.log(error);
+        }
     }
   });
+  $('#members-table').bootstrapTable('refresh');
+  $('input[type=search]').attr('placeholder', 'Rechercher');
 }
 
 function buildStatus(member) {
