@@ -262,7 +262,7 @@ function buildStatus(member) {
       (c) => `- ${c.name}, ${WEEKDAY[c.weekday]}`
     ).join('<br />')
     : undefined;
-  return [active, waiting, cancelled]
+  return [active, waiting, cancelled].filter(l => l !== undefined)
 }
 
 function getMember(memberId) {
