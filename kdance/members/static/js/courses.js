@@ -298,7 +298,6 @@ function getCourses(seasonId) {
             }
           })
         });
-        $('input[type=search]').attr('placeholder', 'Rechercher');
         // Already initialised
       } else {
         $('#courses-table').bootstrapTable('load', data.map(c => {

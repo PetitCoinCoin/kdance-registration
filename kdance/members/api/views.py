@@ -35,10 +35,26 @@ from rest_framework.mixins import (
     RetrieveModelMixin,
     UpdateModelMixin,
 )
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework import serializers
 from rest_framework.viewsets import GenericViewSet
+
+
+class StandardPagination(PageNumberPagination):
+    page_query_param = "offset"
+    page_size_query_param = "limit"
+    max_page_size = 300
+
+    def get_page_size(self, request):
+        return super().get_page_size(request) or self.max_page_size
+
+    def get_page_number(self, request, paginator):
+        page_number = request.query_params.get(self.page_query_param, 0)
+        if page_number in self.last_page_strings:
+            page_number = paginator.num_pages
+        return int(page_number) + 1
 
 
 class GeneralSettingsViewSet(
@@ -167,6 +183,16 @@ class MemberViewSet(
 ):
     http_method_names = ["get", "post", "patch", "delete", "put"]
 
+    @property
+    def pagination_class(self):
+        if self.request.method.lower() == "get":
+            if self.request.query_params.get("without_details", "").lower() in [
+                "true",
+                "1",
+            ]:
+                return StandardPagination
+        return
+
     def get_serializer_class(self):
         if self.request.method.lower() == "get":
             if self.request.query_params.get("without_details", "").lower() in [
@@ -178,11 +204,18 @@ class MemberViewSet(
         return MemberSerializer
 
     def get_queryset(self):
-        queryset = Member.objects.all()
+        queryset = (
+            Member.objects.all()
+            .select_related("documents", "season", "user")
+            .prefetch_related("active_courses", "cancelled_courses")
+        )
         season = self.request.query_params.get("season")
         course = self.request.query_params.get("course")
         with_pass = self.request.query_params.get("with_pass")
         with_license = self.request.query_params.get("with_license")
+
+        search = self.request.query_params.get("search")
+        sort = self.request.query_params.get("sort")
         if season:
             queryset = queryset.filter(season__id=season)
         if course:
@@ -200,10 +233,29 @@ class MemberViewSet(
                 queryset = queryset.filter(ffd_license__gt=0)
             else:
                 queryset = queryset.filter(ffd_license=0)
-        return (
-            queryset.select_related("documents", "season", "user")
-            .prefetch_related("active_courses", "cancelled_courses")
-            .order_by("-season__year", "last_name", "first_name")
+        if search:
+            queryset = queryset.filter(
+                Q(first_name__icontains=search) | Q(last_name__icontains=search)
+            )
+        if sort:
+            order_prefix = (
+                "-" if self.request.query_params.get("order", "asc") == "desc" else ""
+            )
+            if sort == "name":
+                order_by = [f"{order_prefix}last_name", f"{order_prefix}first_name"]
+            elif sort == "solde":
+                order_by = []
+            else:
+                order_by = [f"{order_prefix}{sort.replace('.', '__')}"]
+        else:
+            order_by = ["last_name", "first_name"]
+
+        if order_by:
+            return queryset.order_by("-season__year", *order_by)
+        return sorted(
+            queryset,
+            key=lambda m: m.payment.due - m.payment.paid + m.payment.refund,
+            reverse=bool(order_prefix),
         )
 
     def retrieve(self, request: Request, *a, **k) -> Response:

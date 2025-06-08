@@ -235,7 +235,7 @@ function postOrPatchMember(url, method, event) {
       first_name: $('#member-firstname').val(),
       last_name: $('#member-lastname').val(),
       email: $('#member-email').val(),
-      phone: $('#member-phone').val(),
+      phone: $('#member-phone').val().replace(/\s/g, ''),
       address: $('#member-address').val(),
       postal_code: $('#member-postal-code').val(),
       city: $('#member-city').val(),

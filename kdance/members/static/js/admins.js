@@ -83,7 +83,6 @@ function getUsersAdmins() {
           }],
           data: data
         });
-        $('input[type=search]').attr('placeholder', 'Rechercher');
         // Already initialised
       } else {
         $('#admins-table').bootstrapTable('load', data);
@@ -137,7 +136,6 @@ function getUsersTeachers() {
           }],
           data: data
         });
-        $('input[type=search]').attr('placeholder', 'Rechercher');
         // Already initialised
       } else {
         $('#teachers-table').bootstrapTable('load', data);
