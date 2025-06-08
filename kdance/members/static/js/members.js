@@ -244,7 +244,6 @@ function getMembers(seasonId) {
     }
   });
   $('#members-table').bootstrapTable('refresh');
-  $('input[type=search]').attr('placeholder', 'Rechercher');
 }
 
 function buildStatus(member) {

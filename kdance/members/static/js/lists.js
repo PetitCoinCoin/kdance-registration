@@ -168,7 +168,6 @@ function getMembersPerCourse(mainValue) {
         default:
           return
       }
-      $('input[type=search]').attr('placeholder', 'Rechercher');
       $('#total-count').text(data.length);
     },
     error: (error) => {
@@ -693,7 +692,6 @@ function getChecksPerMonth() {
           }],
         data: data
       });
-      $('input[type=search]').attr('placeholder', 'Rechercher');
       $('#total-count').text(data.length);
       document.querySelector('#total-amount-div').className = 'd-flex';
       const totalAmount = data.reduce(
@@ -853,7 +851,6 @@ function getPayments() {
           }
         })
       });
-      $('input[type=search]').attr('placeholder', 'Rechercher');
       $('#total-count').text(data.length);
       document.querySelector('#total-amount-div').className = 'd-flex';
       const totalAmount = data.reduce(
