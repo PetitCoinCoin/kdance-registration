@@ -346,7 +346,6 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
     active_courses = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Course.objects.all(),
-        default=list,
     )
     cancelled_courses = serializers.PrimaryKeyRelatedField(  # type: ignore
         many=True,
@@ -406,16 +405,17 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
         validated = super().validate(attr)
         if validated.get("city"):
             validated["city"] = validated["city"].title()
-        validated["waiting_courses"] = [
-            course
-            for course in validated.get("active_courses", [])
-            if course.is_complete
-        ]
-        validated["active_courses"] = [
-            course
-            for course in validated.get("active_courses", [])
-            if not course.is_complete
-        ]
+        if validated.get("active_courses") is not None:
+            validated["waiting_courses"] = [
+                course
+                for course in validated.get("active_courses", [])
+                if course.is_complete
+            ]
+            validated["active_courses"] = [
+                course
+                for course in validated.get("active_courses", [])
+                if not course.is_complete
+            ]
         return validated
 
     def check_presignup(self, username: str) -> None:
@@ -440,9 +440,9 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
         contacts = self.validated_data.pop("contacts", None)
         documents = self.validated_data.pop("documents", None) if self.partial else None
         sport_pass = self.validated_data.pop("sport_pass", {})
-        active_courses = self.validated_data.pop("active_courses", [])
-        waiting_courses = self.validated_data.pop("waiting_courses", [])
-        cancelled_courses = self.validated_data.pop("cancelled_courses", [])
+        active_courses = self.validated_data.pop("active_courses", None)
+        waiting_courses = self.validated_data.pop("waiting_courses", None)
+        cancelled_courses = self.validated_data.pop("cancelled_courses", None)
         try:
             member = super().save()
         except IntegrityError:
@@ -476,26 +476,30 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             if SportPass.objects.filter(member__id=member.id).exists():
                 sport_pass_item = SportPass.objects.get(member__id=member.id)
                 sport_pass_item.delete()
-        active_to_remove = [
-            c for c in member.active_courses.all() if c not in active_courses
-        ]
-        active_to_add = [
-            c for c in active_courses if c not in member.active_courses.all()
-        ]
-        for course in active_to_add:
-            member.active_courses.add(course)
-        for course in active_to_remove:
-            member.active_courses.remove(course)
-        waiting_to_remove = [
-            c for c in member.waiting_courses.all() if c not in waiting_courses
-        ]
-        waiting_to_add = [
-            c for c in waiting_courses if c not in member.waiting_courses.all()
-        ]
-        for course in waiting_to_add:
-            member.waiting_courses.add(course)
-        for course in waiting_to_remove:
-            member.waiting_courses.remove(course)
+        print("**********************")
+        print(active_courses, waiting_courses, cancelled_courses)
+        if active_courses is not None:
+            active_to_remove = [
+                c for c in member.active_courses.all() if c not in active_courses
+            ]
+            active_to_add = [
+                c for c in active_courses if c not in member.active_courses.all()
+            ]
+            for course in active_to_add:
+                member.active_courses.add(course)
+            for course in active_to_remove:
+                member.active_courses.remove(course)
+        if waiting_courses is not None:
+            waiting_to_remove = [
+                c for c in member.waiting_courses.all() if c not in waiting_courses
+            ]
+            waiting_to_add = [
+                c for c in waiting_courses if c not in member.waiting_courses.all()
+            ]
+            for course in waiting_to_add:
+                member.waiting_courses.add(course)
+            for course in waiting_to_remove:
+                member.waiting_courses.remove(course)
         if cancelled_courses:
             member.cancelled_courses.clear()
             for course in cancelled_courses:
