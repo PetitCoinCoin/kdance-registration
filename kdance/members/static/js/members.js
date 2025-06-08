@@ -289,7 +289,8 @@ function getMember(memberId) {
       $('#cash-switch').prop('checked', withCash);
 
       $('#payment-cb').val(data.payment.cb_payment?.amount);
-      const withCb = !(data.payment.cb_payment?.amount === 0);
+      const withCb = !(data.payment.cb_payment === null || data.payment.cb_payment?.amount === 0);
+      console.log(data.payment.cb_payment)
       $('#cb-div').attr('hidden', !withCb);
       $('#cb-switch').prop('checked', withCb);
 
