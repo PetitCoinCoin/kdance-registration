@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pathlib import Path
 
 from django.conf import settings
@@ -43,14 +44,17 @@ def _create_cawl_client() -> IMerchantClient:
 @login_required()
 def index(request: HttpRequest) -> HttpResponse:
     current_season = Season.objects.filter(is_current=True).first()
+    general_settings = GeneralSettings.get_solo()
     return render(
         request,
         "pages/index.html",
         context={
             "user": request.user,
             "is_teacher": _is_teacher(request),
-            "allow_new_member": GeneralSettings.get_solo().allow_new_member,
+            "allow_new_member": general_settings.allow_new_member,
             "current_season": current_season,
+            "pre_signup_payment_end": current_season.pre_signup_end
+            + timedelta(days=general_settings.pre_signup_payment_delta_days),
             "previous_season": current_season.previous_season if current_season else "",
         },
     )

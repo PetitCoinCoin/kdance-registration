@@ -34,7 +34,11 @@ _logger = logging.getLogger(__name__)
 class GeneralSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = GeneralSettings
-        fields = ("allow_signup", "allow_new_member")
+        fields = (
+            "allow_signup",
+            "allow_new_member",
+            "pre_signup_payment_delta_days",
+        )
 
 
 class SeasonSerializer(serializers.ModelSerializer):

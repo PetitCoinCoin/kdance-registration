@@ -31,6 +31,9 @@ class GeneralSettings(SingletonModel):
         null=False,
         default=True,
     )
+    pre_signup_payment_delta_days = models.PositiveBigIntegerField(
+        null=False, default=7
+    )
 
 
 class Season(models.Model):
