@@ -153,6 +153,7 @@ async function getMember() {
     $('h1').html('Ajouter un nouvel adhérent');
     $('#form-member').data('url', membersUrl);
     $('#form-member').data('method', 'POST');
+    $('#form-member').data('canEditCourse', true);
     return
   }
   $.ajax({
@@ -162,6 +163,7 @@ async function getMember() {
       $('#me-switch').prop('disabled', true);
       const action = isEdition ? 'Modifier les infos de' : 'Renouveller' ;
       $('h1').html(`${action} ${data.first_name} ${data.last_name}`);
+      $('#form-member').data('canEditCourse', !isEdition || !data.is_validated);
       $('#member-firstname').val(data.first_name);
       $('#member-lastname').val(data.last_name);
       $('#member-email').val(data.email);
@@ -254,7 +256,7 @@ function postOrPatchMember(url, method, event) {
         courses.push(item.value);
       }
     });
-    data.active_courses = courses;
+    data.active_courses = $('#form-member').data('canEditCourse') ? courses : undefined;
     if ($('#member-pass-code').val() !== '') {
       data.sport_pass = { code: $('#member-pass-code').val() };
     }

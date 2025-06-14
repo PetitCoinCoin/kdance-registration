@@ -31,6 +31,9 @@ class GeneralSettings(SingletonModel):
         null=False,
         default=True,
     )
+    pre_signup_payment_delta_days = models.PositiveBigIntegerField(
+        null=False, default=7
+    )
 
 
 class Season(models.Model):
@@ -81,6 +84,10 @@ class Season(models.Model):
             too_old = Season.objects.order_by("-year")[self.SEASON_COUNT - 1 :]
             for season in too_old:
                 season.delete()
+        # When editing, we need to check if FFD amounts were updated
+        prev_state = None
+        if not created and self.is_current:
+            prev_state = Season.objects.get(pk=self.pk)
         super().save(*args, **kwargs)
         # Only one current season is possible
         if self.is_current:
@@ -89,6 +96,12 @@ class Season(models.Model):
         if created:
             for user in User.objects.exclude(username=settings.SUPERUSER_EMAIL).all():
                 Payment(user=user, season=self).save()
+        # If FFD amounts were updated, members need to be updated
+        for attr in ("ffd_a_amount", "ffd_b_amount", "ffd_c_amount", "ffd_d_amount"):
+            if prev_state and getattr(prev_state, attr) != getattr(self, attr):
+                Member.objects.filter(ffd_license=getattr(prev_state, attr)).update(
+                    ffd_license=getattr(self, attr)
+                )
 
     @property
     def previous_season(self) -> str:
