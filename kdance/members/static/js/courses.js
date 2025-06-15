@@ -29,14 +29,16 @@ function getSeasons() {
       var urlParams = new URLSearchParams(window.location.search);
       data.map((season) => {
         let label = season.year;
+        const selectedUrl = urlParams.get('season') === season.id.toString();
         if (season.is_current) {
           label += ' (en cours)';
+        }
+        if (selectedUrl || (urlParams.get('season') === null && season.is_current)) {
           getCourses(season.id);
           $('#copy-modal-title').html(`Ajouter des cours à la saison ${season.year}`);
         } else {
           $('#copy-season').append($('<option>', { value: season.id, text: season.year }));
         }
-        const selectedUrl = urlParams.get('season') === season.id.toString();
         $('#season-select').append($(
           '<option>',
           { value: season.id, text: label, selected: urlParams.get('season') !== null ? selectedUrl : season.is_current }
@@ -386,7 +388,7 @@ function postOrPatchTeacher(teacher) {
       data: JSON.stringify({ name: $('#teacher-name').val() }),
       dataType: 'json',
       success: () => {
-        event.currentTarget.submit();
+        location.reload();
       },
       error: (error) => {
         if (!error.responseJSON) {
@@ -474,7 +476,7 @@ function postOrPatchCourse(course) {
       data: JSON.stringify(data),
       dataType: 'json',
       success: () => {
-        event.currentTarget.submit();
+        location.reload();
       },
       error: (error) => {
         if (!error.responseJSON) {
