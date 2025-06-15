@@ -44,6 +44,7 @@ class Season(models.Model):
         blank=False,
         max_length=9,
         validators=[RegexValidator(r"\d{4}-\d{4}")],
+        unique=True,
     )
     is_current = models.BooleanField(null=False, blank=False, default=True)
     pre_signup_start = models.DateField(null=False, blank=False)

@@ -61,15 +61,6 @@ class SeasonSerializer(serializers.ModelSerializer):
             "ffd_d_amount",
         )
 
-    @staticmethod
-    def validate_year(year: str) -> str:
-        last_season = Season.objects.order_by("year").last()
-        if last_season and year < last_season.year:
-            raise serializers.ValidationError(
-                "On ne peut pas créer de saison dans le passé !"
-            )
-        return year
-
     def validate(self, attr: dict) -> dict:
         validated = super().validate(attr)
         if (
