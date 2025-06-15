@@ -179,7 +179,7 @@ async function getMember() {
       $('#member-pass-amount').val(data.sport_pass?.amount || 50);
       const withPass = !(data.sport_pass === null || data.sport_pass?.code === null || data.sport_pass?.code === '');
       $('#pass-div').attr('hidden', !withPass);
-      $('#pass-switch').prop('checked', withPass);
+      $('#pass-switch').prop('checked', isEdition ? withPass : false);
       document.querySelectorAll('.course-checkbox').forEach(item => {
         isActive = data.active_courses.map(c => c.id.toString()).indexOf(item.value) > -1;
         isWaiting = data.waiting_courses.map(c => c.id.toString()).indexOf(item.value) > -1;

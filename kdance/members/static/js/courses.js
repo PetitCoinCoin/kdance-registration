@@ -26,6 +26,7 @@ function getSeasons() {
     url: seasonsUrl,
     type: 'GET',
     success: (data) => {
+      var urlParams = new URLSearchParams(window.location.search);
       data.map((season) => {
         let label = season.year;
         if (season.is_current) {
@@ -35,7 +36,11 @@ function getSeasons() {
         } else {
           $('#copy-season').append($('<option>', { value: season.id, text: season.year }));
         }
-        $('#season-select').append($('<option>', { value: season.id, text: label, selected: season.is_current }));
+        const selectedUrl = urlParams.get('season') === season.id.toString();
+        $('#season-select').append($(
+          '<option>',
+          { value: season.id, text: label, selected: urlParams.get('season') !== null ? selectedUrl : season.is_current }
+        ));
       });
     },
     error: (error) => {
@@ -189,15 +194,10 @@ function copyCourseFromSeason() {
 }
 
 function onSeasonChange(seasonId) {
+  const refresh = window.location.protocol + "//" + window.location.host + window.location.pathname + `?season=${seasonId}`;
+  window.history.pushState({ path: refresh }, '', refresh);
   getCourses(seasonId);
   getPreviousSeason(seasonId);
-  const seasonSelect = $('#season-select');
-  const seasonYear = seasonSelect[0].options[seasonSelect[0].selectedIndex].innerHTML;
-  if (!seasonYear.includes('en cours') || $('#copy-season')[0].options.length === 0) {
-    $('#copy-courses-btn').addClass('d-none');
-  } else {
-    $('#copy-courses-btn').removeClass('d-none');
-  }
 }
 
 function getPreviousSeason(seasonId) {
@@ -306,6 +306,7 @@ function getCourses(seasonId) {
           return {
             ...c,
             price: c.price + '€',
+            is_complete: c.is_complete ? 'Oui' : 'Non',
             slot: `${WEEKDAY[c.weekday]}, ${startHour[0]}h${startHour[1]}-${endHour[0]}h${endHour[1]}`
           }
         }));

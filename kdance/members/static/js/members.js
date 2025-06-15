@@ -117,13 +117,20 @@ function getSeasons() {
     url: seasonsUrl,
     type: 'GET',
     success: (data) => {
+      var urlParams = new URLSearchParams(window.location.search);
       data.map((season) => {
         let label = season.year;
+        const selectedUrl = urlParams.get('season') === season.id.toString();
         if (season.is_current) {
           label += ' (en cours)';
+        }
+        if (selectedUrl || (urlParams.get('season') === null && season.is_current)) {
           getMembers(season.id);
         }
-        $('#season-select').append($('<option>', { value: season.id, text: label, selected: season.is_current }));
+        $('#season-select').append($(
+          '<option>',
+          { value: season.id, text: label, selected: urlParams.get('season') !== null ? selectedUrl : season.is_current }
+        ));
       });
     },
     error: (error) => {
@@ -134,6 +141,8 @@ function getSeasons() {
 }
 
 function onSeasonChange(seasonId) {
+  const refresh = window.location.protocol + "//" + window.location.host + window.location.pathname + `?season=${seasonId}`;
+  window.history.pushState({ path: refresh }, '', refresh);
   getMembers(seasonId);
 }
 
@@ -167,6 +176,10 @@ function actionFormatter(value, row, index) {
 }
 
 function getMembers(seasonId) {
+  $("#members-table").bootstrapTable("refreshOptions", {
+    url: membersUrl + `?season=${seasonId}&without_details=true`
+  });
+  console.log(seasonId)
   $('#members-table').bootstrapTable({
     ...COMMON_TABLE_PARAMS,
     pagination: true,
