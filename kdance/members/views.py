@@ -54,7 +54,9 @@ def index(request: HttpRequest) -> HttpResponse:
             "allow_new_member": general_settings.allow_new_member,
             "current_season": current_season,
             "pre_signup_payment_end": current_season.pre_signup_end
-            + timedelta(days=general_settings.pre_signup_payment_delta_days),
+            + timedelta(days=general_settings.pre_signup_payment_delta_days)
+            if current_season
+            else "",
             "previous_season": current_season.previous_season if current_season else "",
         },
     )
