@@ -179,7 +179,6 @@ function getMembers(seasonId) {
   $("#members-table").bootstrapTable("refreshOptions", {
     url: membersUrl + `?season=${seasonId}&without_details=true`
   });
-  console.log(seasonId)
   $('#members-table').bootstrapTable({
     ...COMMON_TABLE_PARAMS,
     pagination: true,
@@ -463,7 +462,7 @@ function updateMember() {
       event.preventDefault();
       const memberId = $(this).data('memberId');
       const paymentId = $(this).data('paymentId');
-      patchPayment(memberId, paymentId, event);
+      patchPayment(memberId, paymentId);
     })
   }
   if (memberLicenseModal) {
@@ -492,7 +491,6 @@ function updateMember() {
         dataType: 'json',
         success: () => {
           const newFfd = $('#member-license').val();
-          console.log(initValue, newFfd)
           $('#members-table').bootstrapTable('updateCell', {
             index: rowIndex,
             field: 'solde',
@@ -661,7 +659,7 @@ function patchMember(memberId, rowIndex, modal) {
   });
 }
 
-function patchPayment(memberId, paymentId, event) {
+function patchPayment(memberId, paymentId) {
   let paymentData = {
     cash: $('#payment-cash').val() || 0,
     ancv: {
@@ -718,7 +716,7 @@ function patchPayment(memberId, paymentId, event) {
           data: JSON.stringify(memberData),
           dataType: 'json',
           success: () => {
-            event.currentTarget.submit();
+            location.reload();
           },
           error: (error) => {
             if (!error.responseJSON) {
@@ -742,7 +740,7 @@ function patchPayment(memberId, paymentId, event) {
           }
         });
       } else {
-        event.currentTarget.submit();
+        location.reload();
       }
     },
     error: (error) => {
