@@ -25,7 +25,7 @@ from members.api.serializers import (
 )
 
 from django.conf import settings
-from django.db.models import Q
+from django.db.models import Count, Q
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.mixins import (
@@ -117,7 +117,11 @@ class PaymentViewSet(
         queryset = Payment.objects.all()
         season = self.request.query_params.get("season")
         if season:
-            queryset = queryset.filter(season__id=season)
+            queryset = queryset.annotate(
+                member_count=Count(
+                    "user__member", filter=Q(user__member__season__id=season)
+                )
+            ).filter(member_count__gt=0, season=season)
         return queryset.order_by("-season__year", "user__username")
 
 
