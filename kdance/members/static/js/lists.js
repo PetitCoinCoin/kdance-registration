@@ -220,7 +220,6 @@ function buildMembersInfo(data, courseId) {
       title: 'Ville',
       searchable: true,
       sortable: true,
-      visible: false,
     }, {
       field: 'name-responsible-1',
       title: 'Responsable légal 1',
@@ -568,7 +567,7 @@ function buildSportPassInfo(data) {
         member: `${m.first_name} ${m.last_name}`,
         email: m.email,
         birthday:(new Date(m.birthday)).toLocaleDateString('fr-FR'),
-        address: m.address,
+        address: `${m.address}, ${m.postal_code} ${m.city}`,
         ...buildContactsData(m.contacts),
       }
     })
@@ -621,7 +620,7 @@ function buildLicenseInfo(data) {
         member: `${m.first_name} ${m.last_name}`,
         email: m.email,
         birthday: (new Date(m.birthday)).toLocaleDateString('fr-FR'),
-        address: m.address,
+        address: `${m.address}, ${m.postal_code} ${m.city}`,
         license: getLicenseLabel(m.ffd_license),
         ...buildContactsData(m.contacts),
       }
