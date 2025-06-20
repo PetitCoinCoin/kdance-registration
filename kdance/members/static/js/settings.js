@@ -13,6 +13,7 @@ function getGeneralSettings() {
       $('#allow-signup').prop('checked', data.allow_signup);
       $('#allow-new-member').prop('checked', data.allow_new_member);
       $('#pre-signup-payment-delta').val(data.pre_signup_payment_delta_days);
+      $('#signup-payment-delta').val(data.signup_payment_delta_days);
     },
     error: (error) => {
       console.log(error);
@@ -34,6 +35,7 @@ function updateGeneralSettings() {
         allow_signup: $('#allow-signup').is(':checked'),
         allow_new_member: $('#allow-new-member').is(':checked'),
         pre_signup_payment_delta_days: $('#pre-signup-payment-delta').val(),
+        signup_payment_delta_days: $('#signup-payment-delta').val(),
       }),
       dataType: 'json',
       success: (_) => {
