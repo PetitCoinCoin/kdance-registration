@@ -1,7 +1,7 @@
 import logging
 
 from enum import Enum
-from datetime import date
+from datetime import date, timedelta
 
 from members.emails import EmailEnum, EmailSender
 from django.conf import settings
@@ -34,6 +34,7 @@ class GeneralSettings(SingletonModel):
     pre_signup_payment_delta_days = models.PositiveBigIntegerField(
         null=False, default=7
     )
+    signup_payment_delta_days = models.PositiveBigIntegerField(null=False, default=7)
 
 
 class Season(models.Model):
@@ -113,12 +114,18 @@ class Season(models.Model):
 
     @property
     def is_before_pre_signup(self) -> bool:
-        return date.today() <= self.pre_signup_end
+        pre_signup_end = self.pre_signup_end + timedelta(
+            days=GeneralSettings.get_solo().pre_signup_payment_delta_days
+        )
+        return date.today() <= pre_signup_end
 
     @property
     def is_pre_signup_ongoing(self) -> bool:
         today = date.today()
-        return self.pre_signup_start <= today <= self.pre_signup_end
+        pre_signup_end = self.pre_signup_end + timedelta(
+            days=GeneralSettings.get_solo().pre_signup_payment_delta_days
+        )
+        return self.pre_signup_start <= today <= pre_signup_end
 
     @property
     def is_before_signup(self) -> bool:
@@ -133,15 +140,19 @@ class Season(models.Model):
         if not self.signup_start or not self.signup_end:
             return False
         today = date.today()
-        return self.signup_start <= today <= self.signup_end
+        signup_end = self.signup_end + timedelta(
+            days=GeneralSettings.get_solo().signup_payment_delta_days
+        )
+        return self.signup_start <= today <= signup_end
 
     @property
     def is_after_signup(self) -> bool:
-        return (
-            self.signup_start is not None
-            and self.signup_end is not None
-            and date.today() > self.signup_end
+        if not self.signup_start or not self.signup_end:
+            return False
+        signup_end = self.signup_end + timedelta(
+            days=GeneralSettings.get_solo().signup_payment_delta_days
         )
+        return date.today() > signup_end
 
     def __repr__(self) -> str:
         return self.year

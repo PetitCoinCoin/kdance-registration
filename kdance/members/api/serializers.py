@@ -38,6 +38,7 @@ class GeneralSettingsSerializer(serializers.ModelSerializer):
             "allow_signup",
             "allow_new_member",
             "pre_signup_payment_delta_days",
+            "signup_payment_delta_days",
         )
 
 
