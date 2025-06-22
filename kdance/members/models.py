@@ -323,7 +323,6 @@ class Payment(models.Model):
                 total += 1
                 due += course.price
         # Discount
-        due -= self.special_discount
         if total >= self.season.discount_limit:
             due *= (100 - self.season.discount_percent) / 100
         # Adhesion and license
@@ -334,6 +333,7 @@ class Payment(models.Model):
         due += sum([member.ffd_license for member in validated_members])
         # Refund after cancellation
         due -= sum(member.cancel_refund for member in members)
+        due -= self.special_discount
         return int(round(due))
 
     @property
@@ -371,6 +371,8 @@ class Payment(models.Model):
             info.append(f"{license_count} licence(s): {license_price}€")
         if cancelled:
             info.append(f"Annulation(s): -{cancelled}€")
+        if self.special_discount:
+            info.append(f"Remise exceptionnelle: -{self.special_discount}€")
         return info
 
     @property
