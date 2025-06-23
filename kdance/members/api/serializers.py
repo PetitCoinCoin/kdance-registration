@@ -472,8 +472,6 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             if SportPass.objects.filter(member__id=member.id).exists():
                 sport_pass_item = SportPass.objects.get(member__id=member.id)
                 sport_pass_item.delete()
-        print("**********************")
-        print(active_courses, waiting_courses, cancelled_courses)
         if active_courses is not None:
             active_to_remove = [
                 c for c in member.active_courses.all() if c not in active_courses
