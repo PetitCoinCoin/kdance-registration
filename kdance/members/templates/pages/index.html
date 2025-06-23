@@ -120,6 +120,15 @@
               <i class="bi bi-exclamation-triangle"></i> Les tarifs de licence FFD sont mis à jour pendant l'été. Ils sont donc susceptibles d'être modifiés ultérieurement.
               </p>
               <p class="main-red fw-semibold">L'inscription ne sera valide que si le <span class="border-bottom border-danger">paiement est effectué avant le {{ pre_signup_payment_end }}</span>.</p>
+              <p>
+                Si vous ou votre enfant êtes elligible au <strong>Pass Sport</strong>, vous ne recevrez votre code que plus tard dans l'été. Dans ce cas:
+                <ul>
+                  <li>cochez <i>"J'ai un code Pass Sport"</i> et entrez <i>"À VENIR"</i> à la place du code</li>
+                  <li>effectuez le règlement comme vous le souhaitez (en ligne, chèque, ANCV, Espèces): les {{ current_season.pass_sport_amount }}€ ont été déduits</li>
+                  <li>faites nous parvenir un chèque de caution de {{ current_season.pass_sport_amount }}€ avant le {{ pre_signup_payment_end }}</li>
+                  <li>... lorsque vous recevrez le code Pass Sport, revenez le mettre à jour ici ! Dans le cas contraire, le chèque de caution sera encaissé en fin d'année.</li>
+                </ul>
+              </p>
             </div>
           {% endif %}
           {% if current_season.is_before_signup %}
