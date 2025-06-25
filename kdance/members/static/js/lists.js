@@ -550,6 +550,7 @@ function buildSportPassInfo(data) {
       }, {
         field: 'address',
         title: 'Adresse',
+        visible: false,
       }, {
         field: 'name-responsible-1',
         title: 'Responsable légal',

@@ -314,6 +314,7 @@ class PaymentSerializer(WritableNestedModelSerializer, serializers.ModelSerializ
                 check.delete()
         for check_payment in checks_data:
             Check(payment=payment, **check_payment).save()
+        payment.save()  # Ewww... but to validate members
 
 
 class PaymentShortSerializer(PaymentSerializer):
