@@ -361,7 +361,7 @@ class MemberViewSet(
         self.perform_destroy(instance)
         email_sender = EmailSender(EmailEnum.DELETE_MEMBER)
         email_sender.send_email(
-            emails=[request.user.username, email],
+            emails=[settings.SUPERUSER_EMAIL, email],
             full_name=name,
             season_year=season,
         )
