@@ -549,6 +549,7 @@ class MemberRetrieveShortSerializer(MemberRetrieveSerializer):
 
 class MemberCoursesActionsEnum(Enum):
     ADD = "add"
+    FORCE_ADD = "force_add"  # Bypass waiting list
     REMOVE = "remove"
 
 
@@ -575,7 +576,8 @@ class MemberCoursesSerializer(serializers.Serializer):
                 {"cancel_refund": ["Ce champ est obligatoire pour retirer un cours."]}
             )
         if (
-            self._action == MemberCoursesActionsEnum.ADD
+            self._action
+            in (MemberCoursesActionsEnum.ADD, MemberCoursesActionsEnum.FORCE_ADD)
             and validated.get("cancel_refund") is not None
         ):
             raise serializers.ValidationError(
@@ -603,6 +605,25 @@ class MemberCoursesSerializer(serializers.Serializer):
             self._member.waiting_courses.add(*waiting_courses)
             self._member.cancelled_courses.remove(*active_courses, *waiting_courses)
             self._member.save()
+        elif self._action == MemberCoursesActionsEnum.FORCE_ADD:
+            active_courses = self.validated_data.get("courses", [])
+            self._member.active_courses.add(*active_courses)
+            self._member.waiting_courses.remove(*active_courses)
+            self._member.cancelled_courses.remove(*active_courses)
+            self._member.save()
+            email_sender = EmailSender(EmailEnum.WAITING_TO_ACTIVE_COURSE)
+            for course in active_courses:
+                email_sender.send_email(
+                    emails=[
+                        self._member.email,
+                        self._member.user.username,
+                        settings.SUPERUSER_EMAIL,
+                    ],
+                    full_name=f"{self._member.first_name} {self._member.last_name}",
+                    course_name=course.name,
+                    weekday=course.get_weekday_display(),
+                    start_hour=course.start_hour.strftime("%Hh%M"),
+                )
         elif self._action == MemberCoursesActionsEnum.REMOVE:
             for course in self.validated_data.get("courses", []):
                 if self._member.waiting_courses.filter(pk=course.pk):
