@@ -326,7 +326,7 @@ function getMember(memberId) {
       $('#cb-switch').prop('checked', withCb);
 
       $('#payment-pass-code').val(data.sport_pass?.code || '');
-      $('#payment-pass-amount').val(data.sport_pass?.amount || 50);
+      $('#payment-pass-amount').val(data.sport_pass?.amount || data.season.pass_sport_amount);
       const withPass = !(data.sport_pass === null || data.sport_pass?.code === null || data.sport_pass?.code === '');
       $('#pass-div').attr('hidden', !withPass);
       $('#pass-switch').prop('checked', withPass);
