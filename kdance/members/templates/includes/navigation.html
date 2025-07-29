@@ -1,3 +1,19 @@
+<!-- Copyright 2024, 2025 Andréa Marnier
+
+This file is part of KDance registration.
+
+KDance registration is free software: you can redistribute it and/or modify it
+under the terms of the GNU Affero General Public License as published by the
+Free Software Foundation, either version 3 of the License, or any later version.
+
+KDance registration is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License
+for more details.
+
+You should have received a copy of the GNU Affero General Public License along
+with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
+
 {% load static %}
 
 <header class="header-global">
@@ -6,26 +22,19 @@
       <img src="{% static 'img/logo-kdance.png' %}" alt="K'Dance Logo">
     </a>
     <div class="d-flex">
-      {% if user.is_superuser or is_teacher%}
-        {% if request.path == "/" %}
-          <button class="btn btn-outline-info me-2" type="button" onclick="location.href = '/super';">Admin</button>
-        {% else %}
-          <button class="btn btn-outline-info me-2" type="button" onclick="location.href = '/';">Mon compte</button>
-        {% endif %}
-      {% else %}
-        {% if user.is_authenticated and not request.path == "/" %}
-            <button class="btn btn-outline-info me-2" type="button" onclick="location.href = '/';">Mon compte</button>
-        {% else %}
-          <button class="btn btn-outline-info me-2" type="button" onclick="location.href = '/about';">A propos</button>
-        {% endif %}
-      {% endif %}
       {% if user.is_authenticated %}
+        {% if user.is_superuser or is_teacher%}
+          <button class="btn btn-outline-info me-2" type="button" onclick="location.href = '/super';">Admin</button>
+        {% endif %}
+        <button class="btn btn-outline-info me-2" type="button" onclick="location.href = '/';">Mon compte</button>
         <form action="{% url 'logout' %}" method="post">
           {% csrf_token %}
-          <button class="btn btn-outline-info" type="submit">Déconnexion</button>
+          <button class="btn btn-outline-info me-2" type="submit">Déconnexion</button>
         </form>
-      {% else %}
-        <button class="btn btn-outline-info" type="button" onclick="location.href = '/login';">Connexion</button>
+        <button class="btn btn-outline-info" type="button" onclick="location.href = '/about';"><i class="bi-info-circle"></i></button>
+        {% else %}
+        <button class="btn btn-outline-info me-2" type="button" onclick="location.href = '/login';">Connexion</button>
+        <button class="btn btn-outline-info" type="button" onclick="location.href = '/about';">A propos</button>
       {% endif %}
     </div>
   </nav>

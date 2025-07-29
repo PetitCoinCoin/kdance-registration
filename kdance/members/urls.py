@@ -1,3 +1,21 @@
+"""
+Copyright 2024, 2025 Andréa Marnier
+
+This file is part of KDance registration.
+
+KDance registration is free software: you can redistribute it and/or modify it
+under the terms of the GNU Affero General Public License as published by the
+Free Software Foundation, either version 3 of the License, or any later version.
+
+KDance registration is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License
+for more details.
+
+You should have received a copy of the GNU Affero General Public License along
+with KDance registration. If not, see <https://www.gnu.org/licenses/>.
+"""
+
 from django.urls import include, path
 from rest_framework import routers
 
@@ -20,6 +38,7 @@ from members.views import (
     list_dl,
     member,
     member_mgmt,
+    online_checkout,
     session_status,
     site_mgmt,
     super_index,
@@ -59,6 +78,7 @@ urlpatterns = [
     path("", index, name="index"),
     path("download-pdf/", download_pdf, name="download"),
     path("checkout", checkout, name="checkout"),
+    path("online_checkout", online_checkout, name="online_checkout"),
     path("session_status/", session_status, name="session_status"),
     path("user_edit", user_edit, name="user_edit"),
     path("user_edit_pwd", user_edit_pwd, name="user_edit_pwd"),

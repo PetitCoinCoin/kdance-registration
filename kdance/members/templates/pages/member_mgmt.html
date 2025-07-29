@@ -1,3 +1,19 @@
+<!-- Copyright 2024, 2025 Andréa Marnier
+
+This file is part of KDance registration.
+
+KDance registration is free software: you can redistribute it and/or modify it
+under the terms of the GNU Affero General Public License as published by the
+Free Software Foundation, either version 3 of the License, or any later version.
+
+KDance registration is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License
+for more details.
+
+You should have received a copy of the GNU Affero General Public License along
+with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
+
 {% extends 'layouts/base.html' %}
 
 {% load static %}
@@ -129,7 +145,7 @@
                   </div>
                   <div class="col form-outline mb-4">
                     <label class="form-label fst-italic" for="payment-pass-amount">Montant (€)</label>
-                    <input type="number" id="payment-pass-amount" class="form-control" value="50" disabled />
+                    <input type="number" id="payment-pass-amount" class="form-control" disabled />
                   </div>
                 </div>
               </div>
@@ -259,6 +275,25 @@
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
             <button id="add-btn" type="button" class="btn btn-info" data-bs-dismiss="modal">Ajouter</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="member-courses-bypass-waiting-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="member-courses-bypass-waiting-modal-title"></h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            Sélectionner le(s) cours en attente à ajouter:
+            <select id="bypass-waiting-courses-select" class="form-select mt-2" multiple></select>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button id="bypass-waiting-btn" type="button" class="btn btn-info" data-bs-dismiss="modal">Valider l'inscription</button>
           </div>
         </div>
       </div>

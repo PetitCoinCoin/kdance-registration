@@ -1,3 +1,19 @@
+<!-- Copyright 2024, 2025 Andréa Marnier
+
+This file is part of KDance registration.
+
+KDance registration is free software: you can redistribute it and/or modify it
+under the terms of the GNU Affero General Public License as published by the
+Free Software Foundation, either version 3 of the License, or any later version.
+
+KDance registration is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License
+for more details.
+
+You should have received a copy of the GNU Affero General Public License along
+with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
+
 {% extends 'layouts/base.html' %}
 
 {% load static %}
@@ -135,7 +151,7 @@
             <div class="border border-warning border-5 rounded px-2 pt-2 mb-2">
               <h5>Inscriptions</h5>
               <p>Les inscriptions en ligne pour cette saison auront lieu <strong>du {{ current_season.signup_start }} au {{ current_season.signup_end }}.</strong> Elles sont ouvertes à toutes et à tous.</p>
-              <p class="main-red fw-semibold">L'inscription ne sera valide que si le <span class="border-bottom border-danger">paiement est effectué avant le {{ signup_payment_end }}</span>.</p>
+              <p class="main-red fw-semibold">L'inscription ne sera valide que si le <span class="border-bottom border-danger">paiement est effectué avant le {{ signup_payment_end }}</span> à midi.</p>
             </div>
           {% elif current_season.is_after_signup %}
             <div class="border border-warning border-5 rounded px-2 pt-2 mb-2">

@@ -1,11 +1,29 @@
+"""
+Copyright 2024, 2025 Andréa Marnier
+
+This file is part of KDance registration.
+
+KDance registration is free software: you can redistribute it and/or modify it
+under the terms of the GNU Affero General Public License as published by the
+Free Software Foundation, either version 3 of the License, or any later version.
+
+KDance registration is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License
+for more details.
+
+You should have received a copy of the GNU Affero General Public License along
+with KDance registration. If not, see <https://www.gnu.org/licenses/>.
+"""
+
 from datetime import timedelta
 from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import AnonymousUser, User
 from django.core.exceptions import PermissionDenied
-from django.http import Http404, HttpRequest, HttpResponse
+from django.http import Http404, HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
@@ -40,6 +58,19 @@ def _create_cawl_client() -> IMerchantClient:
     return client.merchant(settings.CAWL_PSPID)
 
 
+def _get_total_due(request_user: User) -> int:
+    if isinstance(request_user, AnonymousUser):
+        raise Http404
+
+    current_payment = Payment.objects.filter(
+        user=request_user, season__is_current=True
+    ).first()
+    if not current_payment:
+        raise Http404
+
+    return current_payment.due - current_payment.paid + current_payment.refund
+
+
 @require_http_methods(["GET"])
 @login_required()
 def index(request: HttpRequest) -> HttpResponse:
@@ -69,21 +100,28 @@ def index(request: HttpRequest) -> HttpResponse:
 @require_http_methods(["GET"])
 @login_required()
 def checkout(request: HttpRequest) -> HttpResponse:
-    merchant_client = _create_cawl_client()
-    if isinstance(request.user, AnonymousUser):
-        raise Http404
-
-    current_payment = Payment.objects.filter(
-        user=request.user, season__is_current=True
-    ).first()
-    if not current_payment:
-        raise Http404
-
-    total_due = current_payment.due - current_payment.paid + current_payment.refund
-
+    total_due = _get_total_due(request.user)
     if total_due <= 0:
         return render(request, "403.html", status=403)
 
+    return render(
+        request,
+        "pages/checkout.html",
+        context={
+            "user": request.user,
+            "season": Season.objects.get(is_current=True),
+        },
+    )
+
+
+@require_http_methods(["GET"])
+@login_required()
+def online_checkout(request: HttpRequest) -> HttpResponse:
+    total_due = _get_total_due(request.user)
+    if total_due <= 0:
+        return render(request, "403.html", status=403)
+
+    merchant_client = _create_cawl_client()
     order_dict = {
         "order": {
             "amountOfMoney": {"currencyCode": "EUR", "amount": total_due * 100},
@@ -105,15 +143,7 @@ def checkout(request: HttpRequest) -> HttpResponse:
         hosted_checkout_request
     )
 
-    return render(
-        request,
-        "pages/checkout.html",
-        context={
-            "user": request.user,
-            "season": Season.objects.get(is_current=True),
-            "cawl_redirection": hosted_checkout_response.redirect_url,
-        },
-    )
+    return HttpResponseRedirect(hosted_checkout_response.redirect_url)
 
 
 @login_required
