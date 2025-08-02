@@ -10,6 +10,7 @@ from django.utils import timezone
 from members.emails import EmailEnum, EmailSender
 from members.models import Course, Season
 from django.core.mail import EmailMultiAlternatives
+from tests.data_tests import COURSE as TEST_COURSE
 
 
 USERNAME = "michel@plop.com"
@@ -46,14 +47,17 @@ class TestEmailSender:
         subject = self.email_sender.get_subject()(**self.expected_kwargs)
         assert subject == self.expected_subject
 
+    @pytest.mark.django_db
     def test_build_text(self):
         text = self.email_sender.get_build_text()(**self.expected_kwargs)
         assert text == self.expected_text
 
+    @pytest.mark.django_db
     def test_build_html(self):
         html = self.email_sender.get_build_html()(**self.expected_kwargs)
         assert html == self.expected_html
 
+    @pytest.mark.django_db
     @patch.object(EmailMultiAlternatives, "send")
     def test_send(self, mock_send):
         mock_send.return_value = True
@@ -373,6 +377,82 @@ Tech K'Dance
 """
 
 
+class TestEmailCourseCancelled(TestEmailSender):
+    __test__ = True
+
+    email_sender = EmailSender(EmailEnum.COURSE_CANCELLED)
+    expected_kwargs = {"full_name": NAME, "course_name": COURSE, "cancel_refund": 10}
+    expected_subject = f"Votre inscription au cours {COURSE} a été annulée"
+    expected_text = f"""
+Bonjour,
+
+L'inscription de {NAME} au cours {COURSE} a bien été annulée. Un remboursement de 10€ sera effectué. Merci de nous faire parvenir un RIB.
+Si cette annulation est une erreur, merci de contacter l'équipe K'Dance.
+
+Bonne journée et à bientôt,
+Tech K'Dance
+"""
+    expected_html = f"""
+<p>Bonjour,</p>
+<p>
+  L'inscription de {NAME} au cours {COURSE} a bien été annulée. Un remboursement de 10€ sera effectué. Merci de nous faire parvenir un RIB.<br />
+  Si cette annulation est une erreur, merci de contacter l'équipe K'Dance.
+</p>
+<p>
+  Bonne journée et à bientôt,<br />
+  Tech K'Dance
+</p>
+"""
+
+
+class TestEmailCoursesUpdate(TestEmailSender):
+    __test__ = True
+
+    email_sender = EmailSender(EmailEnum.COURSES_UPDATE)
+    expected_kwargs = {
+        "full_name": NAME,
+        "courses_removed": [Course(**TEST_COURSE)],
+        "courses_added_active": [],
+        "courses_added_waiting": [Course(**TEST_COURSE)],
+    }
+    expected_subject = "Mise à jour de vos cours K'Dance"
+    expected_text = f"""
+Bonjour,
+
+Les cours de danse de {NAME} ont été mis à jour.
+
+Cours en liste d'attente:
+Cha cha cha
+Nous reviendrons vers vous si une place se libère ou si le cours est dédoublé.
+
+Cours supprimé(s):
+Cha cha cha
+
+Bonne journée et à bientôt,
+Tech K'Dance
+"""
+    expected_html = f"""
+<p>Bonjour,</p>
+<p>
+  Les cours de danse de {NAME} ont été mis à jour.
+</p>
+<p>
+  Cours en liste d'attente:<br />
+  Cha cha cha<br />
+  Nous reviendrons vers vous si une place se libère ou si le cours est dédoublé.
+</p>
+<p>
+  Cours supprimé(s):<br />
+  Cha cha cha
+
+</p>
+<p>
+  Bonne journée et à bientôt,<br />
+  Tech K'Dance
+</p>
+"""
+
+
 class TestEmailPreSignupWarning(TestEmailSender):
     __test__ = True
 
@@ -410,6 +490,7 @@ class TestEmailWaitingToActive(TestEmailSender):
         "course_name": COURSE,
         "weekday": WEEKDAY,
         "start_hour": START,
+        "with_next_course_warning": False,
     }
     expected_subject = f"Vous avez obtenu une place pour le cours {COURSE}!"
     expected_text = f"""
@@ -429,6 +510,83 @@ Tech K'Dance
 </p>
 <p>
   Bonne journée et à bientôt,<br />
+  Tech K'Dance
+</p>
+"""
+
+    @pytest.mark.django_db
+    def test_build_text_with_warning(self):
+        self.expected_kwargs["with_next_course_warning"] = True
+        text = self.email_sender.get_build_text()(
+            **self.expected_kwargs,
+        )
+        assert (
+            text
+            == f"""
+Bonjour,
+
+Une place s'est libérée, et {NAME} a pu être inscrit(e) au cours {COURSE} du {WEEKDAY} à {START}.
+L'inscription ne sera finalisée qu'à réception du paiement et des éventuels documents restants. Si le paiement n'est pas effectué avant votre prochain cours, l'inscription sera annulée et votre place donnée à la personne suivante sur la liste d'attente. Connectez vous à votre compte (https://adherents.association-kdance.fr/) pour un statut détaillé.
+
+Bonne journée et à bientôt,
+Tech K'Dance
+"""
+        )
+        self.expected_kwargs["with_next_course_warning"] = False
+
+    @pytest.mark.django_db
+    def test_build_html_with_warning(self):
+        self.expected_kwargs["with_next_course_warning"] = True
+        html = self.email_sender.get_build_html()(
+            **self.expected_kwargs,
+        )
+        assert (
+            html
+            == f"""
+<p>Bonjour,</p>
+<p>
+  Une place s'est libérée, et {NAME} a pu être inscrit(e) au cours {COURSE} du {WEEKDAY} à {START}.<br />
+  L'inscription ne sera finalisée qu'à réception du paiement et des éventuels documents restants. <strong>Si le paiement n'est pas effectué avant votre prochain cours, l'inscription sera annulée et votre place donnée à la personne suivante sur la liste d'attente. </strong>Connectez vous à <a href="https://adherents.association-kdance.fr/" target="_blank">votre compte</a> pour un statut détaillé.
+</p>
+<p>
+  Bonne journée et à bientôt,<br />
+  Tech K'Dance
+</p>
+"""
+        )
+        self.expected_kwargs["with_next_course_warning"] = False
+
+
+class TestEmailWaitingListInconsistency(TestEmailSender):
+    __test__ = True
+
+    email_sender = EmailSender(EmailEnum.WAITING_LIST_INCONSISTENCY)
+    expected_kwargs = {
+        "member": "aucun",
+        "course": Course(**TEST_COURSE, id=100, season=Season(year="2000")),
+    }
+    expected_subject = "Problème d'incohérence entre les listes d'attente"
+    expected_text = """
+Bonjour,
+
+Il y a des incohérences dans la gestion des listes d'attente.
+Cours concerné: Cha cha cha, Lundi - 2000
+Membre concerné: aucun
+course.members_waiting:
+member.waiting_courses: aucun
+
+Tech K'Dance
+"""
+    expected_html = """
+<p>Bonjour,</p>
+<p>
+  Il y a des incohérences dans la gestion des listes d'attente.<br />
+  Cours concerné: Cha cha cha, Lundi - 2000<br />
+  Membre concerné: aucun<br />
+  course.members_waiting: <br />
+  member.waiting_courses: aucun
+</p>
+<p>
   Tech K'Dance
 </p>
 """

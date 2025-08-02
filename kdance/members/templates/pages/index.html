@@ -151,7 +151,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
             <div class="border border-warning border-5 rounded px-2 pt-2 mb-2">
               <h5>Inscriptions</h5>
               <p>Les inscriptions en ligne pour cette saison auront lieu <strong>du {{ current_season.signup_start }} au {{ current_season.signup_end }}.</strong> Elles sont ouvertes à toutes et à tous.</p>
-              <p class="main-red fw-semibold">L'inscription ne sera valide que si le <span class="border-bottom border-danger">paiement est effectué avant le {{ signup_payment_end }}</span>.</p>
+              <p class="main-red fw-semibold">L'inscription ne sera valide que si le <span class="border-bottom border-danger">paiement est effectué avant le {{ signup_payment_end }}</span> à midi.</p>
             </div>
           {% elif current_season.is_after_signup %}
             <div class="border border-warning border-5 rounded px-2 pt-2 mb-2">

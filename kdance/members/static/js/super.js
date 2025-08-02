@@ -75,7 +75,7 @@ function getMembersPerCourse(courseId) {
       type: 'GET',
       success: (data) => {
         $('#data-table').bootstrapTable('destroy');
-				buildEmergencyInfo(data, courseId);
+		buildEmergencyInfo(data, courseId);
         $('#total-count').text(data.length);
       },
       error: (error) => {

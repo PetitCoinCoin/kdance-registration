@@ -184,6 +184,7 @@ function actionFormatter(value, row, index) {
     <ul class="dropdown-menu dropdown-menu-end">
       <li><button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#member-license-modal" memberId="${row.id}" rowIndex="${isNew ? index : docBtn.attributes.rowIndex.value}" initValue="${row.solde - row.ffd_license}">Modifier la licence</button></li>
       <li><button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#member-courses-add-modal" memberId="${row.id}">Ajouter des cours</button></li>
+      <li><button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#member-courses-bypass-waiting-modal" memberId="${row.id}">Valider des cours en attente</button></li>
       <li><button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#member-courses-update-modal" memberId="${row.id}">Changer de cours</button></li>
       <li><button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#member-courses-delete-modal" memberId="${row.id}">Annuler des cours</button></li>
     </ul>
@@ -305,6 +306,7 @@ function getMember(memberId) {
       $('#member-payment-modal-title').html(`Mettre à jour les paiements de ${data.first_name} ${data.last_name}`);
       $('#member-license-modal-title').html(`Mettre à jour la licence de ${data.first_name} ${data.last_name}`);
       $('#member-courses-add-modal-title').html(`Ajouter des cours pour ${data.first_name} ${data.last_name}`);
+      $('#member-courses-bypass-waiting-modal-title').html(`Valider des cours en attente pour ${data.first_name} ${data.last_name}`);
       $('#member-courses-delete-modal-title').html(`Annuler le(s) cours de ${data.first_name} ${data.last_name}`);
       $('#member-courses-update-modal-title').html(`Changer le cours de ${data.first_name} ${data.last_name}`);
       $('#doc-select').val(data.documents?.medical_document || "Manquant");
@@ -324,7 +326,7 @@ function getMember(memberId) {
       $('#cb-switch').prop('checked', withCb);
 
       $('#payment-pass-code').val(data.sport_pass?.code || '');
-      $('#payment-pass-amount').val(data.sport_pass?.amount || 50);
+      $('#payment-pass-amount').val(data.sport_pass?.amount || data.season.pass_sport_amount);
       const withPass = !(data.sport_pass === null || data.sport_pass?.code === null || data.sport_pass?.code === '');
       $('#pass-div').attr('hidden', !withPass);
       $('#pass-switch').prop('checked', withPass);
@@ -383,6 +385,12 @@ function getMember(memberId) {
           opt.label = `(Annulé) ${opt.label}`;
           opt.disabled = true;
         }
+      });
+      // Bypass waiting courses
+      data.waiting_courses.map((course) => {
+        const startHour = course.start_hour.split(':');
+        const label = `(Sur liste d'attente) ${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
+        $('#bypass-waiting-courses-select').append($('<option>', { value: course.id, text: label }));
       });
       // Delete courses
       $('#courses-delete-select').empty();
@@ -449,6 +457,7 @@ function updateMember() {
   const memberPaymentModal = document.getElementById('member-payment-modal');
   const memberLicenseModal = document.getElementById('member-license-modal');
   const memberCoursesAddModal = document.getElementById('member-courses-add-modal');
+  const memberCoursesBypassWaitingModal = document.getElementById('member-courses-bypass-waiting-modal');
   const memberCoursesDeleteModal = document.getElementById('member-courses-delete-modal');
   const memberCoursesUpdateModal = document.getElementById('member-courses-update-modal');
   if (memberDocModal) {
@@ -548,6 +557,18 @@ function updateMember() {
     });
     $('#add-btn').on('click', () => {
       patchMemberCoursesActions($('#add-btn').data('memberId'), "add");
+    });
+  }
+  if (memberCoursesBypassWaitingModal) {
+    $('#member-courses-bypass-waiting-modal').on('show.bs.modal', function (event) {
+      const button = event.relatedTarget;
+      $('#bypass-waiting-courses-select').empty();
+      let memberId = button.getAttribute('memberId');
+      getMember(memberId);
+      $('#bypass-waiting-btn').data('memberId', memberId);
+    });
+    $('#bypass-waiting-btn').on('click', () => {
+      patchMemberCoursesActions($('#bypass-waiting-btn').data('memberId'), "force_add");
     });
   }
   if (memberCoursesDeleteModal) {
@@ -830,11 +851,20 @@ function patchPayment(memberId, paymentId) {
 }
 
 function patchMemberCoursesActions(memberId, action) {
-  let data = {
-    courses: action === "add" ? $('#add-courses-select').val() : $('#courses-delete-select').val(),
-  };
-  if (action === 'remove') {
-    data['cancel_refund'] = $('#cancel-refund').val();
+  let data;
+  if (action === "add") {
+    data = {
+      courses: $('#add-courses-select').val()
+    };
+  } else if (action === 'remove') {
+    data = {
+      courses: $('#courses-delete-select').val(),
+      cancel_refund: $('#cancel-refund').val()
+    };
+  } else {
+    data = {
+      courses: $('#bypass-waiting-courses-select').val()
+    };
   }
   $.ajax({
     url: membersUrl + memberId + '/courses/' + action + '/',
