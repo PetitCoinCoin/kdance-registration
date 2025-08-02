@@ -32,9 +32,12 @@ class EmailEnum(Enum):
     UPDATE_USER_EMAIL = "email_user"
     CREATE_MEMBER = "create member"
     DELETE_MEMBER = "delete member"
+    COURSE_CANCELLED = "course_cancelled"
+    COURSES_UPDATE = "courses_update"
     PAYMENT_UNKNOWN = "payment_unknown"
     PRE_SIGNUP_WARNING = "pre signup warning"
     WAITING_TO_ACTIVE_COURSE = "waiting to active course"
+    WAITING_LIST_INCONSISTENCY = "waiting_list_inconsistency"
     RESET_PWD = "reset_password"
 
 
@@ -75,12 +78,18 @@ class EmailSender:
                 return self.__subject_create_member
             case EmailEnum.DELETE_MEMBER:
                 return self.__subject_delete_member
+            case EmailEnum.COURSE_CANCELLED:
+                return self.__subject_course_cancelled
+            case EmailEnum.COURSES_UPDATE:
+                return self.__subject_courses_update
             case EmailEnum.PAYMENT_UNKNOWN:
                 return self.__subject_payment_unknown
             case EmailEnum.PRE_SIGNUP_WARNING:
                 return self.__subject_pre_signup_warning
             case EmailEnum.WAITING_TO_ACTIVE_COURSE:
                 return self.__subject_waiting_active
+            case EmailEnum.WAITING_LIST_INCONSISTENCY:
+                return self.__subject_waiting_inconsistent
             case EmailEnum.RESET_PWD:
                 return self.__subject_reset_password
             case _:
@@ -98,12 +107,18 @@ class EmailSender:
                 return self.__build_text_create_member
             case EmailEnum.DELETE_MEMBER:
                 return self.__build_text_delete_member
+            case EmailEnum.COURSE_CANCELLED:
+                return self.__build_text_course_cancelled
+            case EmailEnum.COURSES_UPDATE:
+                return self.__build_text_courses_update
             case EmailEnum.PAYMENT_UNKNOWN:
                 return self.__build_text_payment_unknown
             case EmailEnum.PRE_SIGNUP_WARNING:
                 return self.__build_text_pre_signup_warning
             case EmailEnum.WAITING_TO_ACTIVE_COURSE:
                 return self.__build_text_waiting_active
+            case EmailEnum.WAITING_LIST_INCONSISTENCY:
+                return self.__build_text_waiting_inconsistent
             case EmailEnum.RESET_PWD:
                 return self.__build_text_reset_password
             case _:
@@ -121,12 +136,18 @@ class EmailSender:
                 return self.__build_html_create_member
             case EmailEnum.DELETE_MEMBER:
                 return self.__build_html_delete_member
+            case EmailEnum.COURSE_CANCELLED:
+                return self.__build_html_course_cancelled
+            case EmailEnum.COURSES_UPDATE:
+                return self.__build_html_courses_update
             case EmailEnum.PAYMENT_UNKNOWN:
                 return self.__build_html_payment_unknown
             case EmailEnum.PRE_SIGNUP_WARNING:
                 return self.__build_html_pre_signup_warning
             case EmailEnum.WAITING_TO_ACTIVE_COURSE:
                 return self.__build_html_waiting_active
+            case EmailEnum.WAITING_LIST_INCONSISTENCY:
+                return self.__build_html_waiting_inconsistent
             case EmailEnum.RESET_PWD:
                 return self.__build_html_reset_password
             case _:
@@ -161,6 +182,16 @@ class EmailSender:
         )
 
     @staticmethod
+    def __subject_course_cancelled(**kwargs) -> str:
+        if not kwargs.get("course_name"):
+            raise ValueError("Un argument course_name est nécessaire pour cet email")
+        return f"Votre inscription au cours {kwargs['course_name']} a été annulée"
+
+    @staticmethod
+    def __subject_courses_update(**kwargs) -> str:
+        return "Mise à jour de vos cours K'Dance"
+
+    @staticmethod
     def __subject_pre_signup_warning(**kwargs) -> str:
         return "Suspicion de pré-inscription frauduleuse: à vérifier"
 
@@ -169,6 +200,10 @@ class EmailSender:
         if not kwargs.get("course_name"):
             raise ValueError("Un argument course_name est nécessaire pour cet email")
         return f"Vous avez obtenu une place pour le cours {kwargs['course_name']}!"
+
+    @staticmethod
+    def __subject_waiting_inconsistent(**kwargs) -> str:
+        return "Problème d'incohérence entre les listes d'attente"
 
     @staticmethod
     def __subject_reset_password(**_k) -> str:
@@ -269,6 +304,73 @@ Tech K'Dance
 """
 
     @staticmethod
+    def __build_text_course_cancelled(**kwargs) -> str:
+        if not kwargs.get("full_name"):
+            raise ValueError("Un argument full_name est nécessaire pour cet email")
+        if not kwargs.get("course_name"):
+            raise ValueError("Un argument course_name est nécessaire pour cet email")
+        if kwargs.get("cancel_refund") is None:
+            raise ValueError("Un argument cancel_refund est nécessaire pour cet email")
+        refund = kwargs["cancel_refund"]
+        msg_refund = (
+            ""
+            if not refund
+            else f" Un remboursement de {refund}€ sera effectué. Merci de nous faire parvenir un RIB."
+        )
+        return f"""
+Bonjour,
+
+L'inscription de {kwargs["full_name"]} au cours {kwargs["course_name"]} a bien été annulée.{msg_refund}
+Si cette annulation est une erreur, merci de contacter l'équipe K'Dance.
+
+Bonne journée et à bientôt,
+Tech K'Dance
+"""
+
+    @staticmethod
+    def __build_text_courses_update(**kwargs) -> str:
+        if not kwargs.get("full_name"):
+            raise ValueError("Un argument full_name est nécessaire pour cet email")
+        if kwargs.get("courses_removed") is None:
+            raise ValueError(
+                "Un argument courses_removed est nécessaire pour cet email"
+            )
+        if kwargs.get("courses_added_active") is None:
+            raise ValueError(
+                "Un argument courses_added_active est nécessaire pour cet email"
+            )
+        if kwargs.get("courses_added_waiting") is None:
+            raise ValueError(
+                "Un argument courses_added_waiting est nécessaire pour cet email"
+            )
+        course_message = ""
+        if kwargs.get("courses_added_active"):
+            course_message += f"""
+Cours choisi(s):
+{chr(10).join([c.name for c in kwargs["courses_added_active"]])}
+"""
+        if kwargs.get("courses_added_waiting"):
+            course_message += f"""
+Cours en liste d'attente:
+{chr(10).join([c.name for c in kwargs["courses_added_waiting"]])}
+Nous reviendrons vers vous si une place se libère ou si le cours est dédoublé.
+"""
+        if kwargs.get("courses_removed"):
+            course_message += f"""
+Cours supprimé(s):
+{chr(10).join([c.name for c in kwargs["courses_removed"]])}
+"""
+        message = f"""
+Bonjour,
+
+Les cours de danse de {kwargs["full_name"]} ont été mis à jour.
+{course_message}
+Bonne journée et à bientôt,
+Tech K'Dance
+"""
+        return message
+
+    @staticmethod
     def __build_text_pre_signup_warning(**kwargs) -> str:
         if not kwargs.get("username"):
             raise ValueError("Un argument username est nécessaire pour cet email")
@@ -300,9 +402,28 @@ Tech K'Dance
 Bonjour,
 
 Une place s'est libérée, et {kwargs["full_name"]} a pu être inscrit(e) au cours {kwargs["course_name"]} du {kwargs["weekday"]} à {kwargs["start_hour"]}.
-L'inscription ne sera finalisée qu'à réception du paiement et des éventuels documents restants. Connectez vous à votre compte (https://adherents.association-kdance.fr/) pour un statut détaillé.
+L'inscription ne sera finalisée qu'à réception du paiement et des éventuels documents restants. {"Si le paiement n'est pas effectué avant votre prochain cours, l'inscription sera annulée et votre place donnée à la personne suivante sur la liste d'attente. " if kwargs.get("with_next_course_warning") else ""}Connectez vous à votre compte (https://adherents.association-kdance.fr/) pour un statut détaillé.
 
 Bonne journée et à bientôt,
+Tech K'Dance
+"""
+
+    @staticmethod
+    def __build_text_waiting_inconsistent(**kwargs) -> str:
+        if not kwargs.get("member"):
+            raise ValueError("Un argument member est nécessaire pour cet email")
+        if not kwargs.get("course"):
+            raise ValueError("Un argument course est nécessaire pour cet email")
+        member = kwargs["member"]
+        return f"""
+Bonjour,
+
+Il y a des incohérences dans la gestion des listes d'attente.
+Cours concerné: {kwargs["course"]}
+Membre concerné: {member}
+course.members_waiting:{ ", ".join(kwargs["course"].members_waiting.all())}
+member.waiting_courses: {"aucun" if isinstance(member, str) else ", ".join(kwargs["member"].waiting_courses.all())}
+
 Tech K'Dance
 """
 
@@ -441,6 +562,81 @@ Tech K'Dance
 """
 
     @staticmethod
+    def __build_html_course_cancelled(**kwargs) -> str:
+        if not kwargs.get("full_name"):
+            raise ValueError("Un argument full_name est nécessaire pour cet email")
+        if not kwargs.get("course_name"):
+            raise ValueError("Un argument course_name est nécessaire pour cet email")
+        if kwargs.get("cancel_refund") is None:
+            raise ValueError("Un argument cancel_refund est nécessaire pour cet email")
+        refund = kwargs["cancel_refund"]
+        msg_refund = (
+            ""
+            if not refund
+            else f" Un remboursement de {refund}€ sera effectué. Merci de nous faire parvenir un RIB."
+        )
+        return f"""
+<p>Bonjour,</p>
+<p>
+  L'inscription de {kwargs["full_name"]} au cours {kwargs["course_name"]} a bien été annulée.{msg_refund}<br />
+  Si cette annulation est une erreur, merci de contacter l'équipe K'Dance.
+</p>
+<p>
+  Bonne journée et à bientôt,<br />
+  Tech K'Dance
+</p>
+"""
+
+    @staticmethod
+    def __build_html_courses_update(**kwargs) -> str:
+        if not kwargs.get("full_name"):
+            raise ValueError("Un argument full_name est nécessaire pour cet email")
+        if kwargs.get("courses_removed") is None:
+            raise ValueError(
+                "Un argument courses_removed est nécessaire pour cet email"
+            )
+        if kwargs.get("courses_added_active") is None:
+            raise ValueError(
+                "Un argument courses_added_active est nécessaire pour cet email"
+            )
+        if kwargs.get("courses_added_waiting") is None:
+            raise ValueError(
+                "Un argument courses_added_waiting est nécessaire pour cet email"
+            )
+        course_message = ""
+        if kwargs.get("courses_added_active"):
+            course_message += f"""</p>
+<p>
+  Cours choisi(s):<br />
+  {"<br />".join([c.name for c in kwargs["courses_added_active"]])}
+"""
+        if kwargs.get("courses_added_waiting"):
+            course_message += f"""</p>
+<p>
+  Cours en liste d'attente:<br />
+  {"<br />".join([c.name for c in kwargs["courses_added_waiting"]])}<br />
+  Nous reviendrons vers vous si une place se libère ou si le cours est dédoublé.
+"""
+        if kwargs.get("courses_added_waiting"):
+            course_message += f"""</p>
+<p>
+  Cours supprimé(s):<br />
+  {"<br />".join([c.name for c in kwargs["courses_removed"]])}
+"""
+        message = f"""
+<p>Bonjour,</p>
+<p>
+  Les cours de danse de {kwargs["full_name"]} ont été mis à jour.
+{course_message}
+</p>
+<p>
+  Bonne journée et à bientôt,<br />
+  Tech K'Dance
+</p>
+"""
+        return message
+
+    @staticmethod
     def __build_html_pre_signup_warning(**kwargs) -> str:
         if not kwargs.get("username"):
             raise ValueError("Un argument username est nécessaire pour cet email")
@@ -470,14 +666,39 @@ Tech K'Dance
             raise ValueError("Un argument weekday est nécessaire pour cet email")
         if not kwargs.get("start_hour"):
             raise ValueError("Un argument start_hour est nécessaire pour cet email")
+        if kwargs.get("with_next_course_warning") is None:
+            raise ValueError(
+                "Un argument with_next_course_warning est nécessaire pour cet email"
+            )
         return f"""
 <p>Bonjour,</p>
 <p>
   Une place s'est libérée, et {kwargs["full_name"]} a pu être inscrit(e) au cours {kwargs["course_name"]} du {kwargs["weekday"]} à {kwargs["start_hour"]}.<br />
-  L'inscription ne sera finalisée qu'à réception du paiement et des éventuels documents restants. Connectez vous à <a href="https://adherents.association-kdance.fr/" target="_blank">votre compte</a> pour un statut détaillé.
+  L'inscription ne sera finalisée qu'à réception du paiement et des éventuels documents restants. {"<strong>Si le paiement n'est pas effectué avant votre prochain cours, l'inscription sera annulée et votre place donnée à la personne suivante sur la liste d'attente. </strong>" if kwargs.get("with_next_course_warning") else ""}Connectez vous à <a href="https://adherents.association-kdance.fr/" target="_blank">votre compte</a> pour un statut détaillé.
 </p>
 <p>
   Bonne journée et à bientôt,<br />
+  Tech K'Dance
+</p>
+"""
+
+    @staticmethod
+    def __build_html_waiting_inconsistent(**kwargs) -> str:
+        if not kwargs.get("member"):
+            raise ValueError("Un argument member est nécessaire pour cet email")
+        if not kwargs.get("course"):
+            raise ValueError("Un argument course_name est nécessaire pour cet email")
+        member = kwargs["member"]
+        return f"""
+<p>Bonjour,</p>
+<p>
+  Il y a des incohérences dans la gestion des listes d'attente.<br />
+  Cours concerné: {kwargs["course"]}<br />
+  Membre concerné: {member}<br />
+  course.members_waiting: {", ".join(kwargs["course"].members_waiting.all())}<br />
+  member.waiting_courses: {"aucun" if isinstance(member, str) else ", ".join(kwargs["member"].waiting_courses.all())}
+</p>
+<p>
   Tech K'Dance
 </p>
 """

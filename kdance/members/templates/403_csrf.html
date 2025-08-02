@@ -1,0 +1,32 @@
+{% load static %}
+<!DOCTYPE html>
+<!-- Thanks to Kyle Lavery -->
+<!-- https://codepen.io/kylelavery88/pen/pyQNoP -->
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <!-- Primary Meta Tags -->
+  <title>K'Dance - 403 CSRF</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="title" content="K'Dance - 403 CSRF">
+  <meta name="author" content="Andréa Marnier">
+  <meta name="description" content="Gestion des adhérents pour l'association K'Dance de Villemur-sur-Tarn.">
+  <link type="text/css" href="{% static 'css/bootstrap-5.3.3.min.css' %}" rel="stylesheet" />
+  <link type="text/css" href="{% static 'css/403_csrf.css' %}" rel="stylesheet" />
+</head>
+
+<body>
+  <div class="bubble"></div>
+  <div class="bubble"></div>
+  <div class="bubble"></div>
+  <div class="bubble"></div>
+  <div class="bubble"></div>
+  <div class="main">
+    <h2>403 - CSRF Token</h2>
+    <p>Oups. Il semble qu'il y ait un petit souci de token<br/>Un petit refresh devrait tout résoudre</p>
+    <button type="button" onclick="window.location='/'">Retour à l'accueil</button>
+  </div>
+</body>
+
+</html>

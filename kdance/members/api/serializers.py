@@ -18,6 +18,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>.
 
 import logging
 
+from datetime import date
 from enum import Enum
 from typing import Any
 
@@ -44,6 +45,7 @@ from members.models import (
     SportPass,
     CBPayment,
     Teacher,
+    WaitingList,
 )
 
 _logger = logging.getLogger(__name__)
@@ -491,6 +493,9 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             if SportPass.objects.filter(member__id=member.id).exists():
                 sport_pass_item = SportPass.objects.get(member__id=member.id)
                 sport_pass_item.delete()
+        courses_removed = []
+        courses_added_active = []
+        courses_added_waiting = []
         if active_courses is not None:
             active_to_remove = [
                 c for c in member.active_courses.all() if c not in active_courses
@@ -498,6 +503,8 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             active_to_add = [
                 c for c in active_courses if c not in member.active_courses.all()
             ]
+            courses_added_active = active_to_add
+            courses_removed += active_to_remove
             for course in active_to_add:
                 member.active_courses.add(course)
             for course in active_to_remove:
@@ -509,15 +516,45 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             waiting_to_add = [
                 c for c in waiting_courses if c not in member.waiting_courses.all()
             ]
+            courses_added_waiting = waiting_to_add
+            courses_removed += waiting_to_remove
             for course in waiting_to_add:
                 member.waiting_courses.add(course)
+                if not WaitingList.objects.filter(
+                    course=course, member=member
+                ).exists():
+                    WaitingList(course=course, member=member).save()
             for course in waiting_to_remove:
                 member.waiting_courses.remove(course)
+                waiting_list = WaitingList.objects.filter(
+                    course=course, member=member
+                ).first()
+                if waiting_list:
+                    waiting_list.delete()
+                else:
+                    EmailSender(EmailEnum.WAITING_LIST_INCONSISTENCY).send_email(
+                        emails=[settings.DEFAULT_FROM_EMAIL],
+                        course=course,
+                        member=member,
+                    )
+                    _logger.error(
+                        "Problème avec la liste d'attente - MemberSerializer save"
+                    )
         if cancelled_courses:
             member.cancelled_courses.clear()
             for course in cancelled_courses:
                 member.cancelled_courses.add(course)
         Course.objects.manage_waiting_lists()
+        recipients = [member.email]
+        if member.user:
+            recipients.append(member.user.username)
+        EmailSender(EmailEnum.COURSES_UPDATE).send_email(
+            emails=recipients,
+            full_name=f"{member.first_name} {member.last_name}",
+            courses_removed=courses_removed,
+            courses_added_active=courses_added_active,
+            courses_added_waiting=courses_added_waiting,
+        )
         return member
 
 
@@ -589,6 +626,7 @@ class MemberCoursesSerializer(serializers.Serializer):
             )
         return validated
 
+    @transaction.atomic
     def save(self, **kwargs: Any) -> None:
         if self._action == MemberCoursesActionsEnum.ADD:
             active_courses = [
@@ -603,12 +641,32 @@ class MemberCoursesSerializer(serializers.Serializer):
             ]
             self._member.active_courses.add(*active_courses)
             self._member.waiting_courses.add(*waiting_courses)
+            for course in waiting_courses:
+                if not WaitingList.objects.filter(
+                    course=course, member=self._member
+                ).exists():
+                    WaitingList(course=course, member=self._member).save()
             self._member.cancelled_courses.remove(*active_courses, *waiting_courses)
             self._member.save()
         elif self._action == MemberCoursesActionsEnum.FORCE_ADD:
             active_courses = self.validated_data.get("courses", [])
             self._member.active_courses.add(*active_courses)
             self._member.waiting_courses.remove(*active_courses)
+            for course in active_courses:
+                waiting_list = WaitingList.objects.filter(
+                    course=course, member=self._member
+                ).first()
+                if waiting_list:
+                    waiting_list.delete()
+                else:
+                    EmailSender(EmailEnum.WAITING_LIST_INCONSISTENCY).send_email(
+                        emails=[settings.DEFAULT_FROM_EMAIL],
+                        course=course,
+                        member=self._member,
+                    )
+                    _logger.error(
+                        "Problème avec la liste d'attente - MemberCourseSerializer save FORCE_ADD"
+                    )
             self._member.cancelled_courses.remove(*active_courses)
             self._member.save()
             email_sender = EmailSender(EmailEnum.WAITING_TO_ACTIVE_COURSE)
@@ -622,14 +680,45 @@ class MemberCoursesSerializer(serializers.Serializer):
                     full_name=f"{self._member.first_name} {self._member.last_name}",
                     course_name=course.name,
                     weekday=course.get_weekday_display(),
+                    with_next_course_warning=course.season.signup_end
+                    and course.season.signup_end < date.today(),
                     start_hour=course.start_hour.strftime("%Hh%M"),
                 )
         elif self._action == MemberCoursesActionsEnum.REMOVE:
             for course in self.validated_data.get("courses", []):
                 if self._member.waiting_courses.filter(pk=course.pk):
                     self._member.waiting_courses.remove(course)
+                    waiting_list = WaitingList.objects.filter(
+                        course=course, member=self._member
+                    ).first()
+                    if waiting_list:
+                        waiting_list.delete()
+                    else:
+                        EmailSender(EmailEnum.WAITING_LIST_INCONSISTENCY).send_email(
+                            emails=[settings.DEFAULT_FROM_EMAIL],
+                            course=course,
+                            member=self._member,
+                        )
+                        _logger.error(
+                            "Problème avec la liste d'attente - MemberCourseSerializer save REMOVE"
+                        )
                 else:
                     self._member.cancelled_courses.add(course)
                     self._member.active_courses.remove(course)
+            refund_delta = (
+                self.validated_data.get("cancel_refund") - self._member.cancel_refund
+            )
             self._member.cancel_refund = self.validated_data.get("cancel_refund")
             self._member.save()
+            email_sender = EmailSender(EmailEnum.COURSE_CANCELLED)
+            for course in self.validated_data.get("courses", []):
+                email_sender.send_email(
+                    emails=[
+                        self._member.email,
+                        self._member.user.username,
+                        settings.SUPERUSER_EMAIL,
+                    ],
+                    full_name=f"{self._member.first_name} {self._member.last_name}",
+                    course_name=course.name,
+                    cancel_refund=refund_delta,
+                )
