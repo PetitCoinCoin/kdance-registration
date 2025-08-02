@@ -18,6 +18,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>.
 
 import logging
 
+from datetime import date
 from enum import Enum
 from typing import Any
 
@@ -622,6 +623,8 @@ class MemberCoursesSerializer(serializers.Serializer):
                     full_name=f"{self._member.first_name} {self._member.last_name}",
                     course_name=course.name,
                     weekday=course.get_weekday_display(),
+                    with_next_course_warning=course.season.signup_end
+                    and course.season.signup_end < date.today(),
                     start_hour=course.start_hour.strftime("%Hh%M"),
                 )
         elif self._action == MemberCoursesActionsEnum.REMOVE:

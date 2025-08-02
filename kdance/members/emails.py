@@ -300,7 +300,7 @@ Tech K'Dance
 Bonjour,
 
 Une place s'est libérée, et {kwargs["full_name"]} a pu être inscrit(e) au cours {kwargs["course_name"]} du {kwargs["weekday"]} à {kwargs["start_hour"]}.
-L'inscription ne sera finalisée qu'à réception du paiement et des éventuels documents restants. Connectez vous à votre compte (https://adherents.association-kdance.fr/) pour un statut détaillé.
+L'inscription ne sera finalisée qu'à réception du paiement et des éventuels documents restants. {"Si le paiement n'est pas effectué avant votre prochain cours, l'inscription sera annulée et votre place donnée à la personne suivante sur la liste d'attente. " if kwargs.get("with_next_course_warning") else ""}Connectez vous à votre compte (https://adherents.association-kdance.fr/) pour un statut détaillé.
 
 Bonne journée et à bientôt,
 Tech K'Dance
@@ -470,11 +470,15 @@ Tech K'Dance
             raise ValueError("Un argument weekday est nécessaire pour cet email")
         if not kwargs.get("start_hour"):
             raise ValueError("Un argument start_hour est nécessaire pour cet email")
+        if kwargs.get("with_next_course_warning") is None:
+            raise ValueError(
+                "Un argument with_next_course_warning est nécessaire pour cet email"
+            )
         return f"""
 <p>Bonjour,</p>
 <p>
   Une place s'est libérée, et {kwargs["full_name"]} a pu être inscrit(e) au cours {kwargs["course_name"]} du {kwargs["weekday"]} à {kwargs["start_hour"]}.<br />
-  L'inscription ne sera finalisée qu'à réception du paiement et des éventuels documents restants. Connectez vous à <a href="https://adherents.association-kdance.fr/" target="_blank">votre compte</a> pour un statut détaillé.
+  L'inscription ne sera finalisée qu'à réception du paiement et des éventuels documents restants. {"<strong>Si le paiement n'est pas effectué avant votre prochain cours, l'inscription sera annulée et votre place donnée à la personne suivante sur la liste d'attente. </strong>" if kwargs.get("with_next_course_warning") else ""}Connectez vous à <a href="https://adherents.association-kdance.fr/" target="_blank">votre compte</a> pour un statut détaillé.
 </p>
 <p>
   Bonne journée et à bientôt,<br />

@@ -264,18 +264,23 @@ class Course(models.Model):
             self.update_queue()
 
     def update_queue(self) -> None:
-        if self.members_waiting.count() and not self.is_complete:
+        while self.members_waiting.count() and not self.is_complete:
             member: Member = self.members_waiting.order_by("created").first()  # type: ignore
             member.active_courses.add(self)
             member.waiting_courses.remove(self)
             member.save()
             email_sender = EmailSender(EmailEnum.WAITING_TO_ACTIVE_COURSE)
+            recipients = [member.email]
+            if member.user:
+                recipients.append(member.user.username)
             email_sender.send_email(
-                emails=[member.email, member.user.username],
+                emails=recipients,
                 full_name=f"{member.first_name} {member.last_name}",
                 course_name=self.name,
                 weekday=self.get_weekday_display(),
                 start_hour=self.start_hour.strftime("%Hh%M"),
+                with_next_course_warning=self.season.signup_end
+                and self.season.signup_end < date.today(),
             )
 
 

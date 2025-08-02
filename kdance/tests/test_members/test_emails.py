@@ -410,6 +410,7 @@ class TestEmailWaitingToActive(TestEmailSender):
         "course_name": COURSE,
         "weekday": WEEKDAY,
         "start_hour": START,
+        "with_next_course_warning": False,
     }
     expected_subject = f"Vous avez obtenu une place pour le cours {COURSE}!"
     expected_text = f"""
@@ -432,6 +433,48 @@ Tech K'Dance
   Tech K'Dance
 </p>
 """
+
+    @pytest.mark.django_db
+    def test_build_text_with_warning(self):
+        self.expected_kwargs["with_next_course_warning"] = True
+        text = self.email_sender.get_build_text()(
+            **self.expected_kwargs,
+        )
+        assert (
+            text
+            == f"""
+Bonjour,
+
+Une place s'est libérée, et {NAME} a pu être inscrit(e) au cours {COURSE} du {WEEKDAY} à {START}.
+L'inscription ne sera finalisée qu'à réception du paiement et des éventuels documents restants. Si le paiement n'est pas effectué avant votre prochain cours, l'inscription sera annulée et votre place donnée à la personne suivante sur la liste d'attente. Connectez vous à votre compte (https://adherents.association-kdance.fr/) pour un statut détaillé.
+
+Bonne journée et à bientôt,
+Tech K'Dance
+"""
+        )
+        self.expected_kwargs["with_next_course_warning"] = False
+
+    @pytest.mark.django_db
+    def test_build_html_with_warning(self):
+        self.expected_kwargs["with_next_course_warning"] = True
+        html = self.email_sender.get_build_html()(
+            **self.expected_kwargs,
+        )
+        assert (
+            html
+            == f"""
+<p>Bonjour,</p>
+<p>
+  Une place s'est libérée, et {NAME} a pu être inscrit(e) au cours {COURSE} du {WEEKDAY} à {START}.<br />
+  L'inscription ne sera finalisée qu'à réception du paiement et des éventuels documents restants. <strong>Si le paiement n'est pas effectué avant votre prochain cours, l'inscription sera annulée et votre place donnée à la personne suivante sur la liste d'attente. </strong>Connectez vous à <a href="https://adherents.association-kdance.fr/" target="_blank">votre compte</a> pour un statut détaillé.
+</p>
+<p>
+  Bonne journée et à bientôt,<br />
+  Tech K'Dance
+</p>
+"""
+        )
+        self.expected_kwargs["with_next_course_warning"] = False
 
 
 class TestEmailResetPassword(TestEmailSender):
