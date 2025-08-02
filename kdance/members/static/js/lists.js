@@ -24,6 +24,12 @@ $(document).ready(() => {
   mainSelect.addEventListener('change', () =>
     onMainChange(mainSelect.value)
   );
+  document.querySelector('#season-select').addEventListener('change', () => {
+    mainSelect.dispatchEvent(new Event('change'));
+    $('#data-table').bootstrapTable('destroy');
+    document.querySelector('#total-amount-div').className = 'd-none';
+    $('#total-count').text(0);
+  });
   breadcrumbDropdownOnHover();
 });
 
@@ -233,6 +239,18 @@ function buildMembersInfo(data, courseId) {
       title: 'Email',
       searchable: false,
       sortable: false,
+    }, {
+      field: 'address',
+      title: 'Adresse',
+      searchable: false,
+      sortable: false,
+      visible: false,
+    }, {
+      field: 'postal_code',
+      title: 'Code',
+      searchable: false,
+      sortable: false,
+      visible: false,
     }, {
       field: 'city',
       title: 'Ville',
