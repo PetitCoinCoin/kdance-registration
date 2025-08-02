@@ -10,6 +10,7 @@ from django.utils import timezone
 from members.emails import EmailEnum, EmailSender
 from members.models import Course, Season
 from django.core.mail import EmailMultiAlternatives
+from tests.data_tests import COURSE as TEST_COURSE
 
 
 USERNAME = "michel@plop.com"
@@ -46,14 +47,17 @@ class TestEmailSender:
         subject = self.email_sender.get_subject()(**self.expected_kwargs)
         assert subject == self.expected_subject
 
+    @pytest.mark.django_db
     def test_build_text(self):
         text = self.email_sender.get_build_text()(**self.expected_kwargs)
         assert text == self.expected_text
 
+    @pytest.mark.django_db
     def test_build_html(self):
         html = self.email_sender.get_build_html()(**self.expected_kwargs)
         assert html == self.expected_html
 
+    @pytest.mark.django_db
     @patch.object(EmailMultiAlternatives, "send")
     def test_send(self, mock_send):
         mock_send.return_value = True
@@ -475,6 +479,41 @@ Tech K'Dance
 """
         )
         self.expected_kwargs["with_next_course_warning"] = False
+
+
+class TestEmailWaitingListInconsistency(TestEmailSender):
+    __test__ = True
+
+    email_sender = EmailSender(EmailEnum.WAITING_LIST_INCONSISTENCY)
+    expected_kwargs = {
+        "member": "aucun",
+        "course": Course(**TEST_COURSE, id=100, season=Season(year="2000")),
+    }
+    expected_subject = "Problème d'incohérence entre les listes d'attente"
+    expected_text = """
+Bonjour,
+
+Il y a des incohérences dans la gestion des listes d'attente.
+Cours concerné: Cha cha cha, Lundi - 2000
+Membre concerné: aucun
+course.members_waiting:
+member.waiting_courses: aucun
+
+Tech K'Dance
+"""
+    expected_html = """
+<p>Bonjour,</p>
+<p>
+  Il y a des incohérences dans la gestion des listes d'attente.<br />
+  Cours concerné: Cha cha cha, Lundi - 2000<br />
+  Membre concerné: aucun<br />
+  course.members_waiting: <br />
+  member.waiting_courses: aucun
+</p>
+<p>
+  Tech K'Dance
+</p>
+"""
 
 
 class TestEmailResetPassword(TestEmailSender):

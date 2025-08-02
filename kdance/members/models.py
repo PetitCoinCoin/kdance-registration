@@ -265,10 +265,23 @@ class Course(models.Model):
 
     def update_queue(self) -> None:
         while self.members_waiting.count() and not self.is_complete:
-            member: Member = self.members_waiting.order_by("created").first()  # type: ignore
-            member.active_courses.add(self)
-            member.waiting_courses.remove(self)
-            member.save()
+            waiting_list = (
+                WaitingList.objects.filter(course=self).order_by("signup_date").first()
+            )
+            if not waiting_list:
+                EmailSender(EmailEnum.WAITING_LIST_INCONSISTENCY).send_email(
+                    emails=[settings.DEFAULT_FROM_EMAIL],
+                    course=self,
+                    member="aucun",
+                )
+                _logger.error("Problème avec la liste d'attente - update_queue")
+                break
+            member = waiting_list.member
+            with transaction.atomic():
+                member.active_courses.add(self)
+                member.waiting_courses.remove(self)
+                member.save()
+                waiting_list.delete()
             email_sender = EmailSender(EmailEnum.WAITING_TO_ACTIVE_COURSE)
             recipients = [member.email]
             if member.user:
@@ -613,3 +626,12 @@ def post_delete_member(sender, instance, *args, **kwargs):
     if instance.sport_pass:
         instance.sport_pass.delete()
     Course.objects.manage_waiting_lists()
+
+
+class WaitingList(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=False)
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, null=False)
+    signup_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("course", "member")

@@ -35,6 +35,7 @@ class EmailEnum(Enum):
     PAYMENT_UNKNOWN = "payment_unknown"
     PRE_SIGNUP_WARNING = "pre signup warning"
     WAITING_TO_ACTIVE_COURSE = "waiting to active course"
+    WAITING_LIST_INCONSISTENCY = "waiting_list_inconsistency"
     RESET_PWD = "reset_password"
 
 
@@ -81,6 +82,8 @@ class EmailSender:
                 return self.__subject_pre_signup_warning
             case EmailEnum.WAITING_TO_ACTIVE_COURSE:
                 return self.__subject_waiting_active
+            case EmailEnum.WAITING_LIST_INCONSISTENCY:
+                return self.__subject_waiting_inconsistent
             case EmailEnum.RESET_PWD:
                 return self.__subject_reset_password
             case _:
@@ -104,6 +107,8 @@ class EmailSender:
                 return self.__build_text_pre_signup_warning
             case EmailEnum.WAITING_TO_ACTIVE_COURSE:
                 return self.__build_text_waiting_active
+            case EmailEnum.WAITING_LIST_INCONSISTENCY:
+                return self.__build_text_waiting_inconsistent
             case EmailEnum.RESET_PWD:
                 return self.__build_text_reset_password
             case _:
@@ -127,6 +132,8 @@ class EmailSender:
                 return self.__build_html_pre_signup_warning
             case EmailEnum.WAITING_TO_ACTIVE_COURSE:
                 return self.__build_html_waiting_active
+            case EmailEnum.WAITING_LIST_INCONSISTENCY:
+                return self.__build_html_waiting_inconsistent
             case EmailEnum.RESET_PWD:
                 return self.__build_html_reset_password
             case _:
@@ -169,6 +176,10 @@ class EmailSender:
         if not kwargs.get("course_name"):
             raise ValueError("Un argument course_name est nécessaire pour cet email")
         return f"Vous avez obtenu une place pour le cours {kwargs['course_name']}!"
+
+    @staticmethod
+    def __subject_waiting_inconsistent(**kwargs) -> str:
+        return "Problème d'incohérence entre les listes d'attente"
 
     @staticmethod
     def __subject_reset_password(**_k) -> str:
@@ -303,6 +314,25 @@ Une place s'est libérée, et {kwargs["full_name"]} a pu être inscrit(e) au cou
 L'inscription ne sera finalisée qu'à réception du paiement et des éventuels documents restants. {"Si le paiement n'est pas effectué avant votre prochain cours, l'inscription sera annulée et votre place donnée à la personne suivante sur la liste d'attente. " if kwargs.get("with_next_course_warning") else ""}Connectez vous à votre compte (https://adherents.association-kdance.fr/) pour un statut détaillé.
 
 Bonne journée et à bientôt,
+Tech K'Dance
+"""
+
+    @staticmethod
+    def __build_text_waiting_inconsistent(**kwargs) -> str:
+        if not kwargs.get("member"):
+            raise ValueError("Un argument member est nécessaire pour cet email")
+        if not kwargs.get("course"):
+            raise ValueError("Un argument course est nécessaire pour cet email")
+        member = kwargs["member"]
+        return f"""
+Bonjour,
+
+Il y a des incohérences dans la gestion des listes d'attente.
+Cours concerné: {kwargs["course"]}
+Membre concerné: {member}
+course.members_waiting:{ ", ".join(kwargs["course"].members_waiting.all())}
+member.waiting_courses: {"aucun" if isinstance(member, str) else ", ".join(kwargs["member"].waiting_courses.all())}
+
 Tech K'Dance
 """
 
@@ -482,6 +512,27 @@ Tech K'Dance
 </p>
 <p>
   Bonne journée et à bientôt,<br />
+  Tech K'Dance
+</p>
+"""
+
+    @staticmethod
+    def __build_html_waiting_inconsistent(**kwargs) -> str:
+        if not kwargs.get("member"):
+            raise ValueError("Un argument member est nécessaire pour cet email")
+        if not kwargs.get("course"):
+            raise ValueError("Un argument course_name est nécessaire pour cet email")
+        member = kwargs["member"]
+        return f"""
+<p>Bonjour,</p>
+<p>
+  Il y a des incohérences dans la gestion des listes d'attente.<br />
+  Cours concerné: {kwargs["course"]}<br />
+  Membre concerné: {member}<br />
+  course.members_waiting: {", ".join(kwargs["course"].members_waiting.all())}<br />
+  member.waiting_courses: {"aucun" if isinstance(member, str) else ", ".join(kwargs["member"].waiting_courses.all())}
+</p>
+<p>
   Tech K'Dance
 </p>
 """
