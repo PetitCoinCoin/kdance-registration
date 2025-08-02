@@ -421,8 +421,8 @@ Bonjour,
 Il y a des incohérences dans la gestion des listes d'attente.
 Cours concerné: {kwargs["course"]}
 Membre concerné: {member}
-course.members_waiting:{ ", ".join(kwargs["course"].members_waiting.all())}
-member.waiting_courses: {"aucun" if isinstance(member, str) else ", ".join(kwargs["member"].waiting_courses.all())}
+course.members_waiting:{ ", ".join([str(m) for m in kwargs["course"].members_waiting.all()])}
+member.waiting_courses: {"aucun" if isinstance(member, str) else ", ".join([str(c) for c in kwargs["member"].waiting_courses.all()])}
 
 Tech K'Dance
 """
@@ -617,7 +617,7 @@ Tech K'Dance
   {"<br />".join([c.name for c in kwargs["courses_added_waiting"]])}<br />
   Nous reviendrons vers vous si une place se libère ou si le cours est dédoublé.
 """
-        if kwargs.get("courses_added_waiting"):
+        if kwargs.get("courses_removed"):
             course_message += f"""</p>
 <p>
   Cours supprimé(s):<br />
@@ -695,8 +695,8 @@ Tech K'Dance
   Il y a des incohérences dans la gestion des listes d'attente.<br />
   Cours concerné: {kwargs["course"]}<br />
   Membre concerné: {member}<br />
-  course.members_waiting: {", ".join(kwargs["course"].members_waiting.all())}<br />
-  member.waiting_courses: {"aucun" if isinstance(member, str) else ", ".join(kwargs["member"].waiting_courses.all())}
+  course.members_waiting: {", ".join([str(m) for m in kwargs["course"].members_waiting.all()])}<br />
+  member.waiting_courses: {"aucun" if isinstance(member, str) else ", ".join([str(c) for c in kwargs["member"].waiting_courses.all()])}
 </p>
 <p>
   Tech K'Dance
