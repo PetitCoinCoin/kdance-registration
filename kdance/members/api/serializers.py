@@ -26,6 +26,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.utils import IntegrityError
+from django.utils import timezone
 from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework import serializers
 
@@ -460,6 +461,7 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
         active_courses = self.validated_data.pop("active_courses", None)
         waiting_courses = self.validated_data.pop("waiting_courses", None)
         cancelled_courses = self.validated_data.pop("cancelled_courses", None)
+        now = timezone.now()
         try:
             member = super().save()
         except IntegrityError:
@@ -545,16 +547,17 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             for course in cancelled_courses:
                 member.cancelled_courses.add(course)
         Course.objects.manage_waiting_lists()
-        recipients = [member.email]
-        if member.user:
-            recipients.append(member.user.username)
-        EmailSender(EmailEnum.COURSES_UPDATE).send_email(
-            emails=recipients,
-            full_name=f"{member.first_name} {member.last_name}",
-            courses_removed=courses_removed,
-            courses_added_active=courses_added_active,
-            courses_added_waiting=courses_added_waiting,
-        )
+        if member.created < now:  # It's edition, not creation
+            recipients = [member.email]
+            if member.user:
+                recipients.append(member.user.username)
+            EmailSender(EmailEnum.COURSES_UPDATE).send_email(
+                emails=recipients,
+                full_name=f"{member.first_name} {member.last_name}",
+                courses_removed=courses_removed,
+                courses_added_active=courses_added_active,
+                courses_added_waiting=courses_added_waiting,
+            )
         return member
 
 
