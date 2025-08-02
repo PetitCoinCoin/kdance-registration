@@ -24,7 +24,16 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
     <div class="d-flex">
       {% if user.is_authenticated %}
         {% if user.is_superuser or is_teacher%}
-          <button class="btn btn-outline-info me-2" type="button" onclick="location.href = '/super';">Admin</button>
+          <button class="btn btn-outline-info me-2 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Admin</button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{% url 'course_mgmt' %}">Gérer les cours</a></li>
+            <li><a class="dropdown-item" href="{% url 'member_mgmt' %}">Gérer les adhérents</a></li>
+            <li><a class="dropdown-item" href="{% url 'admin_mgmt' %}">Gérer les admins</a></li>
+            <li><a class="dropdown-item" href="{% url 'site_mgmt' %}">Gérer le site</a></li>
+            <li><a class="dropdown-item" href="{% url 'list_dl' %}">Listes et téléchargements</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'super_index' %}">Admin</a></li>
+          </ul>
         {% endif %}
         <button class="btn btn-outline-info me-2" type="button" onclick="location.href = '/';">Mon compte</button>
         <form action="{% url 'logout' %}" method="post">

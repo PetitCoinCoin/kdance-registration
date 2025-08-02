@@ -377,6 +377,82 @@ Tech K'Dance
 """
 
 
+class TestEmailCourseCancelled(TestEmailSender):
+    __test__ = True
+
+    email_sender = EmailSender(EmailEnum.COURSE_CANCELLED)
+    expected_kwargs = {"full_name": NAME, "course_name": COURSE, "cancel_refund": 10}
+    expected_subject = f"Votre inscription au cours {COURSE} a été annulée"
+    expected_text = f"""
+Bonjour,
+
+L'inscription de {NAME} au cours {COURSE} a bien été annulée. Un remboursement de 10€ sera effectué. Merci de nous faire parvenir un RIB.
+Si cette annulation est une erreur, merci de contacter l'équipe K'Dance.
+
+Bonne journée et à bientôt,
+Tech K'Dance
+"""
+    expected_html = f"""
+<p>Bonjour,</p>
+<p>
+  L'inscription de {NAME} au cours {COURSE} a bien été annulée. Un remboursement de 10€ sera effectué. Merci de nous faire parvenir un RIB.<br />
+  Si cette annulation est une erreur, merci de contacter l'équipe K'Dance.
+</p>
+<p>
+  Bonne journée et à bientôt,<br />
+  Tech K'Dance
+</p>
+"""
+
+
+class TestEmailCoursesUpdate(TestEmailSender):
+    __test__ = True
+
+    email_sender = EmailSender(EmailEnum.COURSES_UPDATE)
+    expected_kwargs = {
+        "full_name": NAME,
+        "courses_removed": [Course(**TEST_COURSE)],
+        "courses_added_active": [],
+        "courses_added_waiting": [Course(**TEST_COURSE)],
+    }
+    expected_subject = "Mise à jour de vos cours K'Dance"
+    expected_text = f"""
+Bonjour,
+
+Les cours de danse de {NAME} ont été mis à jour.
+
+Cours en liste d'attente:
+Cha cha cha
+Nous reviendrons vers vous si une place se libère ou si le cours est dédoublé.
+
+Cours supprimé(s):
+Cha cha cha
+
+Bonne journée et à bientôt,
+Tech K'Dance
+"""
+    expected_html = f"""
+<p>Bonjour,</p>
+<p>
+  Les cours de danse de {NAME} ont été mis à jour.
+</p>
+<p>
+  Cours en liste d'attente:<br />
+  Cha cha cha<br />
+  Nous reviendrons vers vous si une place se libère ou si le cours est dédoublé.
+</p>
+<p>
+  Cours supprimé(s):<br />
+  Cha cha cha
+
+</p>
+<p>
+  Bonne journée et à bientôt,<br />
+  Tech K'Dance
+</p>
+"""
+
+
 class TestEmailPreSignupWarning(TestEmailSender):
     __test__ = True
 

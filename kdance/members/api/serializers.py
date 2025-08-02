@@ -493,6 +493,9 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             if SportPass.objects.filter(member__id=member.id).exists():
                 sport_pass_item = SportPass.objects.get(member__id=member.id)
                 sport_pass_item.delete()
+        courses_removed = []
+        courses_added_active = []
+        courses_added_waiting = []
         if active_courses is not None:
             active_to_remove = [
                 c for c in member.active_courses.all() if c not in active_courses
@@ -500,6 +503,8 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             active_to_add = [
                 c for c in active_courses if c not in member.active_courses.all()
             ]
+            courses_added_active = active_to_add
+            courses_removed += active_to_remove
             for course in active_to_add:
                 member.active_courses.add(course)
             for course in active_to_remove:
@@ -511,6 +516,8 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             waiting_to_add = [
                 c for c in waiting_courses if c not in member.waiting_courses.all()
             ]
+            courses_added_waiting = waiting_to_add
+            courses_removed += waiting_to_remove
             for course in waiting_to_add:
                 member.waiting_courses.add(course)
                 if not WaitingList.objects.filter(
@@ -538,6 +545,16 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             for course in cancelled_courses:
                 member.cancelled_courses.add(course)
         Course.objects.manage_waiting_lists()
+        recipients = [member.email]
+        if member.user:
+            recipients.append(member.user.username)
+        EmailSender(EmailEnum.COURSES_UPDATE).send_email(
+            emails=recipients,
+            full_name=f"{member.first_name} {member.last_name}",
+            courses_removed=courses_removed,
+            courses_added_active=courses_added_active,
+            courses_added_waiting=courses_added_waiting,
+        )
         return member
 
 
@@ -688,5 +705,20 @@ class MemberCoursesSerializer(serializers.Serializer):
                 else:
                     self._member.cancelled_courses.add(course)
                     self._member.active_courses.remove(course)
+            refund_delta = (
+                self.validated_data.get("cancel_refund") - self._member.cancel_refund
+            )
             self._member.cancel_refund = self.validated_data.get("cancel_refund")
             self._member.save()
+            email_sender = EmailSender(EmailEnum.COURSE_CANCELLED)
+            for course in self.validated_data.get("courses", []):
+                email_sender.send_email(
+                    emails=[
+                        self._member.email,
+                        self._member.user.username,
+                        settings.SUPERUSER_EMAIL,
+                    ],
+                    full_name=f"{self._member.first_name} {self._member.last_name}",
+                    course_name=course.name,
+                    cancel_refund=refund_delta,
+                )
