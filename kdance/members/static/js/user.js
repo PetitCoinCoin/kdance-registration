@@ -185,8 +185,8 @@ function getUser() {
             copyBtn.disabled = true;
           }
           const btnParent = clone.querySelector('.season-btn-div');
-          const notValidatedMembers = data.members.filter((member) => member.season.id == item.season.id && !member.is_validated);
-          if (notValidatedMembers.filter((member) => member.active_courses.length > 0).length == 0) {
+          const toPay = item.due - item.paid + item.refund;
+          if (toPay <= 0) {
             memberBtnClone.querySelector('#checkout-btn').disabled = true;
           }
           btnParent.appendChild(memberBtnClone);
