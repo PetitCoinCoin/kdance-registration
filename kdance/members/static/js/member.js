@@ -181,7 +181,7 @@ async function getMember() {
       $('#me-switch').prop('disabled', true);
       const action = isEdition ? 'Modifier les infos de' : 'Renouveller' ;
       $('h1').html(`${action} ${data.first_name} ${data.last_name}`);
-      $('#form-member').data('canEditCourse', !isEdition || !data.is_validated);
+      $('#form-member').data('canEditCourse', !isEdition || !data.is_validated || isSignupOngoing);
       $('#member-firstname').val(data.first_name);
       $('#member-lastname').val(data.last_name);
       $('#member-email').val(data.email);
@@ -202,6 +202,9 @@ async function getMember() {
         isActive = data.active_courses.map(c => c.id.toString()).indexOf(item.value) > -1;
         isWaiting = data.waiting_courses.map(c => c.id.toString()).indexOf(item.value) > -1;
         item.checked = isActive || isWaiting;
+        if (isSignupOngoing && data.is_validated) {
+          item.disabled = item.checked;
+        }
         if (isWaiting) {
           label = $(`label[for="${item.id}"]`)[0]
           label.innerHTML += ' <strong>(sur liste d\'attente)</strong>';
@@ -210,7 +213,9 @@ async function getMember() {
       $('#member-license').val(isEdition ? data.ffd_license : 0);
       if (isEdition && data.is_validated) {
         $('#member-license').prop('disabled', true);
-        document.querySelectorAll('.course-checkbox').forEach(item => { item.disabled = true });
+        if (! isSignupOngoing) {
+          document.querySelectorAll('.course-checkbox').forEach(item => { item.disabled = true });
+        }
         $('#authorise-photos').prop('disabled', true);
         $('#authorise-emergency').prop('disabled', true);
         $('#member-btn').html('Modifier');
