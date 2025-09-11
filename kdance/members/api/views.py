@@ -272,6 +272,7 @@ class MemberViewSet(
         else:
             order_by = ["last_name", "first_name"]
 
+        queryset = queryset.distinct()
         if order_by:
             return queryset.order_by("-season__year", *order_by)
         return sorted(

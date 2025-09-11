@@ -547,7 +547,9 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             for course in cancelled_courses:
                 member.cancelled_courses.add(course)
         Course.objects.manage_waiting_lists()
-        if member.created < now:  # It's edition, not creation
+        if member.created < now and (
+            courses_removed or courses_added_active or courses_added_waiting
+        ):  # It's edition, not creation
             recipients = [member.email]
             if member.user:
                 recipients.append(member.user.username)
