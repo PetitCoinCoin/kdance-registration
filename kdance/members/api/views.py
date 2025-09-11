@@ -272,9 +272,9 @@ class MemberViewSet(
         else:
             order_by = ["last_name", "first_name"]
 
+        queryset = queryset.distinct()
         if order_by:
             return queryset.order_by("-season__year", *order_by)
-        queryset = queryset.distinct()
         return sorted(
             queryset,
             key=lambda m: m.payment.due - m.payment.paid + m.payment.refund,
