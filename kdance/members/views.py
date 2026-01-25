@@ -328,7 +328,16 @@ def about(request: HttpRequest) -> HttpResponse:
     return render(
         request,
         "pages/about.html",
-        context={"user": request.user, "is_teacher": _is_teacher(request)},
+        context={"user": request.user},
+    )
+
+
+@require_http_methods(["GET"])
+def legal(request: HttpRequest) -> HttpResponse:
+    return render(
+        request,
+        "pages/legal.html",
+        context={"user": request.user},
     )
 
 

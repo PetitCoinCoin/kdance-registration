@@ -124,6 +124,10 @@ a {
   max-width: 1000px;
 }
 
+#legal-div {
+  text-align: justify;
+}
+
 #course-header {
   display: flex;
   justify-content: space-between;
