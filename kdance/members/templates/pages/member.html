@@ -168,7 +168,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
                 <h5 class="border-bottom mb-3 fw-semibold">Contacts d'urgence (même pour les adultes)</h5>
                   <div class="form-check form-switch mb-1">
                     <input class="form-check-input" type="checkbox" role="switch" id="emergency-me-switch">
-                    <span class="d-inline-block" tabindex="0" data-bs-toggle="popover"
+                    <span id="emergency-contact-wrapper" class="d-inline-block" tabindex="0" data-bs-toggle="popover"
                       data-bs-trigger="hover focus" data-bs-content="Impossible pour soi-même !"
                       data-bs-placement="bottom">
                       <label class="form-check-label" for="emergency-me-switch">Je suis contact d'urgence pour
@@ -214,24 +214,31 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
                 <input class="form-check-input" type="checkbox" value="" id="authorise-emergency" checked>
                 <label class="form-check-label" for="authorise-emergency">
                   En tant que responsable légal de cet adhérent mineur, j'autorise l’encadrant de la section
-                  danse ou un
-                  membre du Conseil d’Administration à prendre, en cas d’accident, toutes mesures urgentes
-                  tant
-                  médicales que chirurgicales, y compris l’hospitalisation.
+                  danse ou un membre du Conseil d’Administration à prendre, en cas d’accident, toutes mesures
+                  urgentes tant médicales que chirurgicales, y compris l’hospitalisation.
                 </label>
               </div>
               <div class="form-check mb-4">
                 <input class="form-check-input" type="checkbox" value="" id="authorise-photos" checked>
                 <label class="form-check-label" for="authorise-photos">
                   J'autorise l'association K'dance à utiliser les photos et/ou vidéos réalisées dans le cadre
-                  de ses
-                  activités à des fins promotionnelles y compris sur les réseaux sociaux de K’dance.
+                  de ses activités à des fins promotionnelles y compris sur les réseaux sociaux de K’dance.
+                </label>
+              </div>
+              <div class="form-check mb-4" id="rgpd-wrapper">
+                <input class="form-check-input" type="checkbox" value="" id="authorise-rgpd">
+                <label class="form-check-label required" for="authorise-rgpd">
+                  J’accepte que mes données personnelles soient utilisées pour le traitement de ma demande,
+                  conformément à la <a href="{% static 'pdf/politique-de-confidentialite.pdf' %}" target="_blank">politique de confidentialité</a>.
                 </label>
               </div>
             </div>
           </div>
           <button type="button" class="btn btn-secondary" onclick="window.location='/'">Annuler</button>
-          <button type="submit" class="btn btn-info">Enregistrer</button>
+          <span id="submit-wrapper" class="d-inline-block" tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus"
+          data-bs-content="Vous devez consentir au recueil et au traitement de vos données">
+            <button id="member-submit" type="submit" class="btn btn-info">Enregistrer</button>
+          </span>
         </form>
       </div>
 

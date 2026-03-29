@@ -18,7 +18,6 @@
 
 $(document).ready(() => {
   getMember();
-  activatePopovers();
   createUpdateMember();
   initContacts();
   handleContacts();
@@ -28,6 +27,7 @@ $(document).ready(() => {
     const isMajor = Boolean(getAge($('#member-birthday').val()) >= 18);
     majorityImpact(isMajor);
   });
+  activatePopovers();
 });
 
 function activatePopovers() {
@@ -57,6 +57,16 @@ function handleSwitches() {
     contactMeSwitch.addEventListener('change', () => {
       contactMeImpact(key, $(`#${key}-me-switch`).is(':checked'))
     });
+  });
+  const rgpdToggle = document.querySelector('#authorise-rgpd');
+    rgpdToggle.addEventListener('change', () => {
+      const isApproved = $('#authorise-rgpd').is(':checked');
+      $('#member-submit').prop("disabled", !isApproved);
+      if (isApproved) {
+        $('#submit-wrapper').hide();
+      } else {
+        $('#submit-wrapper').show();
+      }
   });
 }
 
@@ -162,16 +172,20 @@ async function getMember() {
     member = urlParams.get('from_pk');
     $('#form-member').data('url', membersUrl);
     $('#form-member').data('method', 'POST');
+    $('#member-submit').prop("disabled", true);
     isEdition = false;
   } else if (urlParams.get('pk') !== null) {
     member = urlParams.get('pk');
     $('#form-member').data('url', membersUrl + member + '/');
     $('#form-member').data('method', 'PATCH');
+    $('#rgpd-wrapper').remove();
+    $('#submit-wrapper').hide();
   } else {
     $('h1').html('Ajouter un nouvel adhérent');
     $('#form-member').data('url', membersUrl);
     $('#form-member').data('method', 'POST');
     $('#form-member').data('canEditCourse', true);
+    $('#member-submit').prop("disabled", true);
     return
   }
   $.ajax({
