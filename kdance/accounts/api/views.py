@@ -47,7 +47,7 @@ from accounts.api.serializers import (
     UserTeacherActionSerializer,
 )
 from members.emails import EmailEnum, EmailSender
-from members.models import GeneralSettings
+from members.models import GeneralSettings, Member
 
 
 class UsersApiViewSet(
@@ -166,6 +166,10 @@ class UserMeApiViewSet(
         instance = self.get_object()
         if instance.username == settings.SUPERUSER_EMAIL:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
+        if Member.objects.filter(
+            user=instance, season__is_current=True, is_validated=True
+        ).exists:
+            return Response(status=status.HTTP_403_FORBIDDEN)
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 

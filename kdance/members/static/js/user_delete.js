@@ -31,16 +31,16 @@ function deleteUser() {
         window.location.replace('/');
       },
       error: (error) => {
-        const errorMessage = 'Une erreur est survenue, impossible de supprimer le compte pour le moment.';
-        showToast(errorMessage);
-        console.log(error);
+        const errorMessage = error.status === 403 ? "Vous ne pouvez pas supprimer votre compte pour le moment, car il y a toujours des adhérents pour la saison en cours (même si vous avez annulé les cours). Veuillez attendre la fin de la saison." : 'Une erreur est survenue, impossible de supprimer le compte pour le moment. ' + ERROR_SUFFIX;
+        const options =  error.status === 403 ? { delay: 10000 } : undefined
+        showToast(errorMessage, options);
       }
     });
   });
 }
 
-function showToast(text) {
-  const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('user-delete-error-toast'));
-  $('#user-delete-error-body').text(`${text} ${ERROR_SUFFIX}`);
+function showToast(text, options = {}) {
+  const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('user-delete-error-toast'), options);
+  $('#user-delete-error-body').text(text);
   toast.show();
 }
