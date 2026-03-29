@@ -235,6 +235,9 @@ async function getMember() {
         $('#member-btn').html('Modifier');
       }
       $('#emergency-me-switch').attr('disabled', isMe(data));
+      if (! isMe(data)) {
+        $('#emergency-contact-wrapper').hide();
+      }
       const isMajor = Boolean(getAge(data.birthday) >= 18);
       majorityImpact(isMajor);
       Object.keys(CONTACT_MAPPING).forEach(key => {
@@ -472,6 +475,9 @@ function handleContacts() {
       if (isMeMember) {
         $('#emergency-me-switch').prop('checked', false);
         contactMeImpact('emergency', false);
+        $('#emergency-contact-wrapper').show();
+      } else {
+        $('#emergency-contact-wrapper').hide();
       }
     });
   });
