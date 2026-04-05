@@ -29,11 +29,6 @@ function confirmPassword() {
   return pwdConfirmation.val() === pwd.val()
 }
 
-function activatePopovers() {
-  const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
-  [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
-}
-
 function getGeneralSettings() {
   $('#message-error-signup').addClass('d-none');
   $.ajax({

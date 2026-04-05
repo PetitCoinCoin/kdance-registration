@@ -30,11 +30,6 @@ $(document).ready(() => {
   activatePopovers();
 });
 
-function activatePopovers() {
-  const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
-  [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
-}
-
 function handleSwitches() {
   const meSwitch = document.querySelector('#me-switch');
   meSwitch.addEventListener('change', () => {

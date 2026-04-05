@@ -35,11 +35,6 @@ function displayPwdToast() {
   }
 }
 
-function activatePopovers() {
-  const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
-  [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
-}
-
 function getPreviousMembers(members) {
   let previousMembers = new Array
   members.map((m) => {

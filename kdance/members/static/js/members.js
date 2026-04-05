@@ -27,15 +27,10 @@ $(document).ready(() => {
   allowCbPaymentUpdate();
   const seasonSelect = document.querySelector('#season-select');
   seasonSelect.addEventListener('change', () =>
-    onSeasonChange(seasonSelect.value)
+    onSeasonChange(seasonSelect.value, getMembers)
   );
   breadcrumbDropdownOnHover();
 });
-
-function activatePopovers() {
-  const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
-  [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
-}
 
 function populateMonths(itemId) {
   monthSelectAdd = $(itemId);
@@ -144,37 +139,23 @@ function handleCheckPayment() {
 }
 
 function getSeasons() {
-  $.ajax({
-    url: seasonsUrl,
-    type: 'GET',
-    success: (data) => {
-      var urlParams = new URLSearchParams(window.location.search);
-      data.map((season) => {
-        let label = season.year;
-        const selectedUrl = urlParams.get('season') === season.id.toString();
-        if (season.is_current) {
-          label += ' (en cours)';
-        }
-        if (selectedUrl || (urlParams.get('season') === null && season.is_current)) {
-          getMembers(season.id);
-        }
-        $('#season-select').append($(
-          '<option>',
-          { value: season.id, text: label, selected: urlParams.get('season') !== null ? selectedUrl : season.is_current }
-        ));
-      });
-    },
-    error: (error) => {
-      showToast('Impossible de récupérer la liste des saisons.');
-      console.log(error);
-    }
-  });
-}
-
-function onSeasonChange(seasonId) {
-  const refresh = window.location.protocol + "//" + window.location.host + window.location.pathname + `?season=${seasonId}`;
-  window.history.pushState({ path: refresh }, '', refresh);
-  getMembers(seasonId);
+  getSeasonsWrapper((data) => {
+    var urlParams = new URLSearchParams(window.location.search);
+    data.map((season) => {
+      let label = season.year;
+      const selectedUrl = urlParams.get('season') === season.id.toString();
+      if (season.is_current) {
+        label += ' (en cours)';
+      }
+      if (selectedUrl || (urlParams.get('season') === null && season.is_current)) {
+        getMembers(season.id);
+      }
+      $('#season-select').append($(
+        '<option>',
+        { value: season.id, text: label, selected: urlParams.get('season') !== null ? selectedUrl : season.is_current }
+      ));
+    });
+  }, MEMBERS_TOAST_PREFIX);
 }
 
 function statusFormatter(value) {
@@ -460,7 +441,7 @@ function getMember(memberId) {
       });
     },
     error: (error) => {
-      showToast('Impossible de récupérer les informations de cet adhérent.');
+      showToast('Impossible de récupérer les informations de cet adhérent.', MEMBERS_TOAST_PREFIX);
       console.log(error);
     }
   });
@@ -543,7 +524,7 @@ function updateMember() {
           $('#member-license-modal').modal('hide');
         },
         error: (error) => {
-          showToast(`${DEFAULT_ERROR} Impossible de mettre à jour la licence.`);
+          showToast(`${DEFAULT_ERROR} Impossible de mettre à jour la licence.`, MEMBERS_TOAST_PREFIX);
           console.log(error);
         }
       });
@@ -567,7 +548,7 @@ function updateMember() {
           $('#add-btn').data('memberId', memberId);
         },
         error: (error) => {
-          showToast('Impossible de récupérer les cours de la saison.');
+          showToast('Impossible de récupérer les cours de la saison.', MEMBERS_TOAST_PREFIX);
           console.log(error);
         }
       });
@@ -618,7 +599,7 @@ function updateMember() {
           $('#update-btn').data('memberId', memberId);
         },
         error: (error) => {
-          showToast('Impossible de récupérer les cours de la saison.');
+          showToast('Impossible de récupérer les cours de la saison.', MEMBERS_TOAST_PREFIX);
           console.log(error);
         }
       });
@@ -662,7 +643,7 @@ function updateMember() {
           location.reload();
         },
         error: (error) => {
-          showToast(`${DEFAULT_ERROR} Impossible de changer le cours.`);
+          showToast(`${DEFAULT_ERROR} Impossible de changer le cours.`, MEMBERS_TOAST_PREFIX);
           console.log(error);
         }
       });
@@ -786,7 +767,7 @@ function patchPayment(memberId, paymentId) {
           },
           error: (error) => {
             if (!error.responseJSON) {
-              showToast('Une erreur est survenue lors de la mise à jour du paiement.');
+              showToast('Une erreur est survenue lors de la mise à jour du paiement.', MEMBERS_TOAST_PREFIX);
               console.log(error);
             } else {
               const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('member-error-toast'));
@@ -811,7 +792,7 @@ function patchPayment(memberId, paymentId) {
     },
     error: (error) => {
       if (!error.responseJSON) {
-        showToast('Une erreur est survenue lors de la mise à jour du paiement.');
+        showToast('Une erreur est survenue lors de la mise à jour du paiement.', MEMBERS_TOAST_PREFIX);
         console.log(error);
       } else {
         const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('member-error-toast'));
@@ -904,7 +885,7 @@ function patchMemberCoursesActions(memberId, action) {
     success: () => { location.reload(); },
     error: (error) => {
       if (!error.responseJSON) {
-        showToast(DEFAULT_ERROR);
+        showToast(DEFAULT_ERROR, MEMBERS_TOAST_PREFIX);
         console.log(error);
       }
       if (error.responseJSON && error.responseJSON.cancel_refund) {
@@ -938,17 +919,11 @@ function deleteMember() {
             location.reload();
           },
           error: (error) => {
-            showToast('Une erreur est survenue, impossible de supprimer l\'adhérent pour le moment.');
+            showToast('Une erreur est survenue, impossible de supprimer l\'adhérent pour le moment.', MEMBERS_TOAST_PREFIX);
             console.log(error);
           }
         });
       });
     });
   }
-}
-
-function showToast(text) {
-  const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('member-error-toast'));
-  $('#member-error-body').text(`${text} ${ERROR_SUFFIX}`);
-  toast.show();
 }

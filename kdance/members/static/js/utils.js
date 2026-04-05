@@ -16,6 +16,11 @@
 /* with KDance registration. If not, see <https://www.gnu.org/licenses/>.           */
 /************************************************************************************/
 
+function activatePopovers() {
+  const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+  [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
+}
+
 function breadcrumbDropdownOnHover() {
   let dropdown_hover = $('.dropdown-hover');
   dropdown_hover.on('mouseover', function(){
@@ -28,4 +33,30 @@ function breadcrumbDropdownOnHover() {
       menu.removeClass('show');
       toggle.removeClass('show').attr('aria-expanded', false);
   });
+}
+
+function getSeasonsWrapper(callback, toastPrefix) {
+  $.ajax({
+    url: seasonsUrl,
+    type: 'GET',
+    success: (data) => {
+        callback(data);
+    },
+    error: (_error) => {
+      showToast('Impossible de récupérer la liste des saisons.', toastPrefix);
+    }
+  });
+}
+
+function onSeasonChange(seasonId, callback) {
+  const refresh = window.location.protocol + "//" + window.location.host + window.location.pathname + `?season=${seasonId}`;
+  window.history.pushState({ path: refresh }, '', refresh);
+  callback(seasonId);
+}
+
+function showToast(text, toastPrefix, withSuffix = true) {
+  const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById(toastPrefix + '-toast'));
+  const toastText = text + (withSuffix ? ` ${ERROR_SUFFIX}` : '');
+  $(`#${toastPrefix}-body`).text(toastText);
+  toast.show();
 }

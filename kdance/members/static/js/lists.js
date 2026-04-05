@@ -35,23 +35,15 @@ $(document).ready(() => {
 
 
 function getSeasons() {
-  $.ajax({
-    url: seasonsUrl,
-    type: 'GET',
-    success: (data) => {
-      data.map((season) => {
-        let label = season.year;
-        if (season.is_current) {
-          label += ' (en cours)';
-        }
-        $('#season-select').append($('<option>', { value: season.id, text: label, selected: season.is_current }));
-      });
-    },
-    error: (error) => {
-      showToast('Impossible de récupérer la liste des saisons.');
-      console.log(error);
-    }
-  });
+  getSeasonsWrapper((data) => {
+    data.map((season) => {
+      let label = season.year;
+      if (season.is_current) {
+        label += ' (en cours)';
+      }
+      $('#season-select').append($('<option>', { value: season.id, text: label, selected: season.is_current }));
+    });
+  }, LISTS_TOAST_PREFIX);
 }
 
 function populateMainSelect() {
@@ -103,7 +95,7 @@ function getCourses(seasonId, mainValue) {
       }
     },
     error: (error) => {
-      showToast('Impossible de récupérer les cours de la saison.');
+      showToast('Impossible de récupérer les cours de la saison.', LISTS_TOAST_PREFIX);
       console.log(error);
     }
   });
@@ -195,7 +187,7 @@ function getMembersPerCourse(mainValue) {
       $('#total-count').text(data.length);
     },
     error: (error) => {
-      showToast('Impossible de récupérer les informations.');
+      showToast('Impossible de récupérer les informations.', LISTS_TOAST_PREFIX);
       console.log(error);
     }
   });
@@ -737,7 +729,7 @@ function getChecksPerMonth() {
       $('#total-amount').text(`${totalAmount}€`);
     },
     error: (error) => {
-      showToast('Impossible de récupérer les chèques demandés.');
+      showToast('Impossible de récupérer les chèques demandés.', LISTS_TOAST_PREFIX);
       console.log(error);
     }
   });
@@ -896,14 +888,8 @@ function getPayments() {
       $('#total-amount').text(`${totalAmount}€`);
     },
     error: (error) => {
-      showToast('Impossible de récupérer les paiements demandés.');
+      showToast('Impossible de récupérer les paiements demandés.', LISTS_TOAST_PREFIX);
       console.log(error);
     }
   });
-}
-
-function showToast(text) {
-  const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('list-error-toast'));
-  $('#list-error-body').text(`${text} ${ERROR_SUFFIX}`);
-  toast.show();
 }

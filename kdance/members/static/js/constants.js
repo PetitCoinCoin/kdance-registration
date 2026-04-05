@@ -66,3 +66,7 @@ const COMMON_TABLE_PARAMS = {
 const DEFAULT_ERROR = 'Une erreur est survenue.';
 const ERROR_SUFFIX = 'Veuillez ré-essayer plus tard ou contacter le support technique K\'Dance.';
 const DEFAULT_ERROR_MESSAGE = `${DEFAULT_ERROR} ${ERROR_SUFFIX}`;
+
+const COURSES_TOAST_PREFIX = 'course-error';
+const LISTS_TOAST_PREFIX = 'list-error';
+const MEMBERS_TOAST_PREFIX = 'member-error';

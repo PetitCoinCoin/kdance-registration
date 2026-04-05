@@ -26,8 +26,12 @@ $(document).ready(() => {
   copyCourseFromSeason();
   deleteItem();
   const seasonSelect = document.querySelector('#season-select');
-  seasonSelect.addEventListener('change', () =>
-    onSeasonChange(seasonSelect.value)
+  seasonSelect.addEventListener('change', () => {
+    onSeasonChange(seasonSelect.value, (sId) => {
+      getCourses(sId);
+      getPreviousSeason(sId);
+    })
+  }
   );
   breadcrumbDropdownOnHover();
 });
@@ -40,34 +44,26 @@ function populateWeekdays() {
 }
 
 function getSeasons() {
-  $.ajax({
-    url: seasonsUrl,
-    type: 'GET',
-    success: (data) => {
-      var urlParams = new URLSearchParams(window.location.search);
-      data.map((season) => {
-        let label = season.year;
-        const selectedUrl = urlParams.get('season') === season.id.toString();
-        if (season.is_current) {
-          label += ' (en cours)';
-        }
-        if (selectedUrl || (urlParams.get('season') === null && season.is_current)) {
-          getCourses(season.id);
-          $('#copy-modal-title').html(`Ajouter des cours à la saison ${season.year}`);
-        } else {
-          $('#copy-season').append($('<option>', { value: season.id, text: season.year }));
-        }
-        $('#season-select').append($(
-          '<option>',
-          { value: season.id, text: label, selected: urlParams.get('season') !== null ? selectedUrl : season.is_current }
-        ));
-      });
-    },
-    error: (error) => {
-      showToast('Impossible de récupérer la liste des saisons.');
-      console.log(error);
-    }
-  });
+  getSeasonsWrapper((data) => {
+    var urlParams = new URLSearchParams(window.location.search);
+    data.map((season) => {
+      let label = season.year;
+      const selectedUrl = urlParams.get('season') === season.id.toString();
+      if (season.is_current) {
+        label += ' (en cours)';
+      }
+      if (selectedUrl || (urlParams.get('season') === null && season.is_current)) {
+        getCourses(season.id);
+        $('#copy-modal-title').html(`Ajouter des cours à la saison ${season.year}`);
+      } else {
+        $('#copy-season').append($('<option>', { value: season.id, text: season.year }));
+      }
+      $('#season-select').append($(
+        '<option>',
+        { value: season.id, text: label, selected: urlParams.get('season') !== null ? selectedUrl : season.is_current }
+      ));
+    });
+  }, COURSES_TOAST_PREFIX);
 }
 
 function getSeason(season) {
@@ -163,8 +159,7 @@ function postOrPatchSeason(url, method) {
       },
       error: (error) => {
         if (!error.responseJSON) {
-          showToast(DEFAULT_ERROR);
-          console.log(error);
+          showToast(DEFAULT_ERROR, COURSES_TOAST_PREFIX);
         }
         if (error.responseJSON.year) {
           $('#invalid-season-year').html(error.responseJSON.year[0] + ' Format attendu: XXXX-YYYY');
@@ -206,22 +201,15 @@ function copyCourseFromSeason() {
         to_season: parseInt($('#season-select').val(), 10),
       }),
       dataType: 'json',
-      success: (data) => {
+      success: () => {
         event.currentTarget.submit();
       },
       error: (error) => {
-        showToast(DEFAULT_ERROR);
+        showToast(DEFAULT_ERROR, COURSES_TOAST_PREFIX);
         console.log(error);
       }
     });
   });
-}
-
-function onSeasonChange(seasonId) {
-  const refresh = window.location.protocol + "//" + window.location.host + window.location.pathname + `?season=${seasonId}`;
-  window.history.pushState({ path: refresh }, '', refresh);
-  getCourses(seasonId);
-  getPreviousSeason(seasonId);
 }
 
 function getPreviousSeason(seasonId) {
@@ -337,7 +325,7 @@ function getCourses(seasonId) {
       }
     },
     error: (error) => {
-      showToast('Impossible de récupérer les cours de la saison.');
+      showToast('Impossible de récupérer les cours de la saison.', COURSES_TOAST_PREFIX);
       console.log(error);
     }
   });
@@ -369,7 +357,7 @@ function getTeachers() {
       });
     },
     error: (error) => {
-      showToast('Impossible de récupérer la liste des professeurs.');
+      showToast('Impossible de récupérer la liste des professeurs.', COURSES_TOAST_PREFIX);
       console.log(error);
     }
   });
@@ -414,8 +402,7 @@ function postOrPatchTeacher(teacher) {
       },
       error: (error) => {
         if (!error.responseJSON) {
-          showToast(DEFAULT_ERROR);
-          console.log(error);
+          showToast(DEFAULT_ERROR, COURSES_TOAST_PREFIX);
         }
         if (error.responseJSON && error.responseJSON.name) {
           $('#invalid-teacher-name').html(error.responseJSON.name[0]);
@@ -467,7 +454,7 @@ function getCourse(course, deleteModalBody) {
       $('#course-capacity').val(data.capacity);
     },
     error: (error) => {
-      showToast('Impossible de récupérer les informations du cours.');
+      showToast('Impossible de récupérer les informations du cours.', COURSES_TOAST_PREFIX);
       console.log(error);
     }
   });
@@ -502,8 +489,7 @@ function postOrPatchCourse(course) {
       },
       error: (error) => {
         if (!error.responseJSON) {
-          showToast(DEFAULT_ERROR);
-          console.log(error);
+          showToast(DEFAULT_ERROR, COURSES_TOAST_PREFIX);
         }
         if (error.responseJSON && error.responseJSON.non_field_errors) {
           const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('course-error-toast'));
@@ -554,17 +540,11 @@ function deleteItem() {
             location.reload();
           },
           error: (error) => {
-            showToast(DEFAULT_ERROR);
+            showToast(DEFAULT_ERROR, COURSES_TOAST_PREFIX);
             console.log(error);
           }
         });
       });
     });
   }
-}
-
-function showToast(text) {
-  const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('course-error-toast'));
-  $('#course-error-body').text(`${text} ${ERROR_SUFFIX}`);
-  toast.show();
 }
