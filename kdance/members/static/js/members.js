@@ -343,6 +343,7 @@ function getMember(memberId) {
       const withPass = !(data.sport_pass === null || data.sport_pass?.code === null || data.sport_pass?.code === '');
       $('#pass-div').attr('hidden', !withPass);
       $('#pass-switch').prop('checked', withPass);
+      $('#payment-pass-code').data('withPass', withPass);
 
       $('#payment-coupon-count').val(data.payment.sport_coupon?.count || '');
       $('#payment-coupon-amount').val(data.payment.sport_coupon?.amount || '');
@@ -762,13 +763,16 @@ function patchPayment(memberId, paymentId) {
     dataType: 'json',
     success: () => {
       $('#payment-cb').prop('disabled', true);
-      if ($('#payment-pass-code').val() !== '') {
-        memberData = {
-          sport_pass: {
-            code: $('#payment-pass-code').val(),
-            amount: $('#payment-pass-amount').val(),
-          },
-        };
+      console.log("prout", $('#payment-pass-code').data('withPass'))
+      if ($('#payment-pass-code').val() !== '' || $('#payment-pass-code').data('withPass')) {
+      const memberData = $('#payment-pass-code').val() !== '' ?
+      {
+        sport_pass: {
+          code: $('#payment-pass-code').val(),
+          amount: $('#payment-pass-amount').val(),
+        },
+      } :
+      {};
         $.ajax({
           url: membersUrl + memberId + '/',
           type: 'PATCH',
