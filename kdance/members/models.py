@@ -70,6 +70,10 @@ class Season(models.Model):
     pre_signup_end = models.DateField(null=False, blank=False)
     signup_start = models.DateField(null=True)
     signup_end = models.DateField(null=True)
+    adhesion_fee = models.PositiveIntegerField(
+        default=10,
+        blank=False,
+    )
     discount_percent = models.PositiveIntegerField(
         default=10,
         blank=False,
@@ -365,7 +369,7 @@ class Payment(models.Model):
         validated_members = members.annotate(
             num_courses=Count("active_courses")
         ).filter(Q(num_courses__gt=0) | Q(is_validated=True))
-        due += validated_members.count() * 10
+        due += validated_members.count() * self.season.adhesion_fee
         due += sum([member.ffd_license for member in validated_members])
         # Refund after cancellation
         due -= sum(member.cancel_refund for member in members)
@@ -396,7 +400,7 @@ class Payment(models.Model):
         license_price = sum(licenses)
         cancelled = sum(member.cancel_refund for member in members)
         info = [
-            f"{members_count} adhésion(s): {10 * members_count}€",
+            f"{members_count} adhésion(s): {self.season.adhesion_fee * members_count}€",
             f"{courses_count} cours: {courses_price}€",
         ]
         if discount:

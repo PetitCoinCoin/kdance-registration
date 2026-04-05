@@ -74,6 +74,7 @@ class SeasonSerializer(serializers.ModelSerializer):
             "pre_signup_end",
             "signup_start",
             "signup_end",
+            "adhesion_fee",
             "discount_percent",
             "discount_limit",
             "pass_sport_amount",

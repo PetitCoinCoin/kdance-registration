@@ -78,6 +78,7 @@ function getSeason(season) {
     success: (data) => {
       $('#season-year').val(data.year);
       $('#season-current').prop('checked', data.is_current);
+      $('#season-adhesion-fee').val(data.adhesion_fee);
       $('#season-discount-percent').val(data.discount_percent);
       $('#season-discount-limit').val(data.discount_limit);
       $('#season-pass-sport-amount').val(data.pass_sport_amount);
@@ -137,6 +138,9 @@ function postOrPatchSeason(url, method) {
       ffd_c_amount: $('#season-ffd-c-amount').val(),
       ffd_d_amount: $('#season-ffd-d-amount').val(),
     };
+    if ($('#season-adhesion-fee').val() !== '') {
+      data['adhesion_fee'] = $('#season-adhesion-fee').val();
+    }
     if ($('#season-discount-percent').val() !== '') {
       data['discount_percent'] = $('#season-discount-percent').val();
     }
