@@ -291,7 +291,7 @@ class PaymentSerializer(WritableNestedModelSerializer, serializers.ModelSerializ
     sport_coupon = SportCouponSerializer(required=False)
     other_payment = OtherPaymentSerializer(required=False)
     check_payment = CheckSerializer(many=True)
-    cb_payment = CBPaymentSerializer(required=False, read_only=True)
+    cb_payment = CBPaymentSerializer(required=False)
     user_email = serializers.CharField(
         read_only=True,
         source="user.username",

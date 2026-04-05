@@ -20,15 +20,22 @@ $(document).ready(() => {
   displayPayments();
   initCheckPayment();
   handleCheckPayment();
+  activatePopovers();
   getSeasons();
   updateMember();
   deleteMember();
+  allowCbPaymentUpdate();
   const seasonSelect = document.querySelector('#season-select');
   seasonSelect.addEventListener('change', () =>
     onSeasonChange(seasonSelect.value)
   );
   breadcrumbDropdownOnHover();
 });
+
+function activatePopovers() {
+  const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+  [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
+}
 
 function populateMonths(itemId) {
   monthSelectAdd = $(itemId);
@@ -74,6 +81,12 @@ function displayPayments() {
   specialSwitch.addEventListener('change', () => {
     $('#special-discount-div').attr('hidden', !$('#special-discount-switch').is(':checked'));
   });
+}
+
+function allowCbPaymentUpdate() {
+  $('#cb-payment-edit').on('click', () => {
+    $('#payment-cb').prop('disabled', false);
+  })
 }
 
 function initCheckPayment() {
@@ -485,12 +498,15 @@ function updateMember() {
       $('#form-member-payment').data('memberId', memberId);
       $('#form-member-payment').data('paymentId', paymentId);
     });
+    $('#member-payment-modal').on('hide.bs.modal', () => {
+      $('#payment-cb').prop('disabled', true);
+    });
     $('#member-payment-modal').on('submit', '#form-member-payment', function (event) {
       event.preventDefault();
       const memberId = $(this).data('memberId');
       const paymentId = $(this).data('paymentId');
       patchPayment(memberId, paymentId);
-    })
+    });
   }
   if (memberLicenseModal) {
     $('#member-license-modal').on('show.bs.modal', function (event) {
@@ -730,6 +746,12 @@ function patchPayment(memberId, paymentId) {
     }
   }
   paymentData.check_payment = checks;
+  if (! $('#payment-cb').prop('disabled')) {
+    paymentData.cb_payment = {
+      amount: $('#payment-cb').val() || 0,
+      transaction_type: "CAWL_"
+    }
+  }
   $.ajax({
     url: paymentsUrl + paymentId + '/',
     type: 'PATCH',
@@ -739,6 +761,7 @@ function patchPayment(memberId, paymentId) {
     data: JSON.stringify(paymentData),
     dataType: 'json',
     success: () => {
+      $('#payment-cb').prop('disabled', true);
       if ($('#payment-pass-code').val() !== '') {
         memberData = {
           sport_pass: {
