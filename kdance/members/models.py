@@ -477,7 +477,12 @@ class SportPass(models.Model):
 
 
 class Check(models.Model):
-    number = models.PositiveIntegerField(null=False)
+    number = models.CharField(
+        blank=False,
+        null=False,
+        validators=[RegexValidator(r"\d{1,10}")],
+        max_length=10,
+    )
     name = models.CharField(
         null=False,
         blank=False,
