@@ -182,6 +182,9 @@ function actionFormatter(value, row, index) {
       <li><button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#member-courses-update-modal" memberId="${row.id}">Changer de cours</button></li>
       <li><button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#member-courses-delete-modal" memberId="${row.id}">Annuler des cours</button></li>
     </ul>
+    <button class="btn btn-outline-info btn-sm" memberId="${row.id}" type="button">
+      <i class="bi bi-cloud-arrow-down-fill"></i>
+    </button>
     <button class="btn btn-outline-warning btn-sm" memberId="${row.id}" memberName="${row.name}" type="button" data-bs-toggle="modal" data-bs-target="#member-delete-modal">
       <i class="bi-trash3-fill"></i>
     </button>

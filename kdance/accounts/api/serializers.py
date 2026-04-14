@@ -229,7 +229,20 @@ class UserCreateSerializer(UserBaseSerializer):
         return user
 
 
-class UserSerializer(UserBaseSerializer):
+class UserMiniSerializer(UserBaseSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+        )
+        read_only_fields = fields
+
+
+class UserMeSerializer(UserBaseSerializer):
     profile = ProfileSerializer()
     payment = PaymentSerializer(read_only=True, many=True)
     members = MemberRetrieveSerializer(read_only=True, many=True)

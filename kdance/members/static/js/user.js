@@ -25,6 +25,9 @@ $(document).ready(() => {
   $('#copy-btn').click(() => {
     window.location.href = 'member?' + new URLSearchParams({from_pk: $('#copy-member-select').val()}).toString()
   });
+  $('#rgpd-button').click(() => {
+    getUser(true);
+  });
 });
 
 function displayPwdToast() {
@@ -105,11 +108,31 @@ function majorityImpact(isMajor) {
   }
 }
 
-function getUser() {
+function getUser(isRgpd = false) {
+  const url = isRgpd ? userMeUrl + "?rgpd=true" : userMeUrl;
   $.ajax({
-    url: userMeUrl,
+    url,
     type: 'GET',
     success: (data) => {
+      if (isRgpd) {
+        const filename = `${data.last_name}_${data.first_name}.json`.replaceAll(' ', '-');
+        const mimeType = "application/json";
+
+        const jsonString = JSON.stringify(data, null, 2);
+        const blob = new Blob([jsonString], { type: mimeType });
+        const fileUrl = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = fileUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+
+        // Clean up
+        document.body.removeChild(a);
+        URL.revokeObjectURL(fileUrl);
+        return;
+      }
       $('#desc-firstname').html(data.first_name);
       $('#desc-lastname').html(data.last_name);
       $('#desc-email').html(data.email);

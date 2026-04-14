@@ -126,6 +126,17 @@ class SeasonSerializer(serializers.ModelSerializer):
         return validated
 
 
+class SeasonMiniSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Season
+        fields = (
+            "id",
+            "year",
+            "is_current",
+        )
+        read_only_fields = fields
+
+
 class TeacherSerializer(serializers.ModelSerializer):
     class Meta:
         model = Teacher
@@ -169,7 +180,7 @@ class CourseSerializer(serializers.ModelSerializer):
 
 class CourseRetrieveSerializer(CourseSerializer):
     teacher = TeacherSerializer()
-    season = SeasonSerializer()
+    season = SeasonMiniSerializer()
 
 
 class CourseCopySeasonSerializer(serializers.Serializer):
@@ -287,7 +298,7 @@ class CheckSerializer(serializers.ModelSerializer):
 
 
 class PaymentSerializer(WritableNestedModelSerializer, serializers.ModelSerializer):
-    season = SeasonSerializer()
+    season = SeasonMiniSerializer()
     ancv = AncvSerializer(required=False)
     sport_coupon = SportCouponSerializer(required=False)
     other_payment = OtherPaymentSerializer(required=False)
@@ -561,7 +572,7 @@ class MemberRetrieveSerializer(MemberSerializer):
     active_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
     cancelled_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
     waiting_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
-    season = SeasonSerializer()
+    season = SeasonMiniSerializer()
 
 
 class MemberRetrieveShortSerializer(MemberRetrieveSerializer):

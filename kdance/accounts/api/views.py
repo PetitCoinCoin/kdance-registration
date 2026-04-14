@@ -43,7 +43,8 @@ from accounts.api.serializers import (
     UserCreateSerializer,
     UserNewPwdSerializer,
     UserResetPwdSerializer,
-    UserSerializer,
+    UserMeSerializer,
+    UserMiniSerializer,
     UserTeacherActionSerializer,
 )
 from members.emails import EmailEnum, EmailSender
@@ -79,7 +80,7 @@ class UsersApiViewSet(
             if self.request.path and "admin" in self.request.path.lower():
                 return UserAdminActionSerializer
             return UserTeacherActionSerializer
-        return UserSerializer
+        return UserMiniSerializer
 
     def create(self, request, *args, **kwargs) -> Response:
         if not GeneralSettings.get_solo().allow_signup:
@@ -156,8 +157,14 @@ class UserMeApiViewSet(
     GenericViewSet,
 ):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = UserMeSerializer
     http_method_names = ["get", "patch", "put", "delete"]
+
+    def get_serializer_class(
+        self,
+    ) -> type[UserMeSerializer]:
+        print(self.request.query_params)
+        return UserMeSerializer
 
     def get_object(self) -> User:
         return self.queryset.get(pk=self.request.user.pk)
