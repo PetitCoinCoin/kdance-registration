@@ -868,14 +868,15 @@ function getPayments() {
             searchable: true,
           }],
         data: data.map(p => {
+          const checks = p.check_payment.filter(c => c.month !== 100)
           return {
             ...p,
             ancv: p.ancv || {amount: 0, count: 0},
             cb_payment: p.cb_payment?.amount || 0,
             sport_coupon: p.sport_coupon || {amount: 0, count: 0},
             other_payment: p.other_payment || {amount: 0, comment: ''},
-            check_count: p.check_payment.length,
-            check_amount: p.check_payment.reduce((acc, val) => acc + val.amount, 0),
+            check_count: checks.length,
+            check_amount: checks.reduce((acc, val) => acc + val.amount, 0),
           }
         })
       });

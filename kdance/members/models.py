@@ -426,7 +426,7 @@ class Payment(models.Model):
             paid += self.cb_payment.amount
         if self.other_payment is not None:
             paid += self.other_payment.amount
-        for check in self.check_payment.all():
+        for check in self.check_payment.exclude(month=100).all():
             paid += check.amount
         for member in Member.objects.filter(user=self.user, season=self.season).all():
             if member.sport_pass:
@@ -503,6 +503,7 @@ class Check(models.Model):
             (10, "Octobre"),
             (11, "Novembre"),
             (12, "Décembre"),
+            (100, "Caution"),
         ],
     )
     payment = models.ForeignKey(

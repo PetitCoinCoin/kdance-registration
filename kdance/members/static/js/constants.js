@@ -34,6 +34,7 @@ const MONTH = {
   4: 'Avril',
   10: 'Octobre',
   11: 'Novembre',
+  100: 'Caution',
 }
 
 const CHECK_NUMBER = 8;
