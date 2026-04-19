@@ -71,3 +71,4 @@ const DEFAULT_ERROR_MESSAGE = `${DEFAULT_ERROR} ${ERROR_SUFFIX}`;
 const COURSES_TOAST_PREFIX = 'course-error';
 const LISTS_TOAST_PREFIX = 'list-error';
 const MEMBERS_TOAST_PREFIX = 'member-error';
+const USER_TOAST_PREFIX = 'user-error';

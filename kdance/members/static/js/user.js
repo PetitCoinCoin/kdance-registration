@@ -248,8 +248,8 @@ function getUser(isRgpd = false) {
         activatePopovers();
       })
     },
-    error: (error) => {
-      showToast('Impossible de récupérer vos informations pour le moment.');
+    error: () => {
+      showToast('Impossible de récupérer vos informations pour le moment.', USER_TOAST_PREFIX);
     }
   });
 }
@@ -274,10 +274,9 @@ function deleteMember() {
           success: () => {
             location.reload();
           },
-          error: (error) => {
+          error: () => {
             const errorMessage = 'Une erreur est survenue, impossible de supprimer cet adhérent pour le moment.';
-            showToast(errorMessage);
-            console.log(error);
+            showToast(errorMessage, USER_TOAST_PREFIX);
           }
         });
       });
@@ -298,20 +297,13 @@ function validateMembers() {
           success: () => {
             location.reload();
           },
-          error: (error) => {
-            showToast(errorMessage);
-            console.log(error);
+          error: () => {
+            showToast(errorMessage, USER_TOAST_PREFIX);
           }
         });
       });
     });
   }
-}
-
-function showToast(text) {
-  const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('user-error-toast'));
-  $('#user-error-body').text(`${text} ${ERROR_SUFFIX}`);
-  toast.show();
 }
 
 function buildHelper(text) {
