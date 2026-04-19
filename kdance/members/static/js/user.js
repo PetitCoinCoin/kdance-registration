@@ -115,22 +115,7 @@ function getUser(isRgpd = false) {
     type: 'GET',
     success: (data) => {
       if (isRgpd) {
-        const filename = `${data.last_name}_${data.first_name}.json`.replaceAll(' ', '-');
-        const mimeType = "application/json";
-
-        const jsonString = JSON.stringify(data, null, 2);
-        const blob = new Blob([jsonString], { type: mimeType });
-        const fileUrl = URL.createObjectURL(blob);
-
-        const a = document.createElement('a');
-        a.href = fileUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-
-        // Clean up
-        document.body.removeChild(a);
-        URL.revokeObjectURL(fileUrl);
+        download(data)
         return;
       }
       $('#desc-firstname').html(data.first_name);
@@ -265,7 +250,6 @@ function getUser(isRgpd = false) {
     },
     error: (error) => {
       showToast('Impossible de récupérer vos informations pour le moment.');
-      console.log(error);
     }
   });
 }

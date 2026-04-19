@@ -34,7 +34,9 @@ from accounts.models import Profile, ResetPassword
 from members.emails import EmailEnum, EmailSender
 from members.models import Member, Payment, Season
 from members.api.serializers import (
+    MemberExtractSerializer,
     MemberRetrieveSerializer,
+    PaymentExtractSerializer,
     PaymentSerializer,
 )
 
@@ -274,6 +276,26 @@ class UserMeSerializer(UserBaseSerializer):
                 user.payment = Payment.objects.filter(user=user).all()
                 user.members = Member.objects.filter(user=user).all()
         super().__init__(*args, **kwargs)
+
+
+class UserExtractSerializer(UserMeSerializer):
+    payment = PaymentExtractSerializer(read_only=True, many=True)
+    members = MemberExtractSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = User
+        fields = (
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "date_joined",
+            "last_login",
+            "profile",
+            "payment",
+            "members",
+        )
+        read_only_fields = fields
 
 
 class UserAdminActionSerializer(serializers.Serializer):

@@ -41,6 +41,7 @@ from accounts.api.serializers import (
     UserBaseSerializer,
     UserChangePwdSerializer,
     UserCreateSerializer,
+    UserExtractSerializer,
     UserNewPwdSerializer,
     UserResetPwdSerializer,
     UserMeSerializer,
@@ -55,6 +56,7 @@ class UsersApiViewSet(
     CreateModelMixin,
     DestroyModelMixin,
     ListModelMixin,
+    RetrieveModelMixin,
     GenericViewSet,
 ):
     def get_queryset(self):
@@ -80,6 +82,8 @@ class UsersApiViewSet(
             if self.request.path and "admin" in self.request.path.lower():
                 return UserAdminActionSerializer
             return UserTeacherActionSerializer
+        if self.request.query_params.get("rgpd", "").lower() in ["1", "true"]:
+            return UserExtractSerializer
         return UserMiniSerializer
 
     def create(self, request, *args, **kwargs) -> Response:
@@ -157,13 +161,13 @@ class UserMeApiViewSet(
     GenericViewSet,
 ):
     queryset = User.objects.all()
-    serializer_class = UserMeSerializer
     http_method_names = ["get", "patch", "put", "delete"]
 
     def get_serializer_class(
         self,
     ) -> type[UserMeSerializer]:
-        print(self.request.query_params)
+        if self.request.query_params.get("rgpd", "").lower() in ["1", "true"]:
+            return UserExtractSerializer
         return UserMeSerializer
 
     def get_object(self) -> User:

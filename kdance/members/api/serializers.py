@@ -362,6 +362,29 @@ class PaymentShortSerializer(PaymentSerializer):
         )
 
 
+class PaymentExtractSerializer(PaymentSerializer):
+    season = serializers.CharField(
+        read_only=True,
+        source="season.year",
+    )
+
+    class Meta:
+        model = Payment
+        fields = (
+            "season",
+            "paid",
+            "due",
+            "cash",
+            "sport_coupon",
+            "ancv",
+            "check_payment",
+            "other_payment",
+            "cb_payment",
+            "refund",
+            "special_discount",
+        )
+
+
 class SportPassSerializer(serializers.ModelSerializer):
     class Meta:
         model = SportPass
@@ -575,8 +598,44 @@ class MemberRetrieveSerializer(MemberSerializer):
     season = SeasonMiniSerializer()
 
 
-class MemberRetrieveShortSerializer(MemberRetrieveSerializer):
+class MemberExtractSerializer(MemberRetrieveSerializer):
+    active_courses = serializers.StringRelatedField(many=True, read_only=True)
+    cancelled_courses = serializers.StringRelatedField(many=True, read_only=True)
+    waiting_courses = serializers.StringRelatedField(many=True, read_only=True)
+    documents = DocumentsSerializer()
+    sport_pass = SportPassSerializer(required=False)
+    contacts = ContactSerializer(many=True)
+
+    class Meta:
+        model = Member
+        fields = (
+            "created",
+            "first_name",
+            "last_name",
+            "birthday",
+            "address",
+            "postal_code",
+            "city",
+            "email",
+            "phone",
+            "active_courses",
+            "cancelled_courses",
+            "waiting_courses",
+            "ffd_license",
+            "documents",
+            "contacts",
+            "sport_pass",
+            "cancel_refund",
+        )
+        read_only_fields = fields
+
+
+class MemberRetrieveShortSerializer(serializers.ModelSerializer):
     payment = PaymentShortSerializer(required=False, read_only=True)
+    user_id = serializers.CharField(
+        read_only=True,
+        source="user.pk",
+    )
 
     class Meta:
         model = Member
@@ -591,6 +650,7 @@ class MemberRetrieveShortSerializer(MemberRetrieveSerializer):
             "is_validated",
             "documents",
             "payment",
+            "user_id",
         )
 
 
