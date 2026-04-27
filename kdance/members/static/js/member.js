@@ -203,7 +203,6 @@ async function getMember() {
       $('#authorise-emergency').prop('checked', isEdition ? data.documents.authorise_emergency : true);
       $('#pass-switch').prop('checked', isEdition ? data.sport_pass?.code !== '' : false);
       $('#member-pass-code').val(isEdition ? data.sport_pass?.code || '' : '');
-      $('#member-pass-amount').val(data.sport_pass?.amount || 50);
       const withPass = !(data.sport_pass === null || data.sport_pass?.code === null || data.sport_pass?.code === '');
       $('#pass-div').attr('hidden', !withPass);
       $('#pass-switch').prop('checked', isEdition ? withPass : false);
