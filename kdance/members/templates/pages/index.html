@@ -36,6 +36,18 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
     </div>
 
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      <div id="sent-success-toast" class="toast align-items-center bg-info" role="alert" aria-live="assertive"
+        aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body fw-semibold">
+            Demande d'attestation envoyée avec succès. Vous devriez avoir reçu une copie de la demande dans votre boîte mail.
+          </div>
+          <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
       <div id="user-error-toast" class="toast align-items-center bg-alert" role="alert" aria-live="assertive"
         aria-atomic="true">
         <div class="d-flex">
@@ -198,16 +210,22 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
             <div class="accordion-body">
               <div class="row mb-3">
                 <div class="col-12 col-sm-8">
-                  <dl class="d-flex mb-0">
-                    <dt class="me-2">Total dû:</dt>
+                  <dl class="d-flex align-items-baseline mb-0">
+                    <dt class="payment me-2">Total dû:</dt>
                     <dd class="payment">€</dd>
                   </dl>
-                  <dl class="d-flex mb-0">
-                    <dt class="me-2">Payé:</dt>
-                    <dd class="payment">€</dd>
+                  <dl class="d-flex align-items-baseline mb-0">
+                    <dt class="payment me-2">Payé:</dt>
+                    <dd class="payment me-2">€</dd>
+                    <form action="{% url 'send_mail_request' %}" method="post">
+                      {% csrf_token %}
+                      <button class="btn btn-sm btn-outline-info mb-1 payment" type="submit" hidden>
+                        Demander une attestation
+                      </button>
+                    </form>
                   </dl>
-                  <dl class="d-flex mb-2">
-                    <dt class="me-2">Remboursement perçu:</dt>
+                  <dl class="d-flex align-items-baseline mb-2">
+                    <dt class="payment me-2">Remboursement perçu:</dt>
                     <dd class="payment">€</dd>
                   </dl>
                 </div>

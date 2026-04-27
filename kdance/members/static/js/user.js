@@ -17,7 +17,7 @@
 /************************************************************************************/
 
 $(document).ready(() => {
-  displayPwdToast();
+  displayConfirmationToast();
   activatePopovers();
   getUser();
   deleteMember();
@@ -30,9 +30,14 @@ $(document).ready(() => {
   });
 });
 
-function displayPwdToast() {
+function displayConfirmationToast() {
   if (window.location.hash === '#pwd_ok') {
     const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('pwd-success-toast'));
+    toast.show();
+    window.location.hash = '';
+  }
+  if (window.location.hash === '#sent') {
+    const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('sent-success-toast'));
     toast.show();
     window.location.hash = '';
   }
@@ -157,7 +162,13 @@ function getUser(isRgpd = false) {
         let details = 'Details:<br />- ' + item.due_detail.join('<br />- ') + '<br />Ne tient pas compte d\'éventuels cours en liste d\'attente';
         dd[0].innerHTML = `${item.due}€ ${item.due > 0 ? buildHelper(details) : ''}`;
         dd[1].innerHTML = `${item.paid}€`;
-        dd[2].innerHTML = `${item.refund}€`;
+        if (item.refund > 0) {
+          dd[2].innerHTML = `${item.refund}€`;
+        } else {
+          dd[2].remove();
+          let dt = clone.querySelectorAll('dt.payment');
+          dt[2].remove();
+        }
         // Collapsible
         let collapseBtn = clone.querySelector('button');
         collapseBtn.dataset.bsTarget = `#accordion-${i}`;
@@ -191,6 +202,7 @@ function getUser(isRgpd = false) {
           const toPay = item.due - item.paid + item.refund;
           if (toPay <= 0) {
             memberBtnClone.querySelector('#checkout-btn').disabled = true;
+            clone.querySelector('button.payment').hidden = false;
           }
           btnParent.appendChild(memberBtnClone);
         }

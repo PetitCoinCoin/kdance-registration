@@ -22,7 +22,7 @@ from pathlib import Path
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser, User
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import BadRequest, PermissionDenied
 from django.http import Http404, HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
@@ -35,7 +35,7 @@ from onlinepayments.sdk.factory import Factory
 from onlinepayments.sdk.merchant.i_merchant_client import IMerchantClient
 
 from members.emails import EmailEnum, EmailSender
-from members.models import GeneralSettings, Payment, Season, CBPayment
+from members.models import GeneralSettings, Member, Payment, Season, CBPayment
 
 
 def _is_teacher(request: HttpRequest) -> bool:
@@ -354,3 +354,27 @@ def download_pdf(request: HttpRequest) -> HttpResponse:
             response["Content-Disposition"] = "inline; filename=" + filename
             return response
     raise Http404
+
+
+@require_http_methods(["POST"])
+@login_required()
+def send_mail_request(request: HttpRequest) -> HttpResponse:
+    members = [
+        f"{firstname} {lastname}"
+        for firstname, lastname in Member.objects.filter(
+            user=request.user, season__is_current=True
+        )
+        .values_list("first_name", "last_name")
+        .all()
+    ]
+    if not members:
+        raise BadRequest("Il n'y a pas d'adhérent pour la saison en cours.")
+
+    email_sender = EmailSender(EmailEnum.CE_REQUEST)
+    email_sender.send_email(
+        emails=[settings.SUPERUSER_EMAIL],
+        cc=[request.user.username],
+        members=members,
+        username=request.user.username,
+    )
+    return HttpResponseRedirect("/#sent")
