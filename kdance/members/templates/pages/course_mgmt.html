@@ -212,6 +212,22 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
                 <div id="invalid-course-name" class="invalid-feedback"></div>
               </div>
               <div class="row">
+                <div class="col-6">
+                  <div class="form-outline mb-4">
+                    <label class="form-label required" for="course-min-year">Année de naissance min</label>
+                    <input type="number" id="course-min-year" class="form-control" required />
+                    <div id="invalid-course-min-year" class="invalid-feedback"></div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="form-outline mb-4">
+                    <label class="form-label" for="course-max-year">Année de naissance max</label>
+                    <input type="number" id="course-max-year" class="form-control" />
+                    <div id="invalid-course-max-year" class="invalid-feedback"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
                 <div class="col-4">
                   <div class="form-outline mb-4">
                     <label class="form-label required" for="course-weekday">Jour de la semaine</label>

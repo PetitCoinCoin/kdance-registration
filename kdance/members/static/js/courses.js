@@ -257,6 +257,11 @@ function getCourses(seasonId) {
             searchable: true,
             sortable: true,
           }, {
+            field: 'years',
+            title: 'Années',
+            searchable: false,
+            sortable: true,
+          }, {
             field: 'teacher.name',
             title: 'Professeur',
             searchable: true,
@@ -306,7 +311,8 @@ function getCourses(seasonId) {
               ...c,
               price: c.price + '€',
               is_complete: c.is_complete ? 'Oui' : 'Non',
-              slot: `${WEEKDAY[c.weekday]}, ${startHour[0]}h${startHour[1]}-${endHour[0]}h${endHour[1]}`
+              slot: `${WEEKDAY[c.weekday]}, ${startHour[0]}h${startHour[1]}-${endHour[0]}h${endHour[1]}`,
+              years: c.max_year ? `${c.min_year}-${c.max_year}` : `≤${c.min_year}`
             }
           })
         });
@@ -319,7 +325,8 @@ function getCourses(seasonId) {
             ...c,
             price: c.price + '€',
             is_complete: c.is_complete ? 'Oui' : 'Non',
-            slot: `${WEEKDAY[c.weekday]}, ${startHour[0]}h${startHour[1]}-${endHour[0]}h${endHour[1]}`
+            slot: `${WEEKDAY[c.weekday]}, ${startHour[0]}h${startHour[1]}-${endHour[0]}h${endHour[1]}`,
+            years: c.max_year ? `${c.min_year}-${c.max_year}` : `≤${c.min_year}`
           }
         }));
       }
@@ -452,6 +459,8 @@ function getCourse(course, deleteModalBody) {
       $('#course-start').val(data.start_hour.substring(0, 5));
       $('#course-end').val(data.end_hour.substring(0, 5));
       $('#course-capacity').val(data.capacity);
+      $('#course-min-year').val(data.min_year);
+      if (data.max_year) { $('#course-max-year').val(data.max_year); }
     },
     error: (error) => {
       showToast('Impossible de récupérer les informations du cours.', COURSES_TOAST_PREFIX);
@@ -466,6 +475,7 @@ function postOrPatchCourse(course) {
   $('#form-course').submit((event) => {
     $('.invalid-feedback').removeClass('d-inline');
     event.preventDefault();
+    const maxYear = $('#course-max-year').val();
     const data = {
       name: $('#course-name').val(),
       teacher: $('#course-teacher').val(),
@@ -475,6 +485,8 @@ function postOrPatchCourse(course) {
       start_hour: $('#course-start').val(),
       end_hour: $('#course-end').val(),
       capacity: $('#course-capacity').val(),
+      min_year: $('#course-min-year').val(),
+      max_year: maxYear == "" ? null : $('#course-max-year').val()
     }
     $.ajax({
       url: url,
@@ -496,6 +508,14 @@ function postOrPatchCourse(course) {
           $('#course-error-body').text(error.responseJSON.non_field_errors.join(', '));
           toast.show();
           console.log(error);
+        }
+        if (error.responseJSON && error.responseJSON.min_year) {
+          $('#invalid-course-min-year').html(error.responseJSON.min_year[0]);
+          $('#invalid-course-min-year').addClass('d-inline');
+        }
+        if (error.responseJSON && error.responseJSON.max_year) {
+          $('#invalid-course-max-year').html(error.responseJSON.max_year[0]);
+          $('#invalid-course-max-year').addClass('d-inline');
         }
       }
     });

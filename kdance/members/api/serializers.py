@@ -168,6 +168,8 @@ class CourseSerializer(serializers.ModelSerializer):
             "name",
             "teacher",
             "season",
+            "min_year",
+            "max_year",
             "price",
             "weekday",
             "start_hour",
@@ -176,6 +178,35 @@ class CourseSerializer(serializers.ModelSerializer):
             "is_complete",
             "waiting",
         )
+
+    @staticmethod
+    def validate_min_year(min_year: int) -> int:
+        if min_year < 1900 or min_year > date.today().year:
+            raise serializers.ValidationError(
+                "L'année doit être comprise entre 1900 et cette année."
+            )
+        return min_year
+
+    @staticmethod
+    def validate_max_year(max_year: int) -> int | None:
+        if not max_year:
+            print("pouet", max_year)
+            return None
+        if max_year < 1900 or max_year > date.today().year:
+            raise serializers.ValidationError(
+                "L'année doit être comprise entre 1900 et cette année."
+            )
+        return max_year
+
+    def validate(self, attr: dict) -> dict:
+        validated = super().validate(attr)
+        if validated.get("max_year") and validated.get("min_year") > validated.get(
+            "max_year", 0
+        ):
+            raise serializers.ValidationError(
+                {"max_year": ["Les années ne sont pas cohérentes entre elles."]}
+            )
+        return validated
 
 
 class CourseRetrieveSerializer(CourseSerializer):
