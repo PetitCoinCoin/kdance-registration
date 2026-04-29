@@ -124,14 +124,20 @@ async function getCourses() {
         data.map((course) => {
           const startHour = course.start_hour.split(':');
           const endHour = course.end_hour.split(':');
-          let label = `${course.name} - ${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]} à ${endHour[0]}h${endHour[1]} - ${course.price}€`;
+          const years = course.max_year ? `${course.min_year}-${course.max_year}` : `≤${course.min_year}`
+          let label = `${course.name} (${years}) - ${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]} à ${endHour[0]}h${endHour[1]} - ${course.price}€`;
           if (course.is_complete) {
             label = `COMPLET (liste d'attente): ${label}`;
           }
-          memberCourses.innerHTML += `<div class="form-check">
+          memberCourses.innerHTML += `<tr><th><div class="form-check">
   <input class="form-check-input course-checkbox" type="checkbox" value="${course.id}" id="check-${course.id}">
-  <label class="form-check-label" for="check-${course.id}">${label}</label>
-</div>
+  </div></th>
+  <th><label class="form-check-label" for="check-${course.id}">${course.name}</label></th>
+  <th>${years}</th>
+  <th>${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]} à ${endHour[0]}h${endHour[1]}</th>
+  <th>${course.price}€</th>
+  <th>${course.is_complete ? "<strong>Liste d'attente</strong>" : ""}</th>
+</tr>
 `
         });
       },
@@ -215,7 +221,7 @@ async function getMember() {
         }
         if (isWaiting) {
           label = $(`label[for="${item.id}"]`)[0]
-          label.innerHTML += ' <strong>(sur liste d\'attente)</strong>';
+          label.innerHTML += ' <i>(sur liste d\'attente)</i>';
         }
       });
       $('#member-license').val(isEdition ? data.ffd_license : 0);

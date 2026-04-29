@@ -128,6 +128,10 @@ a {
   text-align: justify;
 }
 
+#member-courses th {
+  font-weight: initial !important;
+}
+
 #course-header {
   display: flex;
   justify-content: space-between;
