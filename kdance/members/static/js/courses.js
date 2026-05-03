@@ -312,7 +312,7 @@ function getCourses(seasonId) {
               price: c.price + '€',
               is_complete: c.is_complete ? 'Oui' : 'Non',
               slot: `${WEEKDAY[c.weekday]}, ${startHour[0]}h${startHour[1]}-${endHour[0]}h${endHour[1]}`,
-              years: c.max_year ? `${c.min_year}-${c.max_year}` : `≤${c.min_year}`
+              years: c.min_year ? `${c.min_year}-${c.max_year}` : `≤${c.max_year}`
             }
           })
         });
@@ -326,7 +326,7 @@ function getCourses(seasonId) {
             price: c.price + '€',
             is_complete: c.is_complete ? 'Oui' : 'Non',
             slot: `${WEEKDAY[c.weekday]}, ${startHour[0]}h${startHour[1]}-${endHour[0]}h${endHour[1]}`,
-            years: c.max_year ? `${c.min_year}-${c.max_year}` : `≤${c.min_year}`
+            years: c.min_year ? `${c.min_year}-${c.max_year}` : `≤${c.max_year}`
           }
         }));
       }
@@ -459,8 +459,8 @@ function getCourse(course, deleteModalBody) {
       $('#course-start').val(data.start_hour.substring(0, 5));
       $('#course-end').val(data.end_hour.substring(0, 5));
       $('#course-capacity').val(data.capacity);
-      $('#course-min-year').val(data.min_year);
-      if (data.max_year) { $('#course-max-year').val(data.max_year); }
+      $('#course-max-year').val(data.max_year);
+      if (data.min_year) { $('#course-min-year').val(data.min_year); }
     },
     error: (error) => {
       showToast('Impossible de récupérer les informations du cours.', COURSES_TOAST_PREFIX);
@@ -475,7 +475,7 @@ function postOrPatchCourse(course) {
   $('#form-course').submit((event) => {
     $('.invalid-feedback').removeClass('d-inline');
     event.preventDefault();
-    const maxYear = $('#course-max-year').val();
+    const minYear = $('#course-min-year').val();
     const data = {
       name: $('#course-name').val(),
       teacher: $('#course-teacher').val(),
@@ -485,8 +485,8 @@ function postOrPatchCourse(course) {
       start_hour: $('#course-start').val(),
       end_hour: $('#course-end').val(),
       capacity: $('#course-capacity').val(),
-      min_year: $('#course-min-year').val(),
-      max_year: maxYear == "" ? null : $('#course-max-year').val()
+      max_year: $('#course-max-year').val(),
+      min_year: minYear == "" ? null : minYear
     }
     $.ajax({
       url: url,

@@ -536,7 +536,7 @@ function buildNextSeason(data, courseId) {
             courses: m.active_courses.filter(c => c.id != courseId).map(
               (c) => `${c.name}, ${WEEKDAY[c.weekday]}`
             ),
-            possibleCourses: coursesData.filter((c) => c.min_year <= birthyear && (! c.max_year || c.max_year >= birthyear))
+            possibleCourses: coursesData.filter((c) => (! c.min_year || c.min_year <= birthyear) && c.max_year >= birthyear)
           }
         })
       });
@@ -548,7 +548,7 @@ function actionFormatter(value, row, index) {
   const possibleCourses = row.possibleCourses.map((c) =>
     `<li class="form-check">
         <input type="checkbox" class="form-check-input" id="${row.id}-${c.id}"${row.next_courses.map(i => i.id).indexOf(c.id) > -1 ? ' checked' : ''} onChange=updateNextSeason(event,${row.id},${c.id})>
-        <label class="form-check-label" for="${row.id}-${c.id}">${c.name}, ${WEEKDAY[c.weekday]}</label>
+        <label class="form-check-label" for="${row.id}-${c.id}">${c.name} (${c.min_year ? `${c.min_year}-${c.max_year}` : `≤${c.max_year}`}), ${WEEKDAY[c.weekday]}</label>
       </li>`
   );
   return `<div id="next-${row.id}" class="d-flex flex-column">

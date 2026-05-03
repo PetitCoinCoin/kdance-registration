@@ -124,7 +124,7 @@ async function getCourses() {
         data.map((course) => {
           const startHour = course.start_hour.split(':');
           const endHour = course.end_hour.split(':');
-          const years = course.max_year ? `${course.min_year}-${course.max_year}` : `≤${course.min_year}`
+          const years = course.min_year ? `${course.min_year}-${course.max_year}` : `≤${course.max_year}`
           let label = `${course.name} (${years}) - ${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]} à ${endHour[0]}h${endHour[1]} - ${course.price}€`;
           if (course.is_complete) {
             label = `COMPLET (liste d'attente): ${label}`;

@@ -12,13 +12,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="course",
             name="max_year",
-            field=models.PositiveIntegerField(null=True),
+            field=models.PositiveIntegerField(default=1900),
+            preserve_default=False,
         ),
         migrations.AddField(
             model_name="course",
             name="min_year",
-            field=models.PositiveIntegerField(default=1900),
-            preserve_default=False,
+            field=models.PositiveIntegerField(null=True),
         ),
         migrations.AddField(
             model_name="member",

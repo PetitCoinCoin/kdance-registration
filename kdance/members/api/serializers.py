@@ -180,7 +180,9 @@ class CourseSerializer(serializers.ModelSerializer):
         )
 
     @staticmethod
-    def validate_min_year(min_year: int) -> int:
+    def validate_min_year(min_year: int) -> int | None:
+        if not min_year:
+            return None
         if min_year < 1900 or min_year > date.today().year:
             raise serializers.ValidationError(
                 "L'année doit être comprise entre 1900 et cette année."
@@ -188,9 +190,7 @@ class CourseSerializer(serializers.ModelSerializer):
         return min_year
 
     @staticmethod
-    def validate_max_year(max_year: int) -> int | None:
-        if not max_year:
-            return None
+    def validate_max_year(max_year: int) -> int:
         if max_year < 1900 or max_year > date.today().year:
             raise serializers.ValidationError(
                 "L'année doit être comprise entre 1900 et cette année."
@@ -199,8 +199,8 @@ class CourseSerializer(serializers.ModelSerializer):
 
     def validate(self, attr: dict) -> dict:
         validated = super().validate(attr)
-        if validated.get("max_year") and validated.get("min_year") > validated.get(
-            "max_year", 0
+        if validated.get("min_year") and validated.get("min_year") > validated.get(
+            "max_year"
         ):
             raise serializers.ValidationError(
                 {"max_year": ["Les années ne sont pas cohérentes entre elles."]}

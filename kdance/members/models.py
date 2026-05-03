@@ -207,15 +207,15 @@ class CourseManager(models.Manager):
         for course in self.filter(season__id=from_season).values().all():
             try:
                 course.pop("id")
-                min_year = course.pop("min_year")
-                max_year = course.pop("max_year", None)
+                min_year = course.pop("min_year", None)
+                max_year = course.pop("max_year")
                 new_course = {
                     **course,
                     "season_id": to_season,
-                    "min_year": min_year + 1,
+                    "max_year": max_year + 1,
                 }
-                if max_year:
-                    new_course["max_year"] = max_year + 1
+                if min_year:
+                    new_course["min_year"] = min_year + 1
                 Course(**new_course).save()
             except IntegrityError:
                 _logger.info("Cours non copié")
@@ -236,8 +236,8 @@ class Course(models.Model):
     )
     teacher = models.ForeignKey(Teacher, null=True, on_delete=models.SET_NULL)
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
-    min_year = models.PositiveIntegerField(null=False)
-    max_year = models.PositiveIntegerField(null=True)
+    min_year = models.PositiveIntegerField(null=True)
+    max_year = models.PositiveIntegerField(null=False)
     price = models.PositiveIntegerField(null=False)
     weekday = models.PositiveIntegerField(
         choices=[
