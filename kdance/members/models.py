@@ -593,6 +593,7 @@ class MemberManager(models.Manager):
 
 class Member(PersonModel):
     created = models.DateTimeField(auto_now_add=True)
+    from_pk = models.PositiveBigIntegerField(null=True)
     user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
     active_courses = models.ManyToManyField(Course, related_name="members")
     waiting_courses = models.ManyToManyField(Course, related_name="members_waiting")
@@ -641,6 +642,14 @@ class Member(PersonModel):
     @property
     def full_address(self) -> str:
         return f"{self.address}, {self.postal_code} {self.city}"
+
+    @property
+    def default_courses(self) -> list[int]:
+        if not self.from_pk:
+            return []
+        if not Member.objects.filter(id=self.from_pk).exists():
+            return []
+        return [c.id for c in Member.objects.get(id=self.from_pk).next_courses.all()]
 
 
 @receiver(post_delete, sender=Member)

@@ -228,7 +228,10 @@ class CourseMiniSerializer(serializers.ModelSerializer):
             "min_year",
             "max_year",
             "name",
+            "price",
             "weekday",
+            "start_hour",
+            "end_hour",
         )
 
 
@@ -467,6 +470,7 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
         model = Member
         fields = (
             "id",
+            "from_pk",
             "created",
             "first_name",
             "last_name",
@@ -481,6 +485,7 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             "cancelled_courses",
             "waiting_courses",
             "next_courses",
+            "default_courses",
             "ffd_license",
             "is_validated",
             "documents",
@@ -489,7 +494,11 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             "sport_pass",
             "cancel_refund",
         )
-        extra_kwargs = {"created": {"read_only": True}}
+        extra_kwargs = {
+            "created": {"read_only": True},
+            "next_courses": {"read_only": True},
+            "default_courses": {"read_only": True},
+        }
 
     @staticmethod
     def validate_active_courses(courses: list) -> list:
@@ -647,9 +656,9 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
 
 
 class MemberRetrieveSerializer(MemberSerializer):
-    active_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
-    cancelled_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
-    waiting_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
+    active_courses = CourseMiniSerializer(many=True)  # type:ignore[assignment]
+    cancelled_courses = CourseMiniSerializer(many=True)  # type:ignore[assignment]
+    waiting_courses = CourseMiniSerializer(many=True)  # type:ignore[assignment]
     next_courses = CourseMiniSerializer(many=True)  # type:ignore[assignment]
     season = SeasonMiniSerializer()
 
@@ -658,6 +667,7 @@ class MemberExtractSerializer(MemberRetrieveSerializer):
     active_courses = serializers.StringRelatedField(many=True, read_only=True)
     cancelled_courses = serializers.StringRelatedField(many=True, read_only=True)
     waiting_courses = serializers.StringRelatedField(many=True, read_only=True)
+    next_courses = serializers.StringRelatedField(many=True, read_only=True)
     documents = DocumentsSerializer()
     sport_pass = SportPassSerializer(required=False)
     contacts = ContactSerializer(many=True)

@@ -213,6 +213,15 @@ async function getMember() {
       $('#pass-div').attr('hidden', !withPass);
       $('#pass-switch').prop('checked', isEdition ? withPass : false);
       document.querySelectorAll('.course-checkbox').forEach(item => {
+        if (isPreSignupOngoing) {
+          if (! isEdition && data.next_courses.map(c => c.id.toString()).indexOf(item.value) < 0) {
+            item.parentElement.parentElement.parentElement.remove();
+            return;
+          } else if (isEdition && data.default_courses.map(c => c.toString()).indexOf(item.value) < 0) {
+            item.parentElement.parentElement.parentElement.remove();
+            return;
+          }
+        }
         isActive = data.active_courses.map(c => c.id.toString()).indexOf(item.value) > -1;
         isWaiting = data.waiting_courses.map(c => c.id.toString()).indexOf(item.value) > -1;
         item.checked = isActive || isWaiting;
@@ -270,6 +279,7 @@ function isMe(contact) {
 }
 
 function postOrPatchMember(url, method, event) {
+    var urlParams = new URLSearchParams(window.location.search);
     $('.invalid-feedback').removeClass('d-inline');
     $('#message-error-contact').addClass('d-none');
     $('#message-error-mandatory-contact').addClass('d-none');
@@ -290,6 +300,9 @@ function postOrPatchMember(url, method, event) {
         authorise_emergency: $('#authorise-emergency').is(':checked'),
       }
     };
+    if (urlParams.get('from_pk') !== null) {
+      data.from_pk = urlParams.get('from_pk')
+    }
     let courses = [];
     document.querySelectorAll('.course-checkbox').forEach(item => {
       if (item.checked) {

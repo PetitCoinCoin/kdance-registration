@@ -316,6 +316,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
     const membersUrl = "{% url 'api-members-list' %}";
     const seasonsUrl = "{% url 'api-seasons-list' %}";
     const settingsUrl = "{% url 'api-settings-detail' %}";
+    const isPreSignupOngoing = "{{ season.is_pre_signup_ongoing }}".toLowerCase() === "true";
     const isSignupOngoing = "{{ season.is_signup_ongoing }}".toLowerCase() === "true";
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
   </script>

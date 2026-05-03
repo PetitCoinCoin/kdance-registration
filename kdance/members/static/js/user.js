@@ -202,7 +202,9 @@ function getUser(isRgpd = false) {
           const toPay = item.due - item.paid + item.refund;
           if (toPay <= 0) {
             memberBtnClone.querySelector('#checkout-btn').disabled = true;
-            clone.querySelector('button.payment').hidden = false;
+            if (item.due > 0) {
+              clone.querySelector('button.payment').hidden = false;
+            }
           }
           btnParent.appendChild(memberBtnClone);
         }
