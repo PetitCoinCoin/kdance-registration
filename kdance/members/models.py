@@ -16,6 +16,8 @@ You should have received a copy of the GNU Affero General Public License along
 with KDance registration. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from __future__ import annotations
+
 import logging
 
 from enum import Enum
@@ -126,6 +128,10 @@ class Season(models.Model):
                 Member.objects.filter(ffd_license=getattr(prev_state, attr)).update(
                     ffd_license=getattr(self, attr)
                 )
+
+    @property
+    def next_season(self) -> Season | None:
+        return Season.objects.filter(year__gt=self.year).order_by("year").first()
 
     @property
     def previous_season(self) -> str:

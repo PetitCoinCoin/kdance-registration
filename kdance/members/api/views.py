@@ -34,6 +34,7 @@ from members.api.serializers import (
     GeneralSettingsSerializer,
     MemberCoursesActionsEnum,
     MemberCoursesSerializer,
+    MemberNextCoursesSerializer,
     MemberRetrieveSerializer,
     MemberRetrieveShortSerializer,
     MemberSerializer,
@@ -379,6 +380,23 @@ class MemberViewSet(
             return Response(status=status.HTTP_404_NOT_FOUND)
         member = self.get_object()
         serializer = MemberCoursesSerializer(
+            data=request.data, member=member, action=action
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @action(
+        detail=True,
+        methods=["put"],
+        serializer_class=MemberNextCoursesSerializer,
+        url_path=r"next-courses/(?P<action>\w+)",
+    )
+    def next_courses(self, request: Request, action: str, *_a, **_k) -> Response:
+        if action not in [action.value for action in MemberCoursesActionsEnum]:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        member = self.get_object()
+        serializer = MemberNextCoursesSerializer(
             data=request.data, member=member, action=action
         )
         serializer.is_valid(raise_exception=True)

@@ -190,7 +190,6 @@ class CourseSerializer(serializers.ModelSerializer):
     @staticmethod
     def validate_max_year(max_year: int) -> int | None:
         if not max_year:
-            print("pouet", max_year)
             return None
         if max_year < 1900 or max_year > date.today().year:
             raise serializers.ValidationError(
@@ -207,6 +206,30 @@ class CourseSerializer(serializers.ModelSerializer):
                 {"max_year": ["Les années ne sont pas cohérentes entre elles."]}
             )
         return validated
+
+
+class CourseMiniSerializer(serializers.ModelSerializer):
+    weekday = serializers.ChoiceField(
+        choices=[
+            (0, "Lundi"),
+            (1, "Mardi"),
+            (2, "Mercredi"),
+            (3, "Jeudi"),
+            (4, "Vendredi"),
+            (5, "Samedi"),
+            (6, "Dimanche"),
+        ],
+    )
+
+    class Meta:
+        model = Course
+        fields = (
+            "id",
+            "min_year",
+            "max_year",
+            "name",
+            "weekday",
+        )
 
 
 class CourseRetrieveSerializer(CourseSerializer):
@@ -457,6 +480,7 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             "active_courses",
             "cancelled_courses",
             "waiting_courses",
+            "next_courses",
             "ffd_license",
             "is_validated",
             "documents",
@@ -626,6 +650,7 @@ class MemberRetrieveSerializer(MemberSerializer):
     active_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
     cancelled_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
     waiting_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
+    next_courses = CourseMiniSerializer(many=True)  # type:ignore[assignment]
     season = SeasonMiniSerializer()
 
 
@@ -652,6 +677,7 @@ class MemberExtractSerializer(MemberRetrieveSerializer):
             "active_courses",
             "cancelled_courses",
             "waiting_courses",
+            "next_courses",
             "ffd_license",
             "documents",
             "contacts",
@@ -823,3 +849,29 @@ class MemberCoursesSerializer(serializers.Serializer):
                     course_name=course.name,
                     cancel_refund=refund_delta,
                 )
+
+
+class MemberNextCoursesSerializer(serializers.Serializer):
+    next_course = serializers.PrimaryKeyRelatedField(
+        queryset=Course.objects.all(), required=True
+    )
+    name = serializers.CharField(read_only=True, source="next_course.name")
+    weekday = serializers.CharField(read_only=True, source="next_course.weekday")
+
+    def __init__(self, member: Member, action: str, **kwargs: Any) -> None:
+        self._member = member
+        self._action = MemberCoursesActionsEnum(action)
+        if self._action == MemberCoursesActionsEnum.FORCE_ADD:
+            raise serializers.ValidationError(
+                "Pas de liste d'attente à contourner dans ce contexte"
+            )
+        super().__init__(**kwargs)
+
+    @transaction.atomic
+    def save(self, **kwargs: Any) -> None:
+        next_course = self.validated_data["next_course"]
+        if self._action == MemberCoursesActionsEnum.ADD:
+            self._member.next_courses.add(next_course)
+        elif self._action == MemberCoursesActionsEnum.REMOVE:
+            self._member.next_courses.remove(next_course)
+        self._member.save()

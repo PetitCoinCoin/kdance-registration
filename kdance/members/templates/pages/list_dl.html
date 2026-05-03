@@ -32,6 +32,15 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
         </div>
       </div>
     </div>
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      <div id="list-success-toast" class="toast align-items-center bg-info" role="alert" aria-live="assertive"
+        aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body fw-semibold" id="list-success-body"></div>
+          <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+    </div>
 
     <!-- Modal -->
     {% csrf_token %}
@@ -112,6 +121,9 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
     const ffdB = "{{ season.ffd_b_amount }}";
     const ffdC = "{{ season.ffd_c_amount }}";
     const ffdD = "{{ season.ffd_d_amount }}";
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const currentSeasonId = "{{ season.id }}"
+    const nextSeasonId = "{{ season.next_season.id }}"
   </script>
   <script src="{% static 'js/lists.js' %}"></script>
 </main>

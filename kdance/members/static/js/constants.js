@@ -54,6 +54,7 @@ const LIST_MAIN_MAPPING = {
   '5': 'La liste des licenciés',
   '6': 'Les contacts par cours',
   '7': 'Les contacts d\'urgence par cours',
+  '8': '...et attribuer les cours de l\'an prochain',
 }
 
 const COMMON_TABLE_PARAMS = {
