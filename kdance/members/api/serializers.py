@@ -181,6 +181,7 @@ class CourseSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "teacher",
+            "skill",
             "season",
             "min_year",
             "max_year",

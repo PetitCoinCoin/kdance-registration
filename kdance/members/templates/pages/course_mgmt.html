@@ -226,18 +226,24 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
                 <div id="invalid-course-name" class="invalid-feedback"></div>
               </div>
               <div class="row">
-                <div class="col-6">
+                <div class="col-4">
                   <div class="form-outline mb-4">
                     <label class="form-label" for="course-min-year">Année de naissance min</label>
                     <input type="number" id="course-min-year" class="form-control" />
                     <div id="invalid-course-min-year" class="invalid-feedback"></div>
                   </div>
                 </div>
-                <div class="col-6">
+                <div class="col-4">
                   <div class="form-outline mb-4">
                     <label class="form-label required" for="course-max-year">Année de naissance max</label>
                     <input type="number" id="course-max-year" class="form-control" required/>
                     <div id="invalid-course-max-year" class="invalid-feedback"></div>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="form-outline mb-4">
+                    <label class="form-label required" for="course-capacity">Nombre de places</label>
+                    <input type="number" id="course-capacity" class="form-control" required />
                   </div>
                 </div>
               </div>
@@ -270,8 +276,8 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
                 </div>
                 <div class="col-4">
                   <div class="form-outline mb-4">
-                    <label class="form-label required" for="course-capacity">Nombre de places</label>
-                    <input type="number" id="course-capacity" class="form-control" required />
+                    <label class="form-label required" for="course-skill">Discipline</label>
+                    <select id="course-skill" class="form-select"></select>
                   </div>
                 </div>
                 <div class="col-4">
@@ -284,7 +290,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-              <button id="course-btn" type="submit" class="btn btn-info"></button>
+              <button id="course-btn" type="button" class="btn btn-info"></button>
             </div>
           </form>
         </div>

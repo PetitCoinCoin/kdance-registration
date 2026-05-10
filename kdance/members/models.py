@@ -249,6 +249,7 @@ class Course(models.Model):
         max_length=150,
     )
     teacher = models.ForeignKey(Teacher, null=True, on_delete=models.SET_NULL)
+    skill = models.ForeignKey(Skill, null=True, on_delete=models.SET_NULL)
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
     min_year = models.PositiveIntegerField(null=True)
     max_year = models.PositiveIntegerField(null=False)
