@@ -26,6 +26,7 @@ from members.api.views import (
     MemberViewSet,
     PaymentViewSet,
     SeasonViewSet,
+    SkillViewSet,
     TeacherViewSet,
 )
 from members.views import (
@@ -71,6 +72,7 @@ router.register(r"courses", CourseViewSet, basename="api-courses")
 router.register(r"members", MemberViewSet, basename="api-members")
 router.register(r"payments", PaymentViewSet, basename="api-payments")
 router.register(r"seasons", SeasonViewSet, basename="api-seasons")
+router.register(r"skills", SkillViewSet, basename="api-skills")
 router.register(r"teachers", TeacherViewSet, basename="api-teachers")
 
 singleton_router = SingletonRouter()

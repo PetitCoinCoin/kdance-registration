@@ -186,6 +186,19 @@ class Season(models.Model):
         return self.year
 
 
+class Skill(models.Model):
+    name = models.CharField(
+        unique=True,
+        null=False,
+        blank=False,
+        max_length=50,
+    )
+
+    def save(self, *args, **kwargs) -> None:
+        self.name = self.name.title()
+        super().save(*args, **kwargs)
+
+
 class Teacher(models.Model):
     name = models.CharField(
         unique=True,
@@ -193,6 +206,7 @@ class Teacher(models.Model):
         blank=False,
         max_length=30,
     )
+    skills = models.ManyToManyField(Skill, related_name="teachers")
 
     def __repr__(self) -> str:
         return self.name

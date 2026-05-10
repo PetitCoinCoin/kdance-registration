@@ -187,6 +187,20 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
                 <input type="text" id="teacher-name" class="form-control" maxlength="30" required />
                 <div id="invalid-teacher-name" class="invalid-feedback"></div>
               </div>
+              <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                  Disciplines
+                </button>
+                <div class="dropdown-menu p-2 w-75">
+                  <ul id="teacher-skills-select" class="p-0"></ul>
+                  <div class="form-outline d-flex">
+                    <input type="text" id="new-skill-input" class="form-control me-2" maxlength="50" placeholder="Ajouter une discipline..."/>
+                    <button id="add-skill-btn" class="btn btn-outline-info" type="button">
+                      <i class="bi-plus-square"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
@@ -420,6 +434,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
     const coursesUrl = "{% url 'api-courses-list' %}";
     const copyCoursesUrl = "{% url 'api-courses-copy-season' %}";
     const seasonsUrl = "{% url 'api-seasons-list' %}";
+    const skillsUrl = "{% url 'api-skills-list' %}";
     const teachersUrl = "{% url 'api-teachers-list' %}";
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
   </script>

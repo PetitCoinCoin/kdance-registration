@@ -42,6 +42,7 @@ from members.models import (
     OtherPayment,
     Payment,
     Season,
+    Skill,
     SportCoupon,
     SportPass,
     CBPayment,
@@ -137,15 +138,28 @@ class SeasonMiniSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class TeacherSerializer(serializers.ModelSerializer):
+class SkillSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Teacher
+        model = Skill
         fields = ("id", "name")
 
-    def validate_name(self, name: str) -> str:
-        if Teacher.objects.filter(name__iexact=name).exists():
-            raise serializers.ValidationError("Ce professeur existe déjà.")
-        return name
+
+class TeacherBaseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Teacher
+        fields = ("id", "name", "skills")
+
+
+class TeacherRetrieveSerializer(TeacherBaseSerializer):
+    skills = SkillSerializer(many=True, read_only=True)  # type:ignore[assignment]
+
+
+class TeacherSerializer(TeacherBaseSerializer):
+    skills = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Skill.objects.all(),
+        default=list,
+    )
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -236,7 +250,7 @@ class CourseMiniSerializer(serializers.ModelSerializer):
 
 
 class CourseRetrieveSerializer(CourseSerializer):
-    teacher = TeacherSerializer()
+    teacher = TeacherRetrieveSerializer()
     season = SeasonMiniSerializer()
 
 

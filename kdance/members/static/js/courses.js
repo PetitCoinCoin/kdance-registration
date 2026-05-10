@@ -19,6 +19,7 @@
 $(document).ready(() => {
   populateWeekdays();
   getSeasons();
+  getSkills();
   getTeachers();
   createUpdateSeason();
   createUpdateTeacher();
@@ -33,6 +34,7 @@ $(document).ready(() => {
     })
   }
   );
+  $('#add-skill-btn').on('click', () => { postSkill(); });
   breadcrumbDropdownOnHover();
 });
 
@@ -338,6 +340,54 @@ function getCourses(seasonId) {
   });
 }
 
+function getSkills() {
+  $.ajax({
+    url: skillsUrl,
+    type: 'GET',
+    success: (data) => {
+      for (const skill of data) {
+        const element = `<li class="form-check">
+        <input type="checkbox" class="form-check-input" id="check-skill-${skill.id}" value="${skill.id}">
+        <label class="form-check-label" for="skill-${skill.id}">${skill.name}</label>
+      </li>`
+        $('#teacher-skills-select').append(element);
+      }
+    },
+    error: (error) => {
+      showToast('Impossible de récupérer la liste des disciplines.', COURSES_TOAST_PREFIX);
+      console.log(error);
+    }
+  });
+}
+
+function postSkill() {
+  $.ajax({
+    url: skillsUrl,
+    type: 'POST',
+    headers: { 'X-CSRFToken': csrftoken },
+    mode: 'same-origin',
+    dataType: 'json',
+    data: { name: $('#new-skill-input').val() },
+    success: (data) => {
+      const element = `<li class="form-check">
+      <input type="checkbox" class="form-check-input" id="check-skill-${data.id}" value="${data.id}">
+      <label class="form-check-label" for="skill-${data.id}">${data.name}</label>
+    </li>`
+      $('#teacher-skills-select').append(element);
+      $('#new-skill-input').val(undefined)
+    },
+    error: (error) => {
+      if (!error.responseJSON) {
+        showToast('Impossible d\'ajouter une nouvelle discipline.', COURSES_TOAST_PREFIX);
+        console.log(error);
+      }
+      if (error.responseJSON && error.responseJSON.name) {
+        showToast(error.responseJSON.name[0], COURSES_TOAST_PREFIX, false);
+      }
+    }
+  });
+}
+
 function getTeachers() {
   $.ajax({
     url: teachersUrl,
@@ -349,14 +399,15 @@ function getTeachers() {
       data.map((teacher) => {
         teacherSelect.append($('<option>', { value: teacher.id, text: teacher.name }));
         const clone = teacherTemplate.content.cloneNode(true);
-        let name = clone.querySelector('span');
-        name.textContent = teacher.name;
+        let data = clone.querySelector('span');
+        data.textContent = teacher.skills.length > 0 ? `${teacher.name} : ${teacher.skills.map(s => s.name).join(', ')}` : teacher.name;
         let avatar = clone.querySelector('img');
         avatar.src = `https://api.dicebear.com/8.x/thumbs/svg?seed=${teacher.name}&radius=50`;
         let buttons = clone.querySelectorAll('button');
         buttons[0].id = `edit-${teacher.id}-btn`;
         buttons[0].dataset.bsTname = teacher.name;
         buttons[0].dataset.bsTid = teacher.id;
+        buttons[0].dataset.bsTskillids = teacher.skills.map(s => s.id);
         buttons[1].id = `delete-${teacher.id}-btn`;
         buttons[1].dataset.bsTname = teacher.name;
         buttons[1].dataset.bsTid = teacher.id;
@@ -377,13 +428,23 @@ function createUpdateTeacher() {
       const button = event.relatedTarget;
       const teacher = button.getAttribute('data-bs-Tid');
       const teacherName = button.getAttribute('data-bs-Tname');
+      const teacherskills = button.getAttribute('data-bs-Tskillids');
+      const skills = !! teacherskills ? teacherskills.split(',') : []
+      $('.invalid-feedback').removeClass('d-inline');
       if (teacher !== null) {
         $('#teacher-modal-title').html('Modifier un professeur');
         $('#teacher-btn').html('Modifier');
         $('#teacher-name').val(teacherName);
+        for (element of $('[id^=check-skill-]')) {
+          element.checked = skills.indexOf(element.value) > -1;
+        }
       } else {
         $('#teacher-modal-title').html('Ajouter un professeur');
         $('#teacher-btn').html('Ajouter');
+        $('#teacher-name').val(undefined);
+        for (element of $('[id^=check-skill-]')) {
+          element.checked = false;
+        }
       }
       postOrPatchTeacher(teacher);
     });
@@ -396,13 +457,23 @@ function postOrPatchTeacher(teacher) {
   $('#form-teacher').submit((event) => {
     $('.invalid-feedback').removeClass('d-inline');
     event.preventDefault();
+    let skills = [];
+    for (const element of $('[id^=check-skill-]')) {
+      if (element.checked) {
+        skills.push(parseInt(element.value));
+      }
+    }
+    const data = {
+      name: $('#teacher-name').val(),
+      skills
+    };
     $.ajax({
       url: url,
       type: method,
       contentType: 'application/json',
       headers: { 'X-CSRFToken': csrftoken },
       mode: 'same-origin',
-      data: JSON.stringify({ name: $('#teacher-name').val() }),
+      data: JSON.stringify(data),
       dataType: 'json',
       success: () => {
         location.reload();

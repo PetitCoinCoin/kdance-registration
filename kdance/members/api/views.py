@@ -24,6 +24,7 @@ from members.models import (
     Member,
     Payment,
     Season,
+    Skill,
     Teacher,
 )
 from members.api.serializers import (
@@ -40,7 +41,9 @@ from members.api.serializers import (
     MemberSerializer,
     PaymentSerializer,
     SeasonSerializer,
+    SkillSerializer,
     TeacherSerializer,
+    TeacherRetrieveSerializer,
 )
 
 from django.conf import settings
@@ -111,6 +114,16 @@ class SeasonViewSet(
         return queryset.order_by("-year")
 
 
+class SkillViewSet(
+    CreateModelMixin,
+    ListModelMixin,
+    GenericViewSet,
+):
+    queryset = Skill.objects.all().order_by("name")
+    serializer_class = SkillSerializer
+    http_method_names = ["get", "post"]
+
+
 class TeacherViewSet(
     CreateModelMixin,
     ListModelMixin,
@@ -120,8 +133,12 @@ class TeacherViewSet(
     GenericViewSet,
 ):
     queryset = Teacher.objects.all().order_by("name")
-    serializer_class = TeacherSerializer
     http_method_names = ["get", "post", "patch", "delete"]
+
+    def get_serializer_class(self):
+        if self.request.method.lower() == "get":
+            return TeacherRetrieveSerializer
+        return TeacherSerializer
 
 
 class PaymentViewSet(
