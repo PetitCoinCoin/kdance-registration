@@ -252,6 +252,7 @@ class CourseMiniSerializer(serializers.ModelSerializer):
 
 class CourseRetrieveSerializer(CourseSerializer):
     teacher = TeacherRetrieveSerializer()
+    skill = SkillSerializer()
     season = SeasonMiniSerializer()
 
 

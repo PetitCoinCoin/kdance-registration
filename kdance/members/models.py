@@ -291,9 +291,51 @@ class Course(models.Model):
     @transaction.atomic
     def save(self, *args, **kwargs) -> None:
         is_edit = self.pk is not None
+        prev_state = Course.objects.get(pk=self.pk) if is_edit else None
         super().save(*args, **kwargs)
         if is_edit and GeneralSettings.get_solo().allow_new_member:
             self.update_queue()
+        if (
+            not is_edit
+            or prev_state.min_year != self.min_year
+            or prev_state.max_year != self.max_year
+        ):
+            self.update_next_members()
+
+    def update_next_members(self) -> None:
+        for member in self.members_next.all():
+            if (
+                self.min_year and member.birthday.year < self.min_year
+            ) or member.birthday.year > self.max_year:
+                self.members_next.remove(member)
+                member.check_next()
+        for member in Member.objects.filter(
+            season__year=self.season.previous_season
+        ).all():
+            if (
+                self.min_year and member.birthday.year < self.min_year
+            ) or member.birthday.year > self.max_year:
+                continue
+            skill_course = (
+                member.active_courses.filter(skill=self.skill).first()
+                or member.cancelled_courses.filter(skill=self.skill).first()
+            )
+            if skill_course:
+                next_skill_course = member.next_courses.filter(skill=self.skill).first()
+                if not next_skill_course:
+                    member.next_courses.add(self)
+                elif next_skill_course != self:
+                    if (
+                        next_skill_course.weekday == skill_course.weekday
+                        and next_skill_course.start_hour == skill_course.start_hour
+                    ):
+                        continue
+                    if (
+                        self.weekday == skill_course.weekday
+                        and self.start_hour == skill_course.start_hour
+                    ):
+                        member.next_courses.remove(next_skill_course)
+                    member.next_courses.add(self)
 
     def update_queue(self) -> None:
         while self.members_waiting.count() and not self.is_complete:
@@ -665,6 +707,20 @@ class Member(PersonModel):
         if not Member.objects.filter(id=self.from_pk).exists():
             return []
         return [c.id for c in Member.objects.get(id=self.from_pk).next_courses.all()]
+
+    def check_next(self) -> None:
+        skills = set()
+        for course in self.active_courses.all():
+            skills.add(course.skill)
+        for course in self.cancelled_courses.all():
+            skills.add(course.skill)
+
+        for course in Course.objects.filter(
+            season=self.season.next_season,
+            max_year__gte=self.birthday.year,
+            skill__in=skills,
+        ).exclude(min_year__gt=self.birthday.year):
+            self.next_courses.add(course)
 
 
 @receiver(post_delete, sender=Member)
