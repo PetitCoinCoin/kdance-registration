@@ -1,4 +1,4 @@
-<!-- Copyright 2024, 2025 Andréa Marnier
+<!-- Copyright 2024 - present, Andréa Marnier
 
 This file is part of KDance registration.
 
@@ -108,8 +108,18 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
                 <label class="form-check-label" for="cb-switch">En ligne</label>
               </div>
               <div class="form-outline mb-4" id="cb-div" hidden>
-                <label class="form-label fst-italic" for="payment-cb">Montant reçu en ligne (€)</label>
-                <input type="number" id="payment-cb" class="form-control" min="0" disabled/>
+                <div class="row align-items-end">
+                  <div class="col">
+                    <label class="form-label fst-italic" for="payment-cb">Montant reçu en ligne (€)</label>
+                    <input type="number" id="payment-cb" class="form-control" min="0" disabled/>
+                  </div>
+                  <span class="d-inline-block col-1" tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus"
+                  data-bs-content="À utiliser exceptionnellement, s'il y a eu un souci côté banque !" data-bs-placement="left">
+                    <button class="btn btn-outline-danger" type="button" id="cb-payment-edit">
+                      <i class="bi-pencil-fill"></i>
+                    </button>
+                  </span>
+                </div>
               </div>
               <div class="form-check form-switch mb-2">
                 <input class="form-check-input" type="checkbox" role="switch" id="check-switch">
@@ -139,14 +149,15 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
               </div>
               <div id="pass-div" hidden>
                 <div class="row align-items-end">
-                  <div class="col form-outline mb-4">
-                    <label class="form-label fst-italic" for="payment-pass-code">Code</label>
+                  <div class="col-7 form-outline mb-4">
+                    <label class="form-label fst-italic" for="payment-pass-code">Code (laisser vide pour supprimer le Pass'Sport)</label>
                     <input type="text" id="payment-pass-code" class="form-control" maxlength="20" />
                   </div>
-                  <div class="col form-outline mb-4">
+                  <div class="col-5 form-outline mb-4">
                     <label class="form-label fst-italic" for="payment-pass-amount">Montant (€)</label>
                     <input type="number" id="payment-pass-amount" class="form-control" disabled />
                   </div>
+                  </span>
                 </div>
               </div>
               <div class="form-check form-switch mb-2">
@@ -379,6 +390,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
           Pour mettre à jour le paiement, cliquez sur <i class="bi-currency-dollar main-blue"></i>.<br />
           Pour ajouter / déplacer / retirer des cours à un adhérent et/ou modifier sa licence, cliquez sur
           <i class="bi-pencil-fill main-blue" style="font-size: small"></i>.<br />
+          Pour télécharger les données d'un utilisateur (dans le cadre du RGPD), cliquez sur <i class="bi bi-cloud-arrow-down-fill main-blue" style="font-size: small"></i>.<br />
           Il est nécessaire d'annuler un cours avant de procéder à son éventuel remboursement (même partiel).
         </p>
         <div class="mb-3">
@@ -452,6 +464,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
     const seasonsUrl = "{% url 'api-seasons-list' %}";
     const membersUrl = "{% url 'api-members-list' %}";
     const paymentsUrl = "{% url 'api-payments-list' %}";
+    const usersUrl = "{% url 'api-users-list' %}";
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
   </script>
   <script src="{% static 'js/members.js' %}"></script>

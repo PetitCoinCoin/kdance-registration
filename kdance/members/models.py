@@ -1,5 +1,5 @@
 """
-Copyright 2024, 2025 Andréa Marnier
+Copyright 2024 - present, Andréa Marnier
 
 This file is part of KDance registration.
 
@@ -15,6 +15,8 @@ for more details.
 You should have received a copy of the GNU Affero General Public License along
 with KDance registration. If not, see <https://www.gnu.org/licenses/>.
 """
+
+from __future__ import annotations
 
 import logging
 
@@ -70,6 +72,10 @@ class Season(models.Model):
     pre_signup_end = models.DateField(null=False, blank=False)
     signup_start = models.DateField(null=True)
     signup_end = models.DateField(null=True)
+    adhesion_fee = models.PositiveIntegerField(
+        default=10,
+        blank=False,
+    )
     discount_percent = models.PositiveIntegerField(
         default=10,
         blank=False,
@@ -124,6 +130,10 @@ class Season(models.Model):
                 )
 
     @property
+    def next_season(self) -> Season | None:
+        return Season.objects.filter(year__gt=self.year).order_by("year").first()
+
+    @property
     def previous_season(self) -> str:
         previous_season = (
             Season.objects.filter(year__lt=self.year).order_by("-year").first()
@@ -176,6 +186,19 @@ class Season(models.Model):
         return self.year
 
 
+class Skill(models.Model):
+    name = models.CharField(
+        unique=True,
+        null=False,
+        blank=False,
+        max_length=50,
+    )
+
+    def save(self, *args, **kwargs) -> None:
+        self.name = self.name.title()
+        super().save(*args, **kwargs)
+
+
 class Teacher(models.Model):
     name = models.CharField(
         unique=True,
@@ -183,6 +206,7 @@ class Teacher(models.Model):
         blank=False,
         max_length=30,
     )
+    skills = models.ManyToManyField(Skill, related_name="teachers")
 
     def __repr__(self) -> str:
         return self.name
@@ -197,10 +221,15 @@ class CourseManager(models.Manager):
         for course in self.filter(season__id=from_season).values().all():
             try:
                 course.pop("id")
+                min_year = course.pop("min_year", None)
+                max_year = course.pop("max_year")
                 new_course = {
                     **course,
                     "season_id": to_season,
+                    "max_year": max_year + 1,
                 }
+                if min_year:
+                    new_course["min_year"] = min_year + 1
                 Course(**new_course).save()
             except IntegrityError:
                 _logger.info("Cours non copié")
@@ -220,7 +249,10 @@ class Course(models.Model):
         max_length=150,
     )
     teacher = models.ForeignKey(Teacher, null=True, on_delete=models.SET_NULL)
+    skill = models.ForeignKey(Skill, null=True, on_delete=models.SET_NULL)
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
+    min_year = models.PositiveIntegerField(null=True)
+    max_year = models.PositiveIntegerField(null=False)
     price = models.PositiveIntegerField(null=False)
     weekday = models.PositiveIntegerField(
         choices=[
@@ -259,9 +291,51 @@ class Course(models.Model):
     @transaction.atomic
     def save(self, *args, **kwargs) -> None:
         is_edit = self.pk is not None
+        prev_state = Course.objects.get(pk=self.pk) if is_edit else None
         super().save(*args, **kwargs)
         if is_edit and GeneralSettings.get_solo().allow_new_member:
             self.update_queue()
+        if (
+            not is_edit
+            or prev_state.min_year != self.min_year
+            or prev_state.max_year != self.max_year
+        ):
+            self.update_next_members()
+
+    def update_next_members(self) -> None:
+        for member in self.members_next.all():
+            if (
+                self.min_year and member.birthday.year < self.min_year
+            ) or member.birthday.year > self.max_year:
+                self.members_next.remove(member)
+                member.check_next()
+        for member in Member.objects.filter(
+            season__year=self.season.previous_season
+        ).all():
+            if (
+                self.min_year and member.birthday.year < self.min_year
+            ) or member.birthday.year > self.max_year:
+                continue
+            skill_course = (
+                member.active_courses.filter(skill=self.skill).first()
+                or member.cancelled_courses.filter(skill=self.skill).first()
+            )
+            if skill_course:
+                next_skill_course = member.next_courses.filter(skill=self.skill).first()
+                if not next_skill_course:
+                    member.next_courses.add(self)
+                elif next_skill_course != self:
+                    if (
+                        next_skill_course.weekday == skill_course.weekday
+                        and next_skill_course.start_hour == skill_course.start_hour
+                    ):
+                        continue
+                    if (
+                        self.weekday == skill_course.weekday
+                        and self.start_hour == skill_course.start_hour
+                    ):
+                        member.next_courses.remove(next_skill_course)
+                    member.next_courses.add(self)
 
     def update_queue(self) -> None:
         while self.members_waiting.count() and not self.is_complete:
@@ -365,7 +439,7 @@ class Payment(models.Model):
         validated_members = members.annotate(
             num_courses=Count("active_courses")
         ).filter(Q(num_courses__gt=0) | Q(is_validated=True))
-        due += validated_members.count() * 10
+        due += validated_members.count() * self.season.adhesion_fee
         due += sum([member.ffd_license for member in validated_members])
         # Refund after cancellation
         due -= sum(member.cancel_refund for member in members)
@@ -396,7 +470,7 @@ class Payment(models.Model):
         license_price = sum(licenses)
         cancelled = sum(member.cancel_refund for member in members)
         info = [
-            f"{members_count} adhésion(s): {10 * members_count}€",
+            f"{members_count} adhésion(s): {self.season.adhesion_fee * members_count}€",
             f"{courses_count} cours: {courses_price}€",
         ]
         if discount:
@@ -422,7 +496,7 @@ class Payment(models.Model):
             paid += self.cb_payment.amount
         if self.other_payment is not None:
             paid += self.other_payment.amount
-        for check in self.check_payment.all():
+        for check in self.check_payment.exclude(month=100).all():
             paid += check.amount
         for member in Member.objects.filter(user=self.user, season=self.season).all():
             if member.sport_pass:
@@ -473,7 +547,12 @@ class SportPass(models.Model):
 
 
 class Check(models.Model):
-    number = models.PositiveIntegerField(null=False)
+    number = models.CharField(
+        blank=False,
+        null=False,
+        validators=[RegexValidator(r"\d{1,10}")],
+        max_length=10,
+    )
     name = models.CharField(
         null=False,
         blank=False,
@@ -499,6 +578,7 @@ class Check(models.Model):
             (10, "Octobre"),
             (11, "Novembre"),
             (12, "Décembre"),
+            (100, "Caution"),
         ],
     )
     payment = models.ForeignKey(
@@ -570,10 +650,12 @@ class MemberManager(models.Manager):
 
 class Member(PersonModel):
     created = models.DateTimeField(auto_now_add=True)
+    from_pk = models.PositiveBigIntegerField(null=True)
     user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
     active_courses = models.ManyToManyField(Course, related_name="members")
     waiting_courses = models.ManyToManyField(Course, related_name="members_waiting")
     cancelled_courses = models.ManyToManyField(Course, related_name="members_cancelled")
+    next_courses = models.ManyToManyField(Course, related_name="members_next")
     contacts = models.ManyToManyField(Contact)
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
     documents = models.OneToOneField(Documents, null=True, on_delete=models.SET_NULL)
@@ -617,6 +699,28 @@ class Member(PersonModel):
     @property
     def full_address(self) -> str:
         return f"{self.address}, {self.postal_code} {self.city}"
+
+    @property
+    def default_courses(self) -> list[int]:
+        if not self.from_pk:
+            return []
+        if not Member.objects.filter(id=self.from_pk).exists():
+            return []
+        return [c.id for c in Member.objects.get(id=self.from_pk).next_courses.all()]
+
+    def check_next(self) -> None:
+        skills = set()
+        for course in self.active_courses.all():
+            skills.add(course.skill)
+        for course in self.cancelled_courses.all():
+            skills.add(course.skill)
+
+        for course in Course.objects.filter(
+            season=self.season.next_season,
+            max_year__gte=self.birthday.year,
+            skill__in=skills,
+        ).exclude(min_year__gt=self.birthday.year):
+            self.next_courses.add(course)
 
 
 @receiver(post_delete, sender=Member)

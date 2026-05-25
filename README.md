@@ -17,7 +17,7 @@ In your browser, go to `http://localhost:8000` :tada:
 I'm more or less active on this repo, depending on the needs of the association. Nevertheless, this is some kind of (big) pet project for me, and I want to take the opportunity to improve various stuff: code of course, but also deployment, testing and so on. Feel free to reach out for any comment or advice.
 
 ##### License and copyright
-Copyright 2024, 2025 Andréa Marnier
+Copyright 2024 - present, Andréa Marnier
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or any later version.
 

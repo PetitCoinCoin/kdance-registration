@@ -1,5 +1,5 @@
 """
-Copyright 2024, 2025 Andréa Marnier
+Copyright 2024 - present, Andréa Marnier
 
 This file is part of KDance registration.
 
@@ -42,6 +42,7 @@ from members.models import (
     OtherPayment,
     Payment,
     Season,
+    Skill,
     SportCoupon,
     SportPass,
     CBPayment,
@@ -74,6 +75,7 @@ class SeasonSerializer(serializers.ModelSerializer):
             "pre_signup_end",
             "signup_start",
             "signup_end",
+            "adhesion_fee",
             "discount_percent",
             "discount_limit",
             "pass_sport_amount",
@@ -125,15 +127,39 @@ class SeasonSerializer(serializers.ModelSerializer):
         return validated
 
 
-class TeacherSerializer(serializers.ModelSerializer):
+class SeasonMiniSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Teacher
+        model = Season
+        fields = (
+            "id",
+            "year",
+            "is_current",
+        )
+        read_only_fields = fields
+
+
+class SkillSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Skill
         fields = ("id", "name")
 
-    def validate_name(self, name: str) -> str:
-        if Teacher.objects.filter(name__iexact=name).exists():
-            raise serializers.ValidationError("Ce professeur existe déjà.")
-        return name
+
+class TeacherBaseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Teacher
+        fields = ("id", "name", "skills")
+
+
+class TeacherRetrieveSerializer(TeacherBaseSerializer):
+    skills = SkillSerializer(many=True, read_only=True)  # type:ignore[assignment]
+
+
+class TeacherSerializer(TeacherBaseSerializer):
+    skills = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Skill.objects.all(),
+        default=list,
+    )
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -155,7 +181,10 @@ class CourseSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "teacher",
+            "skill",
             "season",
+            "min_year",
+            "max_year",
             "price",
             "weekday",
             "start_hour",
@@ -165,10 +194,66 @@ class CourseSerializer(serializers.ModelSerializer):
             "waiting",
         )
 
+    @staticmethod
+    def validate_min_year(min_year: int) -> int | None:
+        if not min_year:
+            return None
+        if min_year < 1900 or min_year > date.today().year:
+            raise serializers.ValidationError(
+                "L'année doit être comprise entre 1900 et cette année."
+            )
+        return min_year
+
+    @staticmethod
+    def validate_max_year(max_year: int) -> int:
+        if max_year < 1900 or max_year > date.today().year:
+            raise serializers.ValidationError(
+                "L'année doit être comprise entre 1900 et cette année."
+            )
+        return max_year
+
+    def validate(self, attr: dict) -> dict:
+        validated = super().validate(attr)
+        if validated.get("min_year") and validated.get("min_year") > validated.get(
+            "max_year"
+        ):
+            raise serializers.ValidationError(
+                {"max_year": ["Les années ne sont pas cohérentes entre elles."]}
+            )
+        return validated
+
+
+class CourseMiniSerializer(serializers.ModelSerializer):
+    weekday = serializers.ChoiceField(
+        choices=[
+            (0, "Lundi"),
+            (1, "Mardi"),
+            (2, "Mercredi"),
+            (3, "Jeudi"),
+            (4, "Vendredi"),
+            (5, "Samedi"),
+            (6, "Dimanche"),
+        ],
+    )
+
+    class Meta:
+        model = Course
+        fields = (
+            "id",
+            "min_year",
+            "max_year",
+            "name",
+            "price",
+            "weekday",
+            "start_hour",
+            "end_hour",
+        )
+
 
 class CourseRetrieveSerializer(CourseSerializer):
-    teacher = TeacherSerializer()
-    season = SeasonSerializer()
+    teacher = TeacherRetrieveSerializer()
+    skill = SkillSerializer()
+    season = SeasonMiniSerializer()
 
 
 class CourseCopySeasonSerializer(serializers.Serializer):
@@ -286,12 +371,12 @@ class CheckSerializer(serializers.ModelSerializer):
 
 
 class PaymentSerializer(WritableNestedModelSerializer, serializers.ModelSerializer):
-    season = SeasonSerializer()
+    season = SeasonMiniSerializer()
     ancv = AncvSerializer(required=False)
     sport_coupon = SportCouponSerializer(required=False)
     other_payment = OtherPaymentSerializer(required=False)
     check_payment = CheckSerializer(many=True)
-    cb_payment = CBPaymentSerializer(required=False, read_only=True)
+    cb_payment = CBPaymentSerializer(required=False)
     user_email = serializers.CharField(
         read_only=True,
         source="user.username",
@@ -350,6 +435,29 @@ class PaymentShortSerializer(PaymentSerializer):
         )
 
 
+class PaymentExtractSerializer(PaymentSerializer):
+    season = serializers.CharField(
+        read_only=True,
+        source="season.year",
+    )
+
+    class Meta:
+        model = Payment
+        fields = (
+            "season",
+            "paid",
+            "due",
+            "cash",
+            "sport_coupon",
+            "ancv",
+            "check_payment",
+            "other_payment",
+            "cb_payment",
+            "refund",
+            "special_discount",
+        )
+
+
 class SportPassSerializer(serializers.ModelSerializer):
     class Meta:
         model = SportPass
@@ -378,6 +486,7 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
         model = Member
         fields = (
             "id",
+            "from_pk",
             "created",
             "first_name",
             "last_name",
@@ -391,6 +500,8 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             "active_courses",
             "cancelled_courses",
             "waiting_courses",
+            "next_courses",
+            "default_courses",
             "ffd_license",
             "is_validated",
             "documents",
@@ -399,7 +510,11 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             "sport_pass",
             "cancel_refund",
         )
-        extra_kwargs = {"created": {"read_only": True}}
+        extra_kwargs = {
+            "created": {"read_only": True},
+            "next_courses": {"read_only": True},
+            "default_courses": {"read_only": True},
+        }
 
     @staticmethod
     def validate_active_courses(courses: list) -> list:
@@ -557,14 +672,53 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
 
 
 class MemberRetrieveSerializer(MemberSerializer):
-    active_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
-    cancelled_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
-    waiting_courses = CourseRetrieveSerializer(many=True)  # type:ignore[assignment]
-    season = SeasonSerializer()
+    active_courses = CourseMiniSerializer(many=True)  # type:ignore[assignment]
+    cancelled_courses = CourseMiniSerializer(many=True)  # type:ignore[assignment]
+    waiting_courses = CourseMiniSerializer(many=True)  # type:ignore[assignment]
+    next_courses = CourseMiniSerializer(many=True)  # type:ignore[assignment]
+    season = SeasonMiniSerializer()
 
 
-class MemberRetrieveShortSerializer(MemberRetrieveSerializer):
+class MemberExtractSerializer(MemberRetrieveSerializer):
+    active_courses = serializers.StringRelatedField(many=True, read_only=True)
+    cancelled_courses = serializers.StringRelatedField(many=True, read_only=True)
+    waiting_courses = serializers.StringRelatedField(many=True, read_only=True)
+    next_courses = serializers.StringRelatedField(many=True, read_only=True)
+    documents = DocumentsSerializer()
+    sport_pass = SportPassSerializer(required=False)
+    contacts = ContactSerializer(many=True)
+
+    class Meta:
+        model = Member
+        fields = (
+            "created",
+            "first_name",
+            "last_name",
+            "birthday",
+            "address",
+            "postal_code",
+            "city",
+            "email",
+            "phone",
+            "active_courses",
+            "cancelled_courses",
+            "waiting_courses",
+            "next_courses",
+            "ffd_license",
+            "documents",
+            "contacts",
+            "sport_pass",
+            "cancel_refund",
+        )
+        read_only_fields = fields
+
+
+class MemberRetrieveShortSerializer(serializers.ModelSerializer):
     payment = PaymentShortSerializer(required=False, read_only=True)
+    user_id = serializers.CharField(
+        read_only=True,
+        source="user.pk",
+    )
 
     class Meta:
         model = Member
@@ -579,6 +733,7 @@ class MemberRetrieveShortSerializer(MemberRetrieveSerializer):
             "is_validated",
             "documents",
             "payment",
+            "user_id",
         )
 
 
@@ -720,3 +875,29 @@ class MemberCoursesSerializer(serializers.Serializer):
                     course_name=course.name,
                     cancel_refund=refund_delta,
                 )
+
+
+class MemberNextCoursesSerializer(serializers.Serializer):
+    next_course = serializers.PrimaryKeyRelatedField(
+        queryset=Course.objects.all(), required=True
+    )
+    name = serializers.CharField(read_only=True, source="next_course.name")
+    weekday = serializers.CharField(read_only=True, source="next_course.weekday")
+
+    def __init__(self, member: Member, action: str, **kwargs: Any) -> None:
+        self._member = member
+        self._action = MemberCoursesActionsEnum(action)
+        if self._action == MemberCoursesActionsEnum.FORCE_ADD:
+            raise serializers.ValidationError(
+                "Pas de liste d'attente à contourner dans ce contexte"
+            )
+        super().__init__(**kwargs)
+
+    @transaction.atomic
+    def save(self, **kwargs: Any) -> None:
+        next_course = self.validated_data["next_course"]
+        if self._action == MemberCoursesActionsEnum.ADD:
+            self._member.next_courses.add(next_course)
+        elif self._action == MemberCoursesActionsEnum.REMOVE:
+            self._member.next_courses.remove(next_course)
+        self._member.save()

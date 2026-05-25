@@ -1,4 +1,4 @@
-<!-- Copyright 2024, 2025 Andréa Marnier
+<!-- Copyright 2024 - present, Andréa Marnier
 
 This file is part of KDance registration.
 
@@ -28,6 +28,15 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
         aria-atomic="true">
         <div class="d-flex">
           <div class="toast-body fw-semibold" id="list-error-body"></div>
+          <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+    </div>
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      <div id="list-success-toast" class="toast align-items-center bg-info" role="alert" aria-live="assertive"
+        aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body fw-semibold" id="list-success-body"></div>
           <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
       </div>
@@ -81,7 +90,10 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
             </button>
           </div>
         </div>
-        <div class="border-top">
+        <div class="border-top d-flex justify-content-center">
+          <div class="spinner-border text-info mt-4" role="status" hidden>
+            <span class="visually-hidden">Chargement en cours...</span>
+          </div>
           <table id="data-table"></table>
         </div>
         <div class="d-flex mt-3">
@@ -112,6 +124,9 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
     const ffdB = "{{ season.ffd_b_amount }}";
     const ffdC = "{{ season.ffd_c_amount }}";
     const ffdD = "{{ season.ffd_d_amount }}";
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const currentSeasonId = "{{ season.id }}"
+    const nextSeasonId = "{{ season.next_season.id }}"
   </script>
   <script src="{% static 'js/lists.js' %}"></script>
 </main>

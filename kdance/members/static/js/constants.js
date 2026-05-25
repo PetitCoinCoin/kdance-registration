@@ -1,5 +1,5 @@
 /************************************************************************************/
-/* Copyright 2024, 2025 Andréa Marnier                                              */
+/* Copyright 2024 - present, Andréa Marnier                                              */
 /*                                                                                  */
 /* This file is part of KDance registration.                                        */
 /*                                                                                  */
@@ -34,6 +34,7 @@ const MONTH = {
   4: 'Avril',
   10: 'Octobre',
   11: 'Novembre',
+  100: 'Caution',
 }
 
 const CHECK_NUMBER = 8;
@@ -53,6 +54,7 @@ const LIST_MAIN_MAPPING = {
   '5': 'La liste des licenciés',
   '6': 'Les contacts par cours',
   '7': 'Les contacts d\'urgence par cours',
+  '8': '...et attribuer les cours de l\'an prochain',
 }
 
 const COMMON_TABLE_PARAMS = {
@@ -66,3 +68,8 @@ const COMMON_TABLE_PARAMS = {
 const DEFAULT_ERROR = 'Une erreur est survenue.';
 const ERROR_SUFFIX = 'Veuillez ré-essayer plus tard ou contacter le support technique K\'Dance.';
 const DEFAULT_ERROR_MESSAGE = `${DEFAULT_ERROR} ${ERROR_SUFFIX}`;
+
+const COURSES_TOAST_PREFIX = 'course-error';
+const LISTS_TOAST_PREFIX = 'list-error';
+const MEMBERS_TOAST_PREFIX = 'member-error';
+const USER_TOAST_PREFIX = 'user-error';

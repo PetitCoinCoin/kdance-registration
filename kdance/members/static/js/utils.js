@@ -1,5 +1,5 @@
 /************************************************************************************/
-/* Copyright 2024, 2025 Andréa Marnier                                              */
+/* Copyright 2024 - present, Andréa Marnier                                              */
 /*                                                                                  */
 /* This file is part of KDance registration.                                        */
 /*                                                                                  */
@@ -16,6 +16,11 @@
 /* with KDance registration. If not, see <https://www.gnu.org/licenses/>.           */
 /************************************************************************************/
 
+function activatePopovers() {
+  const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+  [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
+}
+
 function breadcrumbDropdownOnHover() {
   let dropdown_hover = $('.dropdown-hover');
   dropdown_hover.on('mouseover', function(){
@@ -28,4 +33,57 @@ function breadcrumbDropdownOnHover() {
       menu.removeClass('show');
       toggle.removeClass('show').attr('aria-expanded', false);
   });
+}
+
+function download(data) {
+    const filename = `${data.last_name}_${data.first_name}.json`.replaceAll(' ', '-');
+    const mimeType = "application/json";
+
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: mimeType });
+    const fileUrl = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = fileUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+
+    // Clean up
+    document.body.removeChild(a);
+    URL.revokeObjectURL(fileUrl);
+}
+
+function getSeasonsWrapper(callback, toastPrefix) {
+  $.ajax({
+    url: seasonsUrl,
+    type: 'GET',
+    success: (data) => {
+        callback(data);
+    },
+    error: (_error) => {
+      showToast('Impossible de récupérer la liste des saisons.', toastPrefix);
+    }
+  });
+}
+
+function onSeasonChange(seasonId, callback) {
+  const refresh = window.location.protocol + "//" + window.location.host + window.location.pathname + `?season=${seasonId}`;
+  window.history.pushState({ path: refresh }, '', refresh);
+  callback(seasonId);
+}
+
+function showToast(text, toastPrefix, withSuffix = true) {
+  const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById(toastPrefix + '-toast'));
+  const toastText = text + (withSuffix ? ` ${ERROR_SUFFIX}` : '');
+  $(`#${toastPrefix}-body`).text(toastText);
+  toast.show();
+}
+
+function showLoader() {
+  $('[role=status]').attr('hidden', false);
+}
+
+function hideLoader() {
+  $('[role=status]').attr('hidden', true);
 }

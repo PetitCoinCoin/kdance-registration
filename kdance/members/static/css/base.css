@@ -124,6 +124,14 @@ a {
   max-width: 1000px;
 }
 
+#legal-div {
+  text-align: justify;
+}
+
+#member-courses th {
+  font-weight: initial !important;
+}
+
 #course-header {
   display: flex;
   justify-content: space-between;

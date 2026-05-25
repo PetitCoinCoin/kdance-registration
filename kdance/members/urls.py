@@ -1,5 +1,5 @@
 """
-Copyright 2024, 2025 Andréa Marnier
+Copyright 2024 - present, Andréa Marnier
 
 This file is part of KDance registration.
 
@@ -26,6 +26,7 @@ from members.api.views import (
     MemberViewSet,
     PaymentViewSet,
     SeasonViewSet,
+    SkillViewSet,
     TeacherViewSet,
 )
 from members.views import (
@@ -35,10 +36,12 @@ from members.views import (
     course_mgmt,
     download_pdf,
     index,
+    legal,
     list_dl,
     member,
     member_mgmt,
     online_checkout,
+    send_mail_request,
     session_status,
     site_mgmt,
     super_index,
@@ -69,6 +72,7 @@ router.register(r"courses", CourseViewSet, basename="api-courses")
 router.register(r"members", MemberViewSet, basename="api-members")
 router.register(r"payments", PaymentViewSet, basename="api-payments")
 router.register(r"seasons", SeasonViewSet, basename="api-seasons")
+router.register(r"skills", SkillViewSet, basename="api-skills")
 router.register(r"teachers", TeacherViewSet, basename="api-teachers")
 
 singleton_router = SingletonRouter()
@@ -79,12 +83,14 @@ urlpatterns = [
     path("download-pdf/", download_pdf, name="download"),
     path("checkout", checkout, name="checkout"),
     path("online_checkout", online_checkout, name="online_checkout"),
+    path("send_mail_request", send_mail_request, name="send_mail_request"),
     path("session_status/", session_status, name="session_status"),
     path("user_edit", user_edit, name="user_edit"),
     path("user_edit_pwd", user_edit_pwd, name="user_edit_pwd"),
     path("user_delete", user_delete, name="user_delete"),
     path("member", member, name="member"),
     path("about", about, name="about"),
+    path("legal", legal, name="legal"),
     path("super", super_index, name="super_index"),
     path("super/admin_mgmt/", admin_mgmt, name="admin_mgmt"),
     path("super/course_mgmt/", course_mgmt, name="course_mgmt"),

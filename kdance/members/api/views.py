@@ -1,5 +1,5 @@
 """
-Copyright 2024, 2025 Andréa Marnier
+Copyright 2024 - present, Andréa Marnier
 
 This file is part of KDance registration.
 
@@ -24,6 +24,7 @@ from members.models import (
     Member,
     Payment,
     Season,
+    Skill,
     Teacher,
 )
 from members.api.serializers import (
@@ -34,12 +35,15 @@ from members.api.serializers import (
     GeneralSettingsSerializer,
     MemberCoursesActionsEnum,
     MemberCoursesSerializer,
+    MemberNextCoursesSerializer,
     MemberRetrieveSerializer,
     MemberRetrieveShortSerializer,
     MemberSerializer,
     PaymentSerializer,
     SeasonSerializer,
+    SkillSerializer,
     TeacherSerializer,
+    TeacherRetrieveSerializer,
 )
 
 from django.conf import settings
@@ -110,6 +114,16 @@ class SeasonViewSet(
         return queryset.order_by("-year")
 
 
+class SkillViewSet(
+    CreateModelMixin,
+    ListModelMixin,
+    GenericViewSet,
+):
+    queryset = Skill.objects.all().order_by("name")
+    serializer_class = SkillSerializer
+    http_method_names = ["get", "post"]
+
+
 class TeacherViewSet(
     CreateModelMixin,
     ListModelMixin,
@@ -119,8 +133,12 @@ class TeacherViewSet(
     GenericViewSet,
 ):
     queryset = Teacher.objects.all().order_by("name")
-    serializer_class = TeacherSerializer
     http_method_names = ["get", "post", "patch", "delete"]
+
+    def get_serializer_class(self):
+        if self.request.method.lower() == "get":
+            return TeacherRetrieveSerializer
+        return TeacherSerializer
 
 
 class PaymentViewSet(
@@ -379,6 +397,23 @@ class MemberViewSet(
             return Response(status=status.HTTP_404_NOT_FOUND)
         member = self.get_object()
         serializer = MemberCoursesSerializer(
+            data=request.data, member=member, action=action
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @action(
+        detail=True,
+        methods=["put"],
+        serializer_class=MemberNextCoursesSerializer,
+        url_path=r"next-courses/(?P<action>\w+)",
+    )
+    def next_courses(self, request: Request, action: str, *_a, **_k) -> Response:
+        if action not in [action.value for action in MemberCoursesActionsEnum]:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        member = self.get_object()
+        serializer = MemberNextCoursesSerializer(
             data=request.data, member=member, action=action
         )
         serializer.is_valid(raise_exception=True)

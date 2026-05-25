@@ -1,5 +1,5 @@
 /************************************************************************************/
-/* Copyright 2024, 2025 Andréa Marnier                                              */
+/* Copyright 2024 - present, Andréa Marnier                                              */
 /*                                                                                  */
 /* This file is part of KDance registration.                                        */
 /*                                                                                  */
@@ -18,7 +18,6 @@
 
 $(document).ready(() => {
   getMember();
-  activatePopovers();
   createUpdateMember();
   initContacts();
   handleContacts();
@@ -28,12 +27,8 @@ $(document).ready(() => {
     const isMajor = Boolean(getAge($('#member-birthday').val()) >= 18);
     majorityImpact(isMajor);
   });
+  activatePopovers();
 });
-
-function activatePopovers() {
-  const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
-  [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
-}
 
 function handleSwitches() {
   const meSwitch = document.querySelector('#me-switch');
@@ -57,6 +52,16 @@ function handleSwitches() {
     contactMeSwitch.addEventListener('change', () => {
       contactMeImpact(key, $(`#${key}-me-switch`).is(':checked'))
     });
+  });
+  const rgpdToggle = document.querySelector('#authorise-rgpd');
+    rgpdToggle.addEventListener('change', () => {
+      const isApproved = $('#authorise-rgpd').is(':checked');
+      $('#member-submit').prop("disabled", !isApproved);
+      if (isApproved) {
+        $('#submit-wrapper').hide();
+      } else {
+        $('#submit-wrapper').show();
+      }
   });
 }
 
@@ -108,6 +113,7 @@ function getCurrentSeason() {
 }
 
 async function getCourses() {
+  showLoader();
   return getCurrentSeason().then(data => {
     const seasonId = data[0].id;
     $.ajax({
@@ -119,20 +125,29 @@ async function getCourses() {
         data.map((course) => {
           const startHour = course.start_hour.split(':');
           const endHour = course.end_hour.split(':');
-          let label = `${course.name} - ${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]} à ${endHour[0]}h${endHour[1]} - ${course.price}€`;
+          const years = course.min_year ? `${course.min_year}-${course.max_year}` : `≤${course.max_year}`
+          let label = `${course.name} (${years}) - ${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]} à ${endHour[0]}h${endHour[1]} - ${course.price}€`;
           if (course.is_complete) {
             label = `COMPLET (liste d'attente): ${label}`;
           }
-          memberCourses.innerHTML += `<div class="form-check">
+          memberCourses.innerHTML += `<tr><th><div class="form-check">
   <input class="form-check-input course-checkbox" type="checkbox" value="${course.id}" id="check-${course.id}">
-  <label class="form-check-label" for="check-${course.id}">${label}</label>
-</div>
+  </div></th>
+  <th><label class="form-check-label" for="check-${course.id}">${course.name}</label></th>
+  <th>${years}</th>
+  <th>${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]} à ${endHour[0]}h${endHour[1]}</th>
+  <th>${course.price}€</th>
+  <th>${course.is_complete ? "<strong>Liste d'attente</strong>" : ""}</th>
+</tr>
 `
         });
       },
       error: (error) => {
         showToast('Impossible de récupérer les cours de la saison.');
         console.log(error);
+      },
+      complete: () => {
+        hideLoader();
       }
     });
     let memberSeason = $('#member-season');
@@ -162,16 +177,20 @@ async function getMember() {
     member = urlParams.get('from_pk');
     $('#form-member').data('url', membersUrl);
     $('#form-member').data('method', 'POST');
+    $('#member-submit').prop("disabled", true);
     isEdition = false;
   } else if (urlParams.get('pk') !== null) {
     member = urlParams.get('pk');
     $('#form-member').data('url', membersUrl + member + '/');
     $('#form-member').data('method', 'PATCH');
+    $('#rgpd-wrapper').remove();
+    $('#submit-wrapper').hide();
   } else {
     $('h1').html('Ajouter un nouvel adhérent');
     $('#form-member').data('url', membersUrl);
     $('#form-member').data('method', 'POST');
     $('#form-member').data('canEditCourse', true);
+    $('#member-submit').prop("disabled", true);
     return
   }
   $.ajax({
@@ -194,11 +213,19 @@ async function getMember() {
       $('#authorise-emergency').prop('checked', isEdition ? data.documents.authorise_emergency : true);
       $('#pass-switch').prop('checked', isEdition ? data.sport_pass?.code !== '' : false);
       $('#member-pass-code').val(isEdition ? data.sport_pass?.code || '' : '');
-      $('#member-pass-amount').val(data.sport_pass?.amount || 50);
       const withPass = !(data.sport_pass === null || data.sport_pass?.code === null || data.sport_pass?.code === '');
       $('#pass-div').attr('hidden', !withPass);
       $('#pass-switch').prop('checked', isEdition ? withPass : false);
       document.querySelectorAll('.course-checkbox').forEach(item => {
+        if (isPreSignupOngoing) {
+          if (! isEdition && data.next_courses.map(c => c.id.toString()).indexOf(item.value) < 0) {
+            item.parentElement.parentElement.parentElement.remove();
+            return;
+          } else if (isEdition && data.default_courses.map(c => c.toString()).indexOf(item.value) < 0) {
+            item.parentElement.parentElement.parentElement.remove();
+            return;
+          }
+        }
         isActive = data.active_courses.map(c => c.id.toString()).indexOf(item.value) > -1;
         isWaiting = data.waiting_courses.map(c => c.id.toString()).indexOf(item.value) > -1;
         item.checked = isActive || isWaiting;
@@ -207,7 +234,7 @@ async function getMember() {
         }
         if (isWaiting) {
           label = $(`label[for="${item.id}"]`)[0]
-          label.innerHTML += ' <strong>(sur liste d\'attente)</strong>';
+          label.innerHTML += ' <i>(sur liste d\'attente)</i>';
         }
       });
       $('#member-license').val(isEdition ? data.ffd_license : 0);
@@ -221,6 +248,9 @@ async function getMember() {
         $('#member-btn').html('Modifier');
       }
       $('#emergency-me-switch').attr('disabled', isMe(data));
+      if (! isMe(data)) {
+        $('#emergency-contact-wrapper').hide();
+      }
       const isMajor = Boolean(getAge(data.birthday) >= 18);
       majorityImpact(isMajor);
       Object.keys(CONTACT_MAPPING).forEach(key => {
@@ -253,6 +283,7 @@ function isMe(contact) {
 }
 
 function postOrPatchMember(url, method, event) {
+    var urlParams = new URLSearchParams(window.location.search);
     $('.invalid-feedback').removeClass('d-inline');
     $('#message-error-contact').addClass('d-none');
     $('#message-error-mandatory-contact').addClass('d-none');
@@ -273,6 +304,9 @@ function postOrPatchMember(url, method, event) {
         authorise_emergency: $('#authorise-emergency').is(':checked'),
       }
     };
+    if (urlParams.get('from_pk') !== null) {
+      data.from_pk = urlParams.get('from_pk')
+    }
     let courses = [];
     document.querySelectorAll('.course-checkbox').forEach(item => {
       if (item.checked) {
@@ -458,6 +492,9 @@ function handleContacts() {
       if (isMeMember) {
         $('#emergency-me-switch').prop('checked', false);
         contactMeImpact('emergency', false);
+        $('#emergency-contact-wrapper').show();
+      } else {
+        $('#emergency-contact-wrapper').hide();
       }
     });
   });
