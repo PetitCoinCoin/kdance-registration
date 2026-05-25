@@ -240,6 +240,7 @@ function actionFormatter(value, row) {
 }
 
 function getCourses(seasonId) {
+  showLoader();
   $.ajax({
     url: coursesUrl + `?season=${seasonId}`,
     type: 'GET',
@@ -343,6 +344,9 @@ function getCourses(seasonId) {
     error: (error) => {
       showToast('Impossible de récupérer les cours de la saison.', COURSES_TOAST_PREFIX);
       console.log(error);
+    },
+    complete: () => {
+      hideLoader();
     }
   });
 }

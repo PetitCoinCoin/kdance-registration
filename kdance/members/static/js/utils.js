@@ -79,3 +79,11 @@ function showToast(text, toastPrefix, withSuffix = true) {
   $(`#${toastPrefix}-body`).text(toastText);
   toast.show();
 }
+
+function showLoader() {
+  $('[role=status]').attr('hidden', false);
+}
+
+function hideLoader() {
+  $('[role=status]').attr('hidden', true);
+}

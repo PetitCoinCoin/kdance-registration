@@ -113,6 +113,7 @@ function getCurrentSeason() {
 }
 
 async function getCourses() {
+  showLoader();
   return getCurrentSeason().then(data => {
     const seasonId = data[0].id;
     $.ajax({
@@ -144,6 +145,9 @@ async function getCourses() {
       error: (error) => {
         showToast('Impossible de récupérer les cours de la saison.');
         console.log(error);
+      },
+      complete: () => {
+        hideLoader();
       }
     });
     let memberSeason = $('#member-season');

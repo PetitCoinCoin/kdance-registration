@@ -108,6 +108,7 @@ function getCourses(seasonId, mainValue) {
 
 function searchData() {
   $('#search-btn').on('click', () => {
+    showLoader();
     const mainValue = $('#menu-1-select').val();
     switch (mainValue) {
       case '1':
@@ -125,7 +126,7 @@ function searchData() {
         getChecksPerMonth();
         break
       default:
-        return
+        break
     }
   });
 }
@@ -166,6 +167,7 @@ function getMembersPerCourse(mainValue) {
     url: url,
     type: 'GET',
     success: (data) => {
+      hideLoader();
       $('#data-table').bootstrapTable('destroy');
       switch (mainValue) {
         case '1':
@@ -196,6 +198,7 @@ function getMembersPerCourse(mainValue) {
       $('#total-count').text(data.length);
     },
     error: (error) => {
+      hideLoader();
       showToast('Impossible de récupérer les informations.', LISTS_TOAST_PREFIX);
       console.log(error);
     }
@@ -851,6 +854,9 @@ function getChecksPerMonth() {
     error: (error) => {
       showToast('Impossible de récupérer les chèques demandés.', LISTS_TOAST_PREFIX);
       console.log(error);
+    },
+    complete: () => {
+      hideLoader();
     }
   });
 }
@@ -884,6 +890,7 @@ function getPayments() {
     url: `${paymentsUrl}?season=${$('#season-select').val()}`,
     type: 'GET',
     success: (data) => {
+      hideLoader();
       $('#data-table').bootstrapTable('destroy');
       $('#data-table').bootstrapTable({
         ...COMMON_TABLE_PARAMS,
@@ -1009,6 +1016,7 @@ function getPayments() {
       $('#total-amount').text(`${totalAmount}€`);
     },
     error: (error) => {
+      hideLoader();
       showToast('Impossible de récupérer les paiements demandés.', LISTS_TOAST_PREFIX);
       console.log(error);
     }
