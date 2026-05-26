@@ -100,7 +100,7 @@ function initCheckPayment() {
       const addClone = addTemplate.content.cloneNode(true);
       let addButton = addClone.querySelector('button');
       addButton.id += `add-check-${i}`;
-      clone.querySelectorAll('.row')[1].appendChild(addClone);
+      clone.querySelector('.check-row').appendChild(addClone);
     }
     // Delete button + hidden except for first
     if (i > 0) {
@@ -109,7 +109,7 @@ function initCheckPayment() {
       let removeButton = removeClone.querySelector('button');
       removeButton.id += `remove-check-${i}`;
       removeButton.dataset.bsCnumber = i;
-      clone.querySelectorAll('.row')[1].appendChild(removeClone);
+      clone.querySelector('.check-row').appendChild(removeClone);
       clone.querySelectorAll('div')[0].id = `check-item-${i}`;
       clone.querySelectorAll('div')[0].hidden = true;
     }
