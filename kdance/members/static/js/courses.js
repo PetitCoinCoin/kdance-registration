@@ -566,7 +566,7 @@ function getCourse(course, deleteModalBody) {
       $('#course-end').val(data.end_hour.substring(0, 5));
       $('#course-capacity').val(data.capacity);
       $('#course-max-year').val(data.max_year);
-      if (data.min_year) { $('#course-min-year').val(data.min_year); }
+      $('#course-min-year').val(data.min_year ?? "");
     },
     error: (error) => {
       showToast('Impossible de récupérer les informations du cours.', COURSES_TOAST_PREFIX);
@@ -577,7 +577,6 @@ function getCourse(course, deleteModalBody) {
 
 function postOrPatchCourse(course) {
   const method = course === null ? 'POST' : 'PATCH';
-  console.log("***", method, course)
   const url = course === null ? coursesUrl : coursesUrl + course + '/';
   $('.invalid-feedback').removeClass('d-inline');
   const minYear = $('#course-min-year').val();
