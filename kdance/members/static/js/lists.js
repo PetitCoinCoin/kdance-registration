@@ -167,7 +167,6 @@ function getMembersPerCourse(mainValue) {
     url: url,
     type: 'GET',
     success: (data) => {
-      hideLoader();
       $('#data-table').bootstrapTable('destroy');
       switch (mainValue) {
         case '1':
@@ -198,9 +197,11 @@ function getMembersPerCourse(mainValue) {
       $('#total-count').text(data.length);
     },
     error: (error) => {
-      hideLoader();
       showToast('Impossible de récupérer les informations.', LISTS_TOAST_PREFIX);
       console.log(error);
+    },
+    complete: () => {
+      hideLoader();
     }
   });
 }
@@ -483,13 +484,15 @@ function buildEmergencyInfo(data, courseId) {
 
 function buildNextSeason(data, courseId) {
   if (! nextSeasonId) {
-     showToast('Il n\'y a pas encore de saison prochaine. Allez d\'abord la créer et ajouter des cours !', LISTS_TOAST_PREFIX, false);
-     return;
+    showToast('Il n\'y a pas encore de saison prochaine. Allez d\'abord la créer et ajouter des cours !', LISTS_TOAST_PREFIX, false);
+    return;
   }
+  showLoader();
   $.ajax({
     url: coursesUrl + `?season=${nextSeasonId}`,
     type: 'GET',
     success: (coursesData) => {
+      hideLoader();
       let columns = [
         {
           field: 'name',
