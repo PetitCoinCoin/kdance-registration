@@ -713,7 +713,7 @@ class MemberExtractSerializer(MemberRetrieveSerializer):
         read_only_fields = fields
 
 
-class MemberRetrieveShortSerializer(serializers.ModelSerializer):
+class MemberRetrieveShortSerializer(MemberRetrieveSerializer):
     payment = PaymentShortSerializer(required=False, read_only=True)
     user_id = serializers.CharField(
         read_only=True,
