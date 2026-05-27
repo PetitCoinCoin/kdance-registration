@@ -16,6 +16,7 @@ You should have received a copy of the GNU Affero General Public License along
 with KDance registration. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from accounts.models import UserAction
 from members.emails import EmailEnum, EmailSender
 from members.models import (
     Check,
@@ -48,6 +49,7 @@ from members.api.serializers import (
 
 from django.conf import settings
 from django.db.models import Count, Q
+from django.forms.models import model_to_dict
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.mixins import (
@@ -354,6 +356,10 @@ class MemberViewSet(
             active_courses=member.active_courses.all(),
             waiting_courses=member.waiting_courses.all(),
         )
+        UserAction(
+            user=member.user,
+            action=f"Ajout d'un adhérent: {member.first_name} {member.last_name}",
+        ).save()
         return Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
@@ -364,7 +370,19 @@ class MemberViewSet(
         instance = self.get_object()
         if not request.user.is_superuser and instance.user != request.user:
             return Response(status=status.HTTP_403_FORBIDDEN)
-        return super().update(request, *args, **kwargs)
+        initial_values = model_to_dict(instance)
+        response = super().update(request, *args, **kwargs)
+
+        instance.refresh_from_db()
+        updated = model_to_dict(instance)
+        update_values = {k: v for k, v in updated.items() if v != initial_values.get(k)}
+        prefix = "[ADMIN ]" if request.user != instance.user else ""
+        UserAction(
+            user=instance.user,
+            action=f"{prefix}Adhérent mis à jour. Nouvelles valeurs: {str(update_values)}",
+        ).save()
+
+        return response
 
     def perform_update(self, serializer: serializers.BaseSerializer):
         user = self.get_object().user
@@ -384,6 +402,11 @@ class MemberViewSet(
             full_name=name,
             season_year=season,
         )
+        prefix = "[ADMIN ]" if request.user != instance.user else ""
+        UserAction(
+            user=instance.user,
+            action=f"{prefix}Adhérent supprimé: {instance.first_name} {instance.last_name}",
+        ).save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -401,6 +424,18 @@ class MemberViewSet(
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
+
+        saved_action = (
+            "Ajout"
+            if action == "add"
+            else "Suppression"
+            if action == "remove"
+            else "Ajout (forcé)"
+        )
+        UserAction(
+            user=member.user,
+            action=f"[ADMIN] {saved_action} de cours pour {member.first_name} {member.last_name}: {', '.join(request.data.get('courses', []))}",
+        ).save()
         return Response(serializer.data)
 
     @action(
@@ -418,4 +453,15 @@ class MemberViewSet(
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        saved_action = (
+            "ajout"
+            if action == "add"
+            else "suppression"
+            if action == "remove"
+            else "ajout forcé"
+        )
+        UserAction(
+            user=member.user,
+            action=f"[ADMIN] Pré-affectation ({saved_action}) de cours pour {member.first_name} {member.last_name}: {', '.join(request.data.get('courses', []))}",
+        ).save()
         return Response(serializer.data)

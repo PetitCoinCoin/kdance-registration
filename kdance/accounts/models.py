@@ -50,6 +50,12 @@ class Profile(models.Model):
         return f"{self.address}, {self.postal_code} {self.city}"
 
 
+class UserAction(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    action = models.CharField(null=False, blank=False, max_length=500)
+    date = models.DateTimeField(auto_now_add=True)
+
+
 class ResetPassword(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     request_hash = models.CharField(null=False, blank=False, max_length=128)
