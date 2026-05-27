@@ -19,14 +19,13 @@
 $(document).ready(() => {
   getSeasons();
   searchData();
+  populateMainSelect();
   const mainSelect = document.querySelector('#menu-1-select');
   mainSelect.addEventListener('change', () =>
     onMainChange(mainSelect.value)
   );
   document.querySelector('#season-select').addEventListener('change', () => {
     mainSelect.dispatchEvent(new Event('change'));
-    $('#menu-1-select').empty();
-    populateMainSelect();
     $('#data-table').bootstrapTable('destroy');
     document.querySelector('#total-amount-div').className = 'd-none';
     $('#total-count').text(0);
@@ -44,15 +43,12 @@ function getSeasons() {
       }
       $('#season-select').append($('<option>', { value: season.id, text: label, selected: season.is_current }));
     });
-    populateMainSelect();
   }, LISTS_TOAST_PREFIX);
 }
 
 function populateMainSelect() {
   for (let [key, value] of Object.entries(LIST_MAIN_MAPPING)) {
-    if ($('#season-select').val() === currentSeasonId || key !== '8') {
-      $('#menu-1-select').append($('<option>', { value: key, text: value, selected: key == '0' }));
-    }
+    $('#menu-1-select').append($('<option>', { value: key, text: value, selected: key == '0' }));
   }
 }
 
@@ -64,6 +60,9 @@ function populateSecondSelect(previousValue) {
     case '7':
     case '8':
       getCourses($('#season-select').val(), previousValue);
+      break
+    case '9':
+      getCourses(nextSeasonId, previousValue);
       break
     case '3':
       $('#menu-2-select').empty();
@@ -92,7 +91,7 @@ function getCourses(seasonId, mainValue) {
     url: coursesUrl + `?season=${seasonId}`,
     type: 'GET',
     success: (data) => {
-      $('#menu-2-select').append($('<option>', { value: '0', text: ['6', '8'].indexOf(mainValue) > -1 ? '-' : 'Tous les cours', selected: true }));
+      $('#menu-2-select').append($('<option>', { value: '0', text: ['6', '8', '9'].indexOf(mainValue) > -1 ? '-' : 'Tous les cours', selected: true }));
       for (let i = 0; i < data.length; i++) {
         const startHour = data[i].start_hour.split(':');
         const label = `${data[i].name}, ${WEEKDAY[data[i].weekday]} ${startHour[0]}h${startHour[1]}`;
@@ -117,6 +116,7 @@ function searchData() {
       case '6':
       case '7':
       case '8':
+      case '9':
         getMembersPerCourse(mainValue);
         break
       case '2':
@@ -135,9 +135,9 @@ function getMembersPerCourse(mainValue) {
   document.querySelector('#total-amount-div').className = 'd-none';
   var url;
   const subValue = $('#menu-2-select').val()
+  let filter = '';
   switch (subValue) {
     case null:
-      let filter = '';
       switch (mainValue) {
         case '4':
           filter = 'with_pass';
@@ -152,7 +152,7 @@ function getMembersPerCourse(mainValue) {
       url = `${membersUrl}?season=${$('#season-select').val()}&${filter}=true`;
       break
     case '0':
-      if (mainValue === '6' || mainValue === '8') {
+      if (mainValue === '6' || mainValue === '8' || mainValue === '9') {
         const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('list-error-toast'));
         $('#list-error-body').text('Veuillez sélectionner un cours.');
         toast.show();
@@ -161,7 +161,10 @@ function getMembersPerCourse(mainValue) {
       url = `${membersUrl}?season=${$('#season-select').val()}`;
       break
     default:
-      url = `${membersUrl}?course=${subValue}`;
+      if (mainValue == '9') {
+        filter = '&next=true'
+      }
+      url = `${membersUrl}?course=${subValue}${filter}`;
   }
   $.ajax({
     url: url,
@@ -170,7 +173,8 @@ function getMembersPerCourse(mainValue) {
       $('#data-table').bootstrapTable('destroy');
       switch (mainValue) {
         case '1':
-          buildMembersInfo(data, subValue);
+        case '9':
+          buildMembersInfo(data, subValue, mainValue === '9');
           break
         case '2':
         case '3':
@@ -206,7 +210,7 @@ function getMembersPerCourse(mainValue) {
   });
 }
 
-function buildMembersInfo(data, courseId) {
+function buildMembersInfo(data, courseId, isForNextSeason) {
   let columns = [
     {
       field: 'name',
@@ -214,6 +218,26 @@ function buildMembersInfo(data, courseId) {
       searchable: true,
       sortable: true,
     },
+    {
+      field: 'birthday',
+      title: 'Date de naissance',
+      searchable: false,
+      sortable: true,
+    }
+  ];
+  if (isForNextSeason) {
+    columns.push({
+        field: 'current_courses',
+        title: 'Cours actuels',
+        searchable: false,
+        sortable: true,
+        visible: true,
+        formatter: function(value) {
+          return value.join('<br />')
+        },
+      })
+  } else {
+    columns.push(...[
     {
       field: 'created',
       title: 'Inscrit le',
@@ -229,11 +253,6 @@ function buildMembersInfo(data, courseId) {
       formatter: function(value) {
         return value.join('<br />')
       },
-    }, {
-      field: 'birthday',
-      title: 'Date de naissance',
-      searchable: false,
-      sortable: true,
     }, {
       field: 'phone',
       title: 'Téléphone',
@@ -334,19 +353,20 @@ function buildMembersInfo(data, courseId) {
       sortable: true,
       visible: false,
     }
-  ];
-  if (courseId > 0) {
-    columns.splice(5, 0, {
-      field: 'courses',
-      title: 'Autre cours',
-      searchable: true,
-      sortable: true,
-      visible: true,
-      formatter: function(value) {
-        return value.join('<br />')
-      },
+  ]);
+    if (courseId > 0) {
+      columns.splice(5, 0, {
+        field: 'courses',
+        title: 'Autre cours',
+        searchable: true,
+        sortable: true,
+        visible: true,
+        formatter: function(value) {
+          return value.join('<br />')
+        },
+      }
+    );
     }
-  );
   }
   $('#data-table').bootstrapTable({
     ...COMMON_TABLE_PARAMS,
@@ -360,6 +380,17 @@ function buildMembersInfo(data, courseId) {
     },
     columns: columns,
     data: data.map(m => {
+      if (isForNextSeason) {
+        return {
+          birthday: (new Date(m.birthday)).toLocaleDateString('fr-FR'),
+          name: `${m.last_name} ${m.first_name}`,
+          current_courses: m.active_courses.map(
+          (c) => `${c.name}, ${WEEKDAY[c.weekday]}`
+        ).concat(m.cancelled_courses.map(
+          (c) => `${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)
+        ),
+        }
+      }
       return {
         ...m,
         status: courseId > 0 ? buildStatusOneCourse(m, courseId) : buildStatusAllCourses(m),

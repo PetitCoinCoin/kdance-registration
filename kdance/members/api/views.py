@@ -246,18 +246,23 @@ class MemberViewSet(
         return MemberSerializer
 
     def get_queryset(self):
-        queryset = (
-            Member.objects.all()
-            .select_related("documents", "season", "user")
-            .prefetch_related("active_courses", "cancelled_courses")
-        )
         season = self.request.query_params.get("season")
         course = self.request.query_params.get("course")
+        next_season = self.request.query_params.get("next")
         with_pass = self.request.query_params.get("with_pass")
         with_license = self.request.query_params.get("with_license")
 
         search = self.request.query_params.get("search")
         sort = self.request.query_params.get("sort")
+
+        if course and next_season and next_season.lower() in ["true", "1", "y"]:
+            return Member.objects.filter(next_courses__id=course).all()
+
+        queryset = (
+            Member.objects.all()
+            .select_related("documents", "season", "user")
+            .prefetch_related("active_courses", "cancelled_courses")
+        )
         if season:
             queryset = queryset.filter(season__id=season)
         if course:

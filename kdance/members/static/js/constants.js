@@ -55,6 +55,7 @@ const LIST_MAIN_MAPPING = {
   '6': 'Les contacts par cours',
   '7': 'Les contacts d\'urgence par cours',
   '8': '...et attribuer les cours de l\'an prochain',
+  '9': 'La projection des cours de l\'an prochain',
 }
 
 const COMMON_TABLE_PARAMS = {
