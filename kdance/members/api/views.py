@@ -206,7 +206,7 @@ class CourseViewSet(
                 queryset = queryset.filter(season=season_instance.next_season)
             else:
                 queryset = queryset.filter(season__id=season)
-        return queryset.order_by("-season__year", "teacher__name", "name")
+        return queryset.order_by("-season__year", "teacher__name", "skill", "name")
 
     @action(methods=["post"], detail=False)
     def copy_season(self, request: Request) -> Response:

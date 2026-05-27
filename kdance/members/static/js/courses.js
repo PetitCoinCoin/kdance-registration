@@ -271,11 +271,13 @@ function getCourses(seasonId) {
             title: 'Professeur',
             searchable: true,
             sortable: true,
+            visible: false,
           }, {
             field: 'skill.name',
             title: 'Discipline',
             searchable: true,
             sortable: true,
+            visible: false,
           }, {
             field: 'capacity',
             title: 'Capacité',
