@@ -48,6 +48,7 @@ from accounts.api.serializers import (
     UserMiniSerializer,
     UserTeacherActionSerializer,
 )
+from accounts.models import UserAction
 from members.emails import EmailEnum, EmailSender
 from members.models import GeneralSettings, Member
 
@@ -174,6 +175,11 @@ class UserMeApiViewSet(
             emails=[self.request.user.username],
             username=self.request.user.username,
         )
+        superuser = User.objects.get(username=settings.SUPERUSER_EMAIL)
+        # The user being deleted, we can't refer to it
+        UserAction(
+            user=superuser, action=f"Utilisateur supprimé: {instance.username}"
+        ).save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def update(self, request, *args, **kwargs):
@@ -201,6 +207,10 @@ class UserMeApiViewSet(
                     )
                 ],
             )
+            UserAction(
+                user=instance,
+                action=f"Mise à jour de l'email du compte: {email_update}",
+            ).save()
         return Response(serializer.data)
 
     @action(detail=False, methods=["put"])
