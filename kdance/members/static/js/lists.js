@@ -19,14 +19,13 @@
 $(document).ready(() => {
   getSeasons();
   searchData();
+  populateMainSelect();
   const mainSelect = document.querySelector('#menu-1-select');
   mainSelect.addEventListener('change', () =>
     onMainChange(mainSelect.value)
   );
   document.querySelector('#season-select').addEventListener('change', () => {
     mainSelect.dispatchEvent(new Event('change'));
-    $('#menu-1-select').empty();
-    populateMainSelect();
     $('#data-table').bootstrapTable('destroy');
     document.querySelector('#total-amount-div').className = 'd-none';
     $('#total-count').text(0);
@@ -44,15 +43,12 @@ function getSeasons() {
       }
       $('#season-select').append($('<option>', { value: season.id, text: label, selected: season.is_current }));
     });
-    populateMainSelect();
   }, LISTS_TOAST_PREFIX);
 }
 
 function populateMainSelect() {
   for (let [key, value] of Object.entries(LIST_MAIN_MAPPING)) {
-    if ($('#season-select').val() === currentSeasonId || key !== '8') {
-      $('#menu-1-select').append($('<option>', { value: key, text: value, selected: key == '0' }));
-    }
+    $('#menu-1-select').append($('<option>', { value: key, text: value, selected: key == '0' }));
   }
 }
 
