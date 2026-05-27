@@ -54,7 +54,6 @@ from members.models import GeneralSettings, Member
 
 class UsersApiViewSet(
     CreateModelMixin,
-    DestroyModelMixin,
     ListModelMixin,
     RetrieveModelMixin,
     GenericViewSet,
@@ -102,18 +101,6 @@ class UsersApiViewSet(
             username=username,
         )
         return response
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        if instance.username == settings.SUPERUSER_EMAIL:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-        self.perform_destroy(instance)
-        email_sender = EmailSender(EmailEnum.DELETE_USER)
-        email_sender.send_email(
-            emails=[self.request.user.username],
-            username=self.request.user.username,
-        )
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=["put"])
     def admin(self, request: Request, action: str) -> Response:
@@ -182,6 +169,11 @@ class UserMeApiViewSet(
         ).exists:
             return Response(status=status.HTTP_403_FORBIDDEN)
         self.perform_destroy(instance)
+        email_sender = EmailSender(EmailEnum.DELETE_USER)
+        email_sender.send_email(
+            emails=[self.request.user.username],
+            username=self.request.user.username,
+        )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def update(self, request, *args, **kwargs):
