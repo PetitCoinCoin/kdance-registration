@@ -199,8 +199,13 @@ class CourseViewSet(
     def get_queryset(self):
         queryset = Course.objects.all()
         season = self.request.query_params.get("season")
+        next_season = self.request.query_params.get("next")
         if season:
-            queryset = queryset.filter(season__id=season)
+            if next_season and next_season.lower() in ["true", "1", "y"]:
+                season_instance = Season.objects.get(id=season)
+                queryset = queryset.filter(season=season_instance.next_season)
+            else:
+                queryset = queryset.filter(season__id=season)
         return queryset.order_by("-season__year", "teacher__name", "name")
 
     @action(methods=["post"], detail=False)
