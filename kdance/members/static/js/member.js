@@ -169,112 +169,113 @@ function createUpdateMember() {
 }
 
 async function getMember() {
-  await getCourses();
-  var urlParams = new URLSearchParams(window.location.search);
-  let member;
-  var isEdition = true;
-  if (urlParams.get('from_pk') !== null) {
-    member = urlParams.get('from_pk');
-    $('#form-member').data('url', membersUrl);
-    $('#form-member').data('method', 'POST');
-    $('#member-submit').prop("disabled", true);
-    isEdition = false;
-  } else if (urlParams.get('pk') !== null) {
-    member = urlParams.get('pk');
-    $('#form-member').data('url', membersUrl + member + '/');
-    $('#form-member').data('method', 'PATCH');
-    $('#rgpd-wrapper').remove();
-    $('#submit-wrapper').hide();
-  } else {
-    $('h1').html('Ajouter un nouvel adhérent');
-    $('#form-member').data('url', membersUrl);
-    $('#form-member').data('method', 'POST');
-    $('#form-member').data('canEditCourse', true);
-    $('#member-submit').prop("disabled", true);
-    return
-  }
-  $.ajax({
-    url: membersUrl + member + '/',
-    type: 'GET',
-    success: (data) => {
-      $('#me-switch').prop('disabled', true);
-      const action = isEdition ? 'Modifier les infos de' : 'Renouveller' ;
-      $('h1').html(`${action} ${data.first_name} ${data.last_name}`);
-      $('#form-member').data('canEditCourse', !isEdition || !data.is_validated || isSignupOngoing);
-      $('#member-firstname').val(data.first_name);
-      $('#member-lastname').val(data.last_name);
-      $('#member-email').val(data.email);
-      $('#member-phone').val(data.phone);
-      $('#member-address').val(data.address);
-      $('#member-postal-code').val(data.postal_code);
-      $('#member-city').val(data.city);
-      $('#member-birthday').val(data.birthday);
-      $('#authorise-photos').prop('checked', isEdition ? data.documents.authorise_photos : true);
-      $('#authorise-emergency').prop('checked', isEdition ? data.documents.authorise_emergency : true);
-      $('#pass-switch').prop('checked', isEdition ? data.sport_pass?.code !== '' : false);
-      $('#member-pass-code').val(isEdition ? data.sport_pass?.code || '' : '');
-      const withPass = !(data.sport_pass === null || data.sport_pass?.code === null || data.sport_pass?.code === '');
-      $('#pass-div').attr('hidden', !withPass);
-      $('#pass-switch').prop('checked', isEdition ? withPass : false);
-      document.querySelectorAll('.course-checkbox').forEach(item => {
-        if (isPreSignupOngoing) {
-          if (! isEdition && data.next_courses.map(c => c.id.toString()).indexOf(item.value) < 0) {
-            item.parentElement.parentElement.parentElement.remove();
-            return;
-          } else if (isEdition && data.default_courses.map(c => c.toString()).indexOf(item.value) < 0) {
-            item.parentElement.parentElement.parentElement.remove();
-            return;
-          }
-        }
-        isActive = data.active_courses.map(c => c.id.toString()).indexOf(item.value) > -1;
-        isWaiting = data.waiting_courses.map(c => c.id.toString()).indexOf(item.value) > -1;
-        item.checked = isActive || isWaiting;
-        if (isSignupOngoing && data.is_validated) {
-          item.disabled = item.checked;
-        }
-        if (isWaiting) {
-          label = $(`label[for="${item.id}"]`)[0]
-          label.innerHTML += ' <i>(sur liste d\'attente)</i>';
-        }
-      });
-      $('#member-license').val(isEdition ? data.ffd_license : 0);
-      if (isEdition && data.is_validated) {
-        $('#member-license').prop('disabled', true);
-        if (! isSignupOngoing) {
-          document.querySelectorAll('.course-checkbox').forEach(item => { item.disabled = true });
-        }
-        $('#authorise-photos').prop('disabled', true);
-        $('#authorise-emergency').prop('disabled', true);
-        $('#member-btn').html('Modifier');
-      }
-      $('#emergency-me-switch').attr('disabled', isMe(data));
-      if (! isMe(data)) {
-        $('#emergency-contact-wrapper').hide();
-      }
-      const isMajor = Boolean(getAge(data.birthday) >= 18);
-      majorityImpact(isMajor);
-      Object.keys(CONTACT_MAPPING).forEach(key => {
-        $(`#${key}-me-switch`).prop('checked', false);
-        const subContacts = data.contacts.filter((c) => c.contact_type === key);
-        for (const [i, contact] of subContacts.entries()) {
-          $(`#contact-${key}-${i+1}`).attr('hidden', false);
-          if (isMe(contact)) {
-            $(`#${key}-me-switch`).prop('checked', true);
-          }
-          $(`#firstname-${key}-${i}`).val(i < subContacts.length ? contact.first_name : '');
-          $(`#lastname-${key}-${i}`).val(i < subContacts.length ? contact.last_name : '');
-          $(`#phone-${key}-${i}`).val(i < subContacts.length ? contact.phone : '');
-          if (key === 'responsible') {
-            $(`#email-${key}-${i}`).val(i < subContacts.length ? contact.email : '');
-          }
-        }
-      });
-    },
-    error: (error) => {
-      showToast('Impossible de récupérer les informations de cet adhérent.');
-      console.log(error);
+  getCourses().then(() => {
+    var urlParams = new URLSearchParams(window.location.search);
+    let member;
+    var isEdition = true;
+    if (urlParams.get('from_pk') !== null) {
+      member = urlParams.get('from_pk');
+      $('#form-member').data('url', membersUrl);
+      $('#form-member').data('method', 'POST');
+      $('#member-submit').prop("disabled", true);
+      isEdition = false;
+    } else if (urlParams.get('pk') !== null) {
+      member = urlParams.get('pk');
+      $('#form-member').data('url', membersUrl + member + '/');
+      $('#form-member').data('method', 'PATCH');
+      $('#rgpd-wrapper').remove();
+      $('#submit-wrapper').hide();
+    } else {
+      $('h1').html('Ajouter un nouvel adhérent');
+      $('#form-member').data('url', membersUrl);
+      $('#form-member').data('method', 'POST');
+      $('#form-member').data('canEditCourse', true);
+      $('#member-submit').prop("disabled", true);
+      return
     }
-  });
+    $.ajax({
+      url: membersUrl + member + '/',
+      type: 'GET',
+      success: (data) => {
+        $('#me-switch').prop('disabled', true);
+        const action = isEdition ? 'Modifier les infos de' : 'Renouveller' ;
+        $('h1').html(`${action} ${data.first_name} ${data.last_name}`);
+        $('#form-member').data('canEditCourse', !isEdition || !data.is_validated || isSignupOngoing);
+        $('#member-firstname').val(data.first_name);
+        $('#member-lastname').val(data.last_name);
+        $('#member-email').val(data.email);
+        $('#member-phone').val(data.phone);
+        $('#member-address').val(data.address);
+        $('#member-postal-code').val(data.postal_code);
+        $('#member-city').val(data.city);
+        $('#member-birthday').val(data.birthday);
+        $('#authorise-photos').prop('checked', isEdition ? data.documents.authorise_photos : true);
+        $('#authorise-emergency').prop('checked', isEdition ? data.documents.authorise_emergency : true);
+        $('#pass-switch').prop('checked', isEdition ? data.sport_pass?.code !== '' : false);
+        $('#member-pass-code').val(isEdition ? data.sport_pass?.code || '' : '');
+        const withPass = !(data.sport_pass === null || data.sport_pass?.code === null || data.sport_pass?.code === '');
+        $('#pass-div').attr('hidden', !withPass);
+        $('#pass-switch').prop('checked', isEdition ? withPass : false);
+        document.querySelectorAll('.course-checkbox').forEach(item => {
+          if (isPreSignupOngoing) {
+            if (! isEdition && data.next_courses.map(c => c.id.toString()).indexOf(item.value) < 0) {
+              item.parentElement.parentElement.parentElement.remove();
+              return;
+            } else if (isEdition && data.default_courses.map(c => c.toString()).indexOf(item.value) < 0) {
+              item.parentElement.parentElement.parentElement.remove();
+              return;
+            }
+          }
+          isActive = data.active_courses.map(c => c.id.toString()).indexOf(item.value) > -1;
+          isWaiting = data.waiting_courses.map(c => c.id.toString()).indexOf(item.value) > -1;
+          item.checked = isActive || isWaiting;
+          if (isSignupOngoing && data.is_validated) {
+            item.disabled = item.checked;
+          }
+          if (isWaiting) {
+            label = $(`label[for="${item.id}"]`)[0]
+            label.innerHTML += ' <i>(sur liste d\'attente)</i>';
+          }
+        });
+        $('#member-license').val(isEdition ? data.ffd_license : 0);
+        if (isEdition && data.is_validated) {
+          $('#member-license').prop('disabled', true);
+          if (! isSignupOngoing) {
+            document.querySelectorAll('.course-checkbox').forEach(item => { item.disabled = true });
+          }
+          $('#authorise-photos').prop('disabled', true);
+          $('#authorise-emergency').prop('disabled', true);
+          $('#member-btn').html('Modifier');
+        }
+        $('#emergency-me-switch').attr('disabled', isMe(data));
+        if (! isMe(data)) {
+          $('#emergency-contact-wrapper').hide();
+        }
+        const isMajor = Boolean(getAge(data.birthday) >= 18);
+        majorityImpact(isMajor);
+        Object.keys(CONTACT_MAPPING).forEach(key => {
+          $(`#${key}-me-switch`).prop('checked', false);
+          const subContacts = data.contacts.filter((c) => c.contact_type === key);
+          for (const [i, contact] of subContacts.entries()) {
+            $(`#contact-${key}-${i+1}`).attr('hidden', false);
+            if (isMe(contact)) {
+              $(`#${key}-me-switch`).prop('checked', true);
+            }
+            $(`#firstname-${key}-${i}`).val(i < subContacts.length ? contact.first_name : '');
+            $(`#lastname-${key}-${i}`).val(i < subContacts.length ? contact.last_name : '');
+            $(`#phone-${key}-${i}`).val(i < subContacts.length ? contact.phone : '');
+            if (key === 'responsible') {
+              $(`#email-${key}-${i}`).val(i < subContacts.length ? contact.email : '');
+            }
+          }
+        });
+      },
+      error: (error) => {
+        showToast('Impossible de récupérer les informations de cet adhérent.');
+        console.log(error);
+      }
+    });
+  })
 }
 
 function isMe(contact) {
