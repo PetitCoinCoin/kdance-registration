@@ -54,6 +54,7 @@ function populateMainSelect() {
 
 function populateSecondSelect(previousValue) {
   $('#menu-2-select').attr('hidden', false);
+  $('#menu-2-select').empty();
   switch (previousValue) {
     case '1':
     case '6':
@@ -62,16 +63,14 @@ function populateSecondSelect(previousValue) {
       getCourses($('#season-select').val(), previousValue);
       break
     case '9':
-      getCourses(nextSeasonId, previousValue);
+      getCourses($('#season-select').val(), previousValue, true);
       break
     case '3':
-      $('#menu-2-select').empty();
       for (let [key, value] of Object.entries(MONTH)) {
         $('#menu-2-select').append($('<option>', { value: key, text: value, selected: key == '0' }));
       }
       break
     default:
-      $('#menu-2-select').empty();
       $('#menu-2-select').attr('hidden', true);
   }
 }
@@ -86,9 +85,10 @@ function onMainChange(mainValue) {
   }
 }
 
-function getCourses(seasonId, mainValue) {
+function getCourses(seasonId, mainValue, isForNextSeason = false) {
+  const filter = isForNextSeason ? '&next=true' : ''
   $.ajax({
-    url: coursesUrl + `?season=${seasonId}`,
+    url: coursesUrl + `?season=${seasonId}`+ filter,
     type: 'GET',
     success: (data) => {
       $('#menu-2-select').append($('<option>', { value: '0', text: ['6', '8', '9'].indexOf(mainValue) > -1 ? '-' : 'Tous les cours', selected: true }));
@@ -514,13 +514,14 @@ function buildEmergencyInfo(data, courseId) {
 }
 
 function buildNextSeason(data, courseId) {
+  const seasonId = $('#season-select').val();
   if (! nextSeasonId) {
     showToast('Il n\'y a pas encore de saison prochaine. Allez d\'abord la créer et ajouter des cours !', LISTS_TOAST_PREFIX, false);
     return;
   }
   showLoader();
   $.ajax({
-    url: coursesUrl + `?season=${nextSeasonId}`,
+    url: coursesUrl + `?season=${seasonId}&next=true`,
     type: 'GET',
     success: (coursesData) => {
       hideLoader();
@@ -577,6 +578,10 @@ function buildNextSeason(data, courseId) {
           }
         })
       });
+    },
+    error: (error) => {
+      showToast('Êtes vous sur d\'avoir créé la saison prochaine ? Allez d\'abord la créer et ajouter des cours ! À moins qu\'il y ait un autre problème.', LISTS_TOAST_PREFIX, false);
+      console.log(error);
     }
   });
 }
