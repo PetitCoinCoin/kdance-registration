@@ -116,21 +116,22 @@ async function getCourses() {
   showLoader();
   return getCurrentSeason().then(data => {
     const seasonId = data[0].id;
-    $.ajax({
-      url: coursesUrl + `?season=${seasonId}`,
-      type: 'GET',
-      success: (data) => {
-        let memberCourses = document.querySelector('#member-courses');
-        memberCourses.innerHTML = '';
-        data.map((course) => {
-          const startHour = course.start_hour.split(':');
-          const endHour = course.end_hour.split(':');
-          const years = course.min_year ? `${course.min_year}-${course.max_year}` : `≤${course.max_year}`
-          let label = `${course.name} (${years}) - ${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]} à ${endHour[0]}h${endHour[1]} - ${course.price}€`;
-          if (course.is_complete) {
-            label = `COMPLET (liste d'attente): ${label}`;
-          }
-          memberCourses.innerHTML += `<tr><th><div class="form-check">
+    return new Promise((resolve, reject) => {
+      $.ajax({
+        url: coursesUrl + `?season=${seasonId}`,
+        type: 'GET',
+        success: (data) => {
+          let memberCourses = document.querySelector('#member-courses');
+          memberCourses.innerHTML = '';
+          data.map((course) => {
+            const startHour = course.start_hour.split(':');
+            const endHour = course.end_hour.split(':');
+            const years = course.min_year ? `${course.min_year}-${course.max_year}` : `≤${course.max_year}`
+            let label = `${course.name} (${years}) - ${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]} à ${endHour[0]}h${endHour[1]} - ${course.price}€`;
+            if (course.is_complete) {
+              label = `COMPLET (liste d'attente): ${label}`;
+            }
+            memberCourses.innerHTML += `<tr><th><div class="form-check">
   <input class="form-check-input course-checkbox" type="checkbox" value="${course.id}" id="check-${course.id}">
   </div></th>
   <th><label class="form-check-label" for="check-${course.id}">${course.name}</label></th>
@@ -140,19 +141,22 @@ async function getCourses() {
   <th>${course.is_complete ? "<strong>Liste d'attente</strong>" : ""}</th>
 </tr>
 `
-        });
-      },
-      error: (error) => {
-        showToast('Impossible de récupérer les cours de la saison.');
-        console.log(error);
-      },
-      complete: () => {
-        hideLoader();
-      }
+          });
+          let memberSeason = $('#member-season');
+          memberSeason.append($('<option>', { value: seasonId, text: data[0].year }));
+          memberSeason.val(seasonId)
+          resolve();
+        },
+        error: (error) => {
+          showToast('Impossible de récupérer les cours de la saison.');
+          console.log(error);
+          reject(error);
+        },
+        complete: () => {
+          hideLoader();
+        }
+      });
     });
-    let memberSeason = $('#member-season');
-    memberSeason.append($('<option>', { value: seasonId, text: data[0].year }));
-    memberSeason.val(seasonId)
   }).catch(error => {
     showToast('Impossible de récupérer la saison en cours.');
     console.log(error);
