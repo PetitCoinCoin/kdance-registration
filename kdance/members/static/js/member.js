@@ -55,7 +55,17 @@ function handleSwitches() {
   });
   const rgpdToggle = document.querySelector('#authorise-rgpd');
     rgpdToggle.addEventListener('change', () => {
-      const isApproved = $('#authorise-rgpd').is(':checked');
+      const isApproved = $('#authorise-rgpd').is(':checked') && $('#check-accuracy').is(':checked');
+      $('#member-submit').prop("disabled", !isApproved);
+      if (isApproved) {
+        $('#submit-wrapper').hide();
+      } else {
+        $('#submit-wrapper').show();
+      }
+  });
+  const checkToggle = document.querySelector('#check-accuracy');
+    checkToggle.addEventListener('change', () => {
+      const isApproved = $('#authorise-rgpd').is(':checked') && $('#check-accuracy').is(':checked');
       $('#member-submit').prop("disabled", !isApproved);
       if (isApproved) {
         $('#submit-wrapper').hide();
@@ -182,12 +192,14 @@ async function getMember() {
       $('#form-member').data('url', membersUrl);
       $('#form-member').data('method', 'POST');
       $('#member-submit').prop("disabled", true);
+      $('#check-accuracy-wrapper label')[0].innerText += ' Les mises à jour nécessaires ont été effectuées.';
       isEdition = false;
     } else if (urlParams.get('pk') !== null) {
       member = urlParams.get('pk');
       $('#form-member').data('url', membersUrl + member + '/');
       $('#form-member').data('method', 'PATCH');
       $('#rgpd-wrapper').remove();
+      $('#check-accuracy-wrapper').remove();
       $('#submit-wrapper').hide();
     } else {
       $('h1').html('Ajouter un nouvel adhérent');
