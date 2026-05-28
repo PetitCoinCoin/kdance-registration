@@ -54,6 +54,12 @@ function download(data) {
     URL.revokeObjectURL(fileUrl);
 }
 
+function formatCourseYears(course) {
+  if (! course.min_year) { return `≤${course.max_year}` }
+  if (course.min_year == course.max_year) { return `${course.min_year}` }
+  return `${course.min_year}-${course.max_year}`
+}
+
 function getSeasonsWrapper(callback, toastPrefix) {
   $.ajax({
     url: seasonsUrl,
