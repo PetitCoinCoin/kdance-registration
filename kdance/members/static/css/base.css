@@ -119,6 +119,10 @@ a {
   text-align: justify;
 }
 
+.table-emphasis {
+  border: 0.2rem solid orange;
+}
+
 #about-div {
   text-align: justify;
   max-width: 1000px;

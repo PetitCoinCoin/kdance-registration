@@ -55,7 +55,17 @@ function handleSwitches() {
   });
   const rgpdToggle = document.querySelector('#authorise-rgpd');
     rgpdToggle.addEventListener('change', () => {
-      const isApproved = $('#authorise-rgpd').is(':checked');
+      const isApproved = $('#authorise-rgpd').is(':checked') && $('#check-accuracy').is(':checked');
+      $('#member-submit').prop("disabled", !isApproved);
+      if (isApproved) {
+        $('#submit-wrapper').hide();
+      } else {
+        $('#submit-wrapper').show();
+      }
+  });
+  const checkToggle = document.querySelector('#check-accuracy');
+    checkToggle.addEventListener('change', () => {
+      const isApproved = $('#authorise-rgpd').is(':checked') && $('#check-accuracy').is(':checked');
       $('#member-submit').prop("disabled", !isApproved);
       if (isApproved) {
         $('#submit-wrapper').hide();
@@ -116,43 +126,47 @@ async function getCourses() {
   showLoader();
   return getCurrentSeason().then(data => {
     const seasonId = data[0].id;
-    $.ajax({
-      url: coursesUrl + `?season=${seasonId}`,
-      type: 'GET',
-      success: (data) => {
-        let memberCourses = document.querySelector('#member-courses');
-        memberCourses.innerHTML = '';
-        data.map((course) => {
-          const startHour = course.start_hour.split(':');
-          const endHour = course.end_hour.split(':');
-          const years = course.min_year ? `${course.min_year}-${course.max_year}` : `≤${course.max_year}`
-          let label = `${course.name} (${years}) - ${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]} à ${endHour[0]}h${endHour[1]} - ${course.price}€`;
-          if (course.is_complete) {
-            label = `COMPLET (liste d'attente): ${label}`;
-          }
-          memberCourses.innerHTML += `<tr><th><div class="form-check">
+    return new Promise((resolve, reject) => {
+      $.ajax({
+        url: coursesUrl + `?season=${seasonId}`,
+        type: 'GET',
+        success: (data) => {
+          let memberCourses = document.querySelector('#member-courses');
+          memberCourses.innerHTML = '';
+          data.map((course) => {
+            const startHour = course.start_hour.split(':');
+            const endHour = course.end_hour.split(':');
+            const years = isPreSignupOngoing ? '' : `<th>${formatCourseYears(course)}</th>`;
+            let label = `${course.name} (${years}) - ${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]} à ${endHour[0]}h${endHour[1]} - ${course.price}€`;
+            if (course.is_complete) {
+              label = `COMPLET (liste d'attente): ${label}`;
+            }
+            memberCourses.innerHTML += `<tr><th><div class="form-check">
   <input class="form-check-input course-checkbox" type="checkbox" value="${course.id}" id="check-${course.id}">
   </div></th>
   <th><label class="form-check-label" for="check-${course.id}">${course.name}</label></th>
-  <th>${years}</th>
+  ${years}
   <th>${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]} à ${endHour[0]}h${endHour[1]}</th>
   <th>${course.price}€</th>
   <th>${course.is_complete ? "<strong>Liste d'attente</strong>" : ""}</th>
 </tr>
 `
-        });
-      },
-      error: (error) => {
-        showToast('Impossible de récupérer les cours de la saison.');
-        console.log(error);
-      },
-      complete: () => {
-        hideLoader();
-      }
+          });
+          let memberSeason = $('#member-season');
+          memberSeason.append($('<option>', { value: seasonId, text: data[0].year }));
+          memberSeason.val(seasonId)
+          resolve();
+        },
+        error: (error) => {
+          showToast('Impossible de récupérer les cours de la saison.');
+          console.log(error);
+          reject(error);
+        },
+        complete: () => {
+          hideLoader();
+        }
+      });
     });
-    let memberSeason = $('#member-season');
-    memberSeason.append($('<option>', { value: seasonId, text: data[0].year }));
-    memberSeason.val(seasonId)
   }).catch(error => {
     showToast('Impossible de récupérer la saison en cours.');
     console.log(error);
@@ -178,12 +192,14 @@ async function getMember() {
       $('#form-member').data('url', membersUrl);
       $('#form-member').data('method', 'POST');
       $('#member-submit').prop("disabled", true);
+      $('#check-accuracy-wrapper label')[0].innerText += ' Les mises à jour nécessaires ont été effectuées.';
       isEdition = false;
     } else if (urlParams.get('pk') !== null) {
       member = urlParams.get('pk');
       $('#form-member').data('url', membersUrl + member + '/');
       $('#form-member').data('method', 'PATCH');
       $('#rgpd-wrapper').remove();
+      $('#check-accuracy-wrapper').remove();
       $('#submit-wrapper').hide();
     } else {
       $('h1').html('Ajouter un nouvel adhérent');
@@ -198,7 +214,7 @@ async function getMember() {
       type: 'GET',
       success: (data) => {
         $('#me-switch').prop('disabled', true);
-        const action = isEdition ? 'Modifier les infos de' : 'Renouveller' ;
+        const action = isEdition ? 'Modifier les infos de' : 'Renouveler' ;
         $('h1').html(`${action} ${data.first_name} ${data.last_name}`);
         $('#form-member').data('canEditCourse', !isEdition || !data.is_validated || isSignupOngoing);
         $('#member-firstname').val(data.first_name);
@@ -218,10 +234,10 @@ async function getMember() {
         $('#pass-switch').prop('checked', isEdition ? withPass : false);
         document.querySelectorAll('.course-checkbox').forEach(item => {
           if (isPreSignupOngoing) {
-            if (! isEdition && data.next_courses.map(c => c.id.toString()).indexOf(item.value) < 0) {
+            if (! isEdition && ! data.next_courses.map(c => c.id.toString()).includes(item.value)) {
               item.parentElement.parentElement.parentElement.remove();
               return;
-            } else if (isEdition && data.default_courses.map(c => c.toString()).indexOf(item.value) < 0) {
+            } else if (isEdition && ! data.default_courses.map(c => c.toString()).includes(item.value) && ! data.active_courses.concat(data.waiting_courses).map(c => c.id.toString()).includes(item.value)) {
               item.parentElement.parentElement.parentElement.remove();
               return;
             }

@@ -324,7 +324,7 @@ function getCourses(seasonId) {
               price: c.price + '€',
               is_complete: c.is_complete ? 'Oui' : 'Non',
               slot: `${WEEKDAY[c.weekday]}, ${startHour[0]}h${startHour[1]}-${endHour[0]}h${endHour[1]}`,
-              years: c.min_year ? `${c.min_year}-${c.max_year}` : `≤${c.max_year}`
+              years: formatCourseYears(c)
             }
           })
         });
@@ -338,7 +338,7 @@ function getCourses(seasonId) {
             price: c.price + '€',
             is_complete: c.is_complete ? 'Oui' : 'Non',
             slot: `${WEEKDAY[c.weekday]}, ${startHour[0]}h${startHour[1]}-${endHour[0]}h${endHour[1]}`,
-            years: c.min_year ? `${c.min_year}-${c.max_year}` : `≤${c.max_year}`
+            years: formatCourseYears(c)
           }
         }));
       }

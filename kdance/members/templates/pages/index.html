@@ -155,7 +155,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
               </p>
               <p class="main-red fw-semibold">L'inscription ne sera valide que si le <span class="border-bottom border-danger">paiement est effectué avant le {{ pre_signup_payment_end }}</span>.</p>
               <p>
-                Si vous ou votre enfant êtes elligible au <strong>Pass Sport</strong>, vous ne recevrez votre code que plus tard dans l'été. Dans ce cas:
+                Si vous ou votre enfant êtes éligible au <strong>Pass Sport</strong>, vous ne recevrez votre code que plus tard dans l'été. Dans ce cas:
                 <ul>
                   <li>cochez <i>"J'ai un code Pass Sport"</i> et entrez <i>"À VENIR"</i> à la place du code</li>
                   <li>effectuez le règlement comme vous le souhaitez (en ligne, chèque, ANCV, Espèces): les {{ current_season.pass_sport_amount }}€ ont été déduits</li>
@@ -182,7 +182,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
             <p>
               Pour commencer l'inscription, cliquez sur <span class="main-blue fst-italic">Ajouter un nouvel adhérent</span> dans la saison en cours.
               Recommencez pour chaque adhérent de la famille.<br />
-              Pour une ré-inscription, vous pouvez également cliquer sur <span class="main-blue fst-italic">Ajouter un adhérent d'une saison précédente</span>.<br />
+              Pour une ré-inscription, vous pouvez également cliquer sur <span class="main-blue fst-italic">Renouveler un adhérent pour la nouvelle saison</span>.<br />
               L'inscription sera validée à réception du paiement.
             </p>
             <p class="fst-italic">Pour en savoir un peu plus sur cet espace, <a href="/about">cliquez ici</a>.</p>
@@ -283,7 +283,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
         <button class="btn btn-info mb-1" type="button" data-bs-toggle="modal" data-bs-target="#copy-member-modal"
           id="copy-member-btn" {% if not allow_new_member %} disabled {% endif %}>
           <i class="bi-plus-square"></i>
-          Ajouter un adhérent d'une saison précédente
+          Renouveler un adhérent pour la nouvelle saison
         </button>
         <button class="btn btn-info mb-1" type="button" onclick="window.location='/member'"
           id="add-member-btn" {% if not allow_new_member %} disabled {% endif %}>

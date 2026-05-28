@@ -279,7 +279,7 @@ Tech K'Dance
             course_message = f"""
 Cours choisi(s):
 {chr(10).join([c.name for c in kwargs["active_courses"]])}
-Notez que l'inscription ne sera validée qu'après réception du paiement.
+Notez que l'inscription ne sera validée qu'après réception du paiement (et d'un chèque de caution si vous bénéficiez d'un Pass Sport).
 """
         if kwargs.get("waiting_courses"):
             course_message += f"""
@@ -547,7 +547,7 @@ Tech K'Dance
 <p>
   Cours choisi(s):<br />
   {"<br />".join([c.name for c in kwargs["active_courses"]])}<br />
-  Notez que l'inscription ne sera validée qu'après réception du paiement.
+  Notez que l'inscription ne sera validée qu'après réception du paiement (et d'un chèque de caution si vous bénéficiez d'un Pass Sport).
 """
         if kwargs.get("waiting_courses"):
             course_message += f"""
