@@ -126,7 +126,7 @@ async function getCourses() {
           data.map((course) => {
             const startHour = course.start_hour.split(':');
             const endHour = course.end_hour.split(':');
-            const years = course.min_year ? `${course.min_year}-${course.max_year}` : `≤${course.max_year}`
+            const years = isPreSignupOngoing ? '' : `<th>${formatCourseYears(course)}</th>`;
             let label = `${course.name} (${years}) - ${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]} à ${endHour[0]}h${endHour[1]} - ${course.price}€`;
             if (course.is_complete) {
               label = `COMPLET (liste d'attente): ${label}`;
@@ -135,7 +135,7 @@ async function getCourses() {
   <input class="form-check-input course-checkbox" type="checkbox" value="${course.id}" id="check-${course.id}">
   </div></th>
   <th><label class="form-check-label" for="check-${course.id}">${course.name}</label></th>
-  <th>${years}</th>
+  ${years}
   <th>${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]} à ${endHour[0]}h${endHour[1]}</th>
   <th>${course.price}€</th>
   <th>${course.is_complete ? "<strong>Liste d'attente</strong>" : ""}</th>
@@ -222,10 +222,10 @@ async function getMember() {
         $('#pass-switch').prop('checked', isEdition ? withPass : false);
         document.querySelectorAll('.course-checkbox').forEach(item => {
           if (isPreSignupOngoing) {
-            if (! isEdition && data.next_courses.map(c => c.id.toString()).indexOf(item.value) < 0) {
+            if (! isEdition && ! data.next_courses.map(c => c.id.toString()).includes(item.value)) {
               item.parentElement.parentElement.parentElement.remove();
               return;
-            } else if (isEdition && data.default_courses.map(c => c.toString()).indexOf(item.value) < 0) {
+            } else if (isEdition && ! data.default_courses.map(c => c.toString()).includes(item.value) && ! data.active_courses.concat(data.waiting_courses).map(c => c.id.toString()).includes(item.value)) {
               item.parentElement.parentElement.parentElement.remove();
               return;
             }

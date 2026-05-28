@@ -217,7 +217,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
                   <thead>
                     <th></th>
                     <th>Cours</th>
-                    <th>Années de naissance</th>
+                    {% if not season.is_pre_signup_ongoing %}<th>Années de naissance</th>{% endif %}
                     <th>Horaire</th>
                     <th>Tarif</th>
                     <th></th>
