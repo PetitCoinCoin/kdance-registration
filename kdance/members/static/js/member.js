@@ -198,7 +198,7 @@ async function getMember() {
       type: 'GET',
       success: (data) => {
         $('#me-switch').prop('disabled', true);
-        const action = isEdition ? 'Modifier les infos de' : 'Renouveller' ;
+        const action = isEdition ? 'Modifier les infos de' : 'Renouveler' ;
         $('h1').html(`${action} ${data.first_name} ${data.last_name}`);
         $('#form-member').data('canEditCourse', !isEdition || !data.is_validated || isSignupOngoing);
         $('#member-firstname').val(data.first_name);
