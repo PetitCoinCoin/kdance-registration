@@ -208,24 +208,26 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
                     <div id="invalid-member-license" class="invalid-feedback"></div>
                   </div>
                 </div>
+                <p class="mb-4 mt-4"><strong>Adhésion à l'association:</strong> {{season.adhesion_fee}}€</p>
                 <div class="d-flex justify-content-center">
                   <div class="spinner-border text-info mt-2" role="status" hidden>
                     <span class="visually-hidden">Chargement en cours...</span>
                   </div>
                 </div>
-                <table class="table">
-                  <thead>
-                    <th></th>
-                    <th>Cours</th>
-                    {% if not season.is_pre_signup_ongoing %}<th>Années de naissance</th>{% endif %}
-                    <th>Horaire</th>
-                    <th>Tarif</th>
-                    <th></th>
-                  </thead>
-                  <tbody id="member-courses"></tbody>
-                </table>
+                <div class="table-emphasis p-2">
+                  <table class="table">
+                    <thead>
+                      <th></th>
+                      <th>Cours</th>
+                      {% if not season.is_pre_signup_ongoing %}<th>Années de naissance</th>{% endif %}
+                      <th>Horaire</th>
+                      <th>Tarif</th>
+                      <th></th>
+                    </thead>
+                    <tbody id="member-courses"></tbody>
+                  </table>
+                </div>
                 <div id="invalid-member-courses" class="invalid-feedback"></div>
-                <p class="mb-4 mt-4"><strong>Adhésion à l'association:</strong> {{season.adhesion_fee}}€</p>
               </div>
             </div>
 
