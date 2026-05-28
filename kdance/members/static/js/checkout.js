@@ -35,13 +35,14 @@ async function initCheckout() {
 			let details = '<strong>Details:</strong><ul>' + payment.due_detail.map(t => `<li>${t}</li>`).join('');
 			if (payment.sport_pass_count > 0) {
 				details += `<li>${payment.sport_pass_count} Pass Sport: -${payment.sport_pass_amount}€</li>`;
+				$('#sport-pass-disclaimer').attr('hidden', false);
 			}
 			if (payment.paid > payment.sport_pass_amount) {
 				details += `<li>Déjà payé: -${payment.paid - payment.sport_pass_amount}€</li>`;
 			}
 			details += '</ul>';
 			document.getElementById('checkout-details').innerHTML = details;
-			document.getElementById('checkout-due').innerHTML = `<strong>Somme dûe:</strong> ${payment.due - payment.paid + payment.refund}€`;
+			document.getElementById('checkout-due').innerHTML = `<strong>Somme restante dûe:</strong> ${payment.due - payment.paid + payment.refund}€`;
 		},
 		error: (error) => {
 			showToast('Impossible de récupérer vos informations pour le moment.');
