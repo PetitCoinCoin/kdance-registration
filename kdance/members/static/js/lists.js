@@ -515,10 +515,6 @@ function buildEmergencyInfo(data, courseId) {
 
 function buildNextSeason(data, courseId) {
   const seasonId = $('#season-select').val();
-  if (! nextSeasonId) {
-    showToast('Il n\'y a pas encore de saison prochaine. Allez d\'abord la créer et ajouter des cours !', LISTS_TOAST_PREFIX, false);
-    return;
-  }
   showLoader();
   $.ajax({
     url: coursesUrl + `?season=${seasonId}&next=true`,
