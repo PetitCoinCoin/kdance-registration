@@ -1,5 +1,5 @@
 """
-Copyright 2024, 2025 Andréa Marnier
+Copyright 2024 - present, Andréa Marnier
 
 This file is part of KDance registration.
 
@@ -39,6 +39,7 @@ class EmailEnum(Enum):
     WAITING_TO_ACTIVE_COURSE = "waiting to active course"
     WAITING_LIST_INCONSISTENCY = "waiting_list_inconsistency"
     RESET_PWD = "reset_password"
+    CE_REQUEST = "ce_request"
 
 
 class EmailSender:
@@ -48,11 +49,12 @@ class EmailSender:
         self.build_text = self.get_build_text()
         self.build_html = self.get_build_html()
 
-    def send_email(self, emails: list, **kwargs) -> None:
+    def send_email(self, emails: list, cc_emails: list = None, **kwargs) -> None:
         _logger.info("Envoi d'un email: %s", self.type.value)
         mail = EmailMultiAlternatives(
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=emails,
+            cc=cc_emails,
             reply_to=[settings.DEFAULT_FROM_EMAIL],
             subject=self.build_subject(**kwargs),
             body=self.build_text(**kwargs),
@@ -92,6 +94,8 @@ class EmailSender:
                 return self.__subject_waiting_inconsistent
             case EmailEnum.RESET_PWD:
                 return self.__subject_reset_password
+            case EmailEnum.CE_REQUEST:
+                return self.__subject_ce_request
             case _:
                 raise ValueError("Type d'email inconnu")
 
@@ -121,6 +125,8 @@ class EmailSender:
                 return self.__build_text_waiting_inconsistent
             case EmailEnum.RESET_PWD:
                 return self.__build_text_reset_password
+            case EmailEnum.CE_REQUEST:
+                return self.__build_text_ce_request
             case _:
                 raise ValueError("Type d'email inconnu")
 
@@ -150,6 +156,8 @@ class EmailSender:
                 return self.__build_html_waiting_inconsistent
             case EmailEnum.RESET_PWD:
                 return self.__build_html_reset_password
+            case EmailEnum.CE_REQUEST:
+                return self.__build_html_ce_request
             case _:
                 raise ValueError("Type d'email inconnu")
 
@@ -214,6 +222,10 @@ class EmailSender:
         return "Statut de paiement inconnu"
 
     @staticmethod
+    def __subject_ce_request(**kwargs) -> str:
+        return "Demande d'attestation CE"
+
+    @staticmethod
     def __build_text_create_user(**kwargs) -> str:
         if not kwargs.get("username"):
             raise ValueError("Un argument username est nécessaire pour cet email")
@@ -267,7 +279,7 @@ Tech K'Dance
             course_message = f"""
 Cours choisi(s):
 {chr(10).join([c.name for c in kwargs["active_courses"]])}
-Notez que l'inscription ne sera validée qu'après réception du paiement.
+Notez que l'inscription ne sera validée qu'après réception du paiement (et d'un chèque de caution si vous bénéficiez d'un Pass Sport).
 """
         if kwargs.get("waiting_courses"):
             course_message += f"""
@@ -458,6 +470,21 @@ Tech K'Dance
 """
 
     @staticmethod
+    def __build_text_ce_request(**kwargs) -> str:
+        if not isinstance(kwargs.get("members"), list):
+            raise ValueError("Un argument members est nécessaire pour cet email")
+        if not kwargs.get("username"):
+            raise ValueError("Un argument username est nécessaire pour cet email")
+        return f"""
+Bonjour,
+
+Merci d'envoyer une attestation de paiement pour la saison en cours concernant {', '.join(kwargs["members"])} à {kwargs["username"]} (en copie de cet email).
+
+Bonne journée et à bientôt,
+Tech K'Dance
+"""
+
+    @staticmethod
     def __build_html_create_user(**kwargs) -> str:
         if not kwargs.get("username"):
             raise ValueError("Un argument username est nécessaire pour cet email")
@@ -520,7 +547,7 @@ Tech K'Dance
 <p>
   Cours choisi(s):<br />
   {"<br />".join([c.name for c in kwargs["active_courses"]])}<br />
-  Notez que l'inscription ne sera validée qu'après réception du paiement.
+  Notez que l'inscription ne sera validée qu'après réception du paiement (et d'un chèque de caution si vous bénéficiez d'un Pass Sport).
 """
         if kwargs.get("waiting_courses"):
             course_message += f"""
@@ -732,6 +759,23 @@ Tech K'Dance
 <p>Bonjour,</p>
 <p>
   Il semble que le paiement de {kwargs["username"]} soit revenu avec "STATUS_UNKNOWN". Merci d'investiguer.
+</p>
+<p>
+  Bonne journée et à bientôt,<br />
+  Tech K'Dance
+</p>
+"""
+
+    @staticmethod
+    def __build_html_ce_request(**kwargs) -> str:
+        if not isinstance(kwargs.get("members"), list):
+            raise ValueError("Un argument members est nécessaire pour cet email")
+        if not kwargs.get("username"):
+            raise ValueError("Un argument username est nécessaire pour cet email")
+        return f"""
+<p>Bonjour,</p>
+<p>
+  Merci d'envoyer une attestation de paiement pour la saison en cours concernant {', '.join(kwargs["members"])} à {kwargs["username"]} (en copie de cet email).
 </p>
 <p>
   Bonne journée et à bientôt,<br />

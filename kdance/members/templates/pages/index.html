@@ -1,4 +1,4 @@
-<!-- Copyright 2024, 2025 Andréa Marnier
+<!-- Copyright 2024 - present, Andréa Marnier
 
 This file is part of KDance registration.
 
@@ -29,6 +29,18 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
         <div class="d-flex">
           <div class="toast-body fw-semibold">
             Mot de passe changé avec succès.
+          </div>
+          <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      <div id="sent-success-toast" class="toast align-items-center bg-info" role="alert" aria-live="assertive"
+        aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body fw-semibold">
+            Demande d'attestation envoyée avec succès. Vous devriez avoir reçu une copie de la demande dans votre boîte mail.
           </div>
           <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
@@ -106,7 +118,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
               <dd id="desc-address" class="col-sm-9"></dd>
             </dl>
           </div>
-          <div class="col-1">
+          <div class="col-1 d-flex flex-column gap-1">
             <span class="d-inline-block" tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus"
               data-bs-content="Modifier mes infos" data-bs-placement="left">
               <button class="btn btn-outline-info" type="button" onclick="window.location='/user_edit'">
@@ -125,6 +137,12 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
                 <i class="bi-trash3-fill"></i>
               </button>
             </span>
+            <span class="d-inline-block" tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus"
+              data-bs-content="Télécharger mes données au format JSON (RGPD)" data-bs-placement="left">
+              <button class="btn btn-outline-info" type="button" id="rgpd-button">
+                <i class="bi bi-cloud-arrow-down-fill"></i>
+              </button>
+            </span>
           </div>
         </div>
         <div class="mb-3">
@@ -132,12 +150,12 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
             <div class="border border-warning border-5 rounded px-2 pt-2 mb-2">
               <h5>Ré-inscriptions</h5>
               <p>
-              Uniquement pour les adhérents <span class="border-bottom border-danger">inscrits la saison précédente, en priorité sur leur discipline</span>: <strong>du {{ current_season.pre_signup_start }} au {{ current_season.pre_signup_end }}.</strong><br/>
+              Uniquement pour les adhérents <span class="border-bottom border-danger">inscrits la saison précédente, sur leur discipline</span>: <strong>du {{ current_season.pre_signup_start }} au {{ current_season.pre_signup_end }}.</strong><br/>
               <i class="bi bi-exclamation-triangle"></i> Les tarifs de licence FFD sont mis à jour pendant l'été. Ils sont donc susceptibles d'être modifiés ultérieurement.
               </p>
               <p class="main-red fw-semibold">L'inscription ne sera valide que si le <span class="border-bottom border-danger">paiement est effectué avant le {{ pre_signup_payment_end }}</span>.</p>
               <p>
-                Si vous ou votre enfant êtes elligible au <strong>Pass Sport</strong>, vous ne recevrez votre code que plus tard dans l'été. Dans ce cas:
+                Si vous ou votre enfant êtes éligible au <strong>Pass Sport</strong>, vous ne recevrez votre code que plus tard dans l'été. Dans ce cas:
                 <ul>
                   <li>cochez <i>"J'ai un code Pass Sport"</i> et entrez <i>"À VENIR"</i> à la place du code</li>
                   <li>effectuez le règlement comme vous le souhaitez (en ligne, chèque, ANCV, Espèces): les {{ current_season.pass_sport_amount }}€ ont été déduits</li>
@@ -164,7 +182,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
             <p>
               Pour commencer l'inscription, cliquez sur <span class="main-blue fst-italic">Ajouter un nouvel adhérent</span> dans la saison en cours.
               Recommencez pour chaque adhérent de la famille.<br />
-              Pour une ré-inscription, vous pouvez également cliquer sur <span class="main-blue fst-italic">Ajouter un adhérent d'une saison précédente</span>.<br />
+              Pour une ré-inscription, vous pouvez également cliquer sur <span class="main-blue fst-italic">Renouveler un adhérent pour la nouvelle saison</span>.<br />
               L'inscription sera validée à réception du paiement.
             </p>
             <p class="fst-italic">Pour en savoir un peu plus sur cet espace, <a href="/about">cliquez ici</a>.</p>
@@ -192,16 +210,22 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
             <div class="accordion-body">
               <div class="row mb-3">
                 <div class="col-12 col-sm-8">
-                  <dl class="d-flex mb-0">
-                    <dt class="me-2">Total dû:</dt>
+                  <dl class="d-flex align-items-baseline mb-0">
+                    <dt class="payment me-2">Total dû:</dt>
                     <dd class="payment">€</dd>
                   </dl>
-                  <dl class="d-flex mb-0">
-                    <dt class="me-2">Payé:</dt>
-                    <dd class="payment">€</dd>
+                  <dl class="d-flex align-items-baseline mb-0">
+                    <dt class="payment me-2">Payé:</dt>
+                    <dd class="payment me-2">€</dd>
+                    <form action="{% url 'send_mail_request' %}" method="post">
+                      {% csrf_token %}
+                      <button class="btn btn-sm btn-outline-info mb-1 payment" type="submit" hidden>
+                        Demander une attestation
+                      </button>
+                    </form>
                   </dl>
-                  <dl class="d-flex mb-2">
-                    <dt class="me-2">Remboursement perçu:</dt>
+                  <dl class="d-flex align-items-baseline mb-2">
+                    <dt class="payment me-2">Remboursement perçu:</dt>
                     <dd class="payment">€</dd>
                   </dl>
                 </div>
@@ -259,7 +283,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
         <button class="btn btn-info mb-1" type="button" data-bs-toggle="modal" data-bs-target="#copy-member-modal"
           id="copy-member-btn" {% if not allow_new_member %} disabled {% endif %}>
           <i class="bi-plus-square"></i>
-          Ajouter un adhérent d'une saison précédente
+          Renouveler un adhérent pour la nouvelle saison
         </button>
         <button class="btn btn-info mb-1" type="button" onclick="window.location='/member'"
           id="add-member-btn" {% if not allow_new_member %} disabled {% endif %}>

@@ -1,5 +1,5 @@
 /************************************************************************************/
-/* Copyright 2024, 2025 Andréa Marnier                                              */
+/* Copyright 2024 - present, Andréa Marnier                                              */
 /*                                                                                  */
 /* This file is part of KDance registration.                                        */
 /*                                                                                  */
@@ -70,6 +70,7 @@ function getCourses(seasonId) {
 }
 
 function getMembersPerCourse(courseId) {
+    showLoader();
     $.ajax({
       url: `${membersUrl}?course=${courseId}`,
       type: 'GET',
@@ -81,6 +82,9 @@ function getMembersPerCourse(courseId) {
       error: (error) => {
         showToast('Impossible de récupérer les informations.');
         console.log(error);
+      },
+      complete: () => {
+        hideLoader();
       }
     });
   }

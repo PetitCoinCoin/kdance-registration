@@ -1,5 +1,5 @@
 /************************************************************************************/
-/* Copyright 2024, 2025 Andréa Marnier                                              */
+/* Copyright 2024 - present, Andréa Marnier                                              */
 /*                                                                                  */
 /* This file is part of KDance registration.                                        */
 /*                                                                                  */
@@ -27,11 +27,6 @@ function confirmPassword() {
   const pwd = $('#password');
   const pwdConfirmation = $('#password-confirmation');
   return pwdConfirmation.val() === pwd.val()
-}
-
-function activatePopovers() {
-  const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
-  [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
 }
 
 function getGeneralSettings() {

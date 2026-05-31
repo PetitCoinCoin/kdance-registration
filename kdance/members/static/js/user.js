@@ -1,5 +1,5 @@
 /************************************************************************************/
-/* Copyright 2024, 2025 Andréa Marnier                                              */
+/* Copyright 2024 - present, Andréa Marnier                                              */
 /*                                                                                  */
 /* This file is part of KDance registration.                                        */
 /*                                                                                  */
@@ -17,7 +17,7 @@
 /************************************************************************************/
 
 $(document).ready(() => {
-  displayPwdToast();
+  displayConfirmationToast();
   activatePopovers();
   getUser();
   deleteMember();
@@ -25,19 +25,22 @@ $(document).ready(() => {
   $('#copy-btn').click(() => {
     window.location.href = 'member?' + new URLSearchParams({from_pk: $('#copy-member-select').val()}).toString()
   });
+  $('#rgpd-button').click(() => {
+    getUser(true);
+  });
 });
 
-function displayPwdToast() {
+function displayConfirmationToast() {
   if (window.location.hash === '#pwd_ok') {
     const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('pwd-success-toast'));
     toast.show();
     window.location.hash = '';
   }
-}
-
-function activatePopovers() {
-  const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
-  [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
+  if (window.location.hash === '#sent') {
+    const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('sent-success-toast'));
+    toast.show();
+    window.location.hash = '';
+  }
 }
 
 function getPreviousMembers(members) {
@@ -110,11 +113,16 @@ function majorityImpact(isMajor) {
   }
 }
 
-function getUser() {
+function getUser(isRgpd = false) {
+  const url = isRgpd ? userMeUrl + "?rgpd=true" : userMeUrl;
   $.ajax({
-    url: userMeUrl,
+    url,
     type: 'GET',
     success: (data) => {
+      if (isRgpd) {
+        download(data)
+        return;
+      }
       $('#desc-firstname').html(data.first_name);
       $('#desc-lastname').html(data.last_name);
       $('#desc-email').html(data.email);
@@ -154,7 +162,13 @@ function getUser() {
         let details = 'Details:<br />- ' + item.due_detail.join('<br />- ') + '<br />Ne tient pas compte d\'éventuels cours en liste d\'attente';
         dd[0].innerHTML = `${item.due}€ ${item.due > 0 ? buildHelper(details) : ''}`;
         dd[1].innerHTML = `${item.paid}€`;
-        dd[2].innerHTML = `${item.refund}€`;
+        if (item.refund > 0) {
+          dd[2].innerHTML = `${item.refund}€`;
+        } else {
+          dd[2].remove();
+          let dt = clone.querySelectorAll('dt.payment');
+          dt[2].remove();
+        }
         // Collapsible
         let collapseBtn = clone.querySelector('button');
         collapseBtn.dataset.bsTarget = `#accordion-${i}`;
@@ -188,6 +202,9 @@ function getUser() {
           const toPay = item.due - item.paid + item.refund;
           if (toPay <= 0) {
             memberBtnClone.querySelector('#checkout-btn').disabled = true;
+            if (item.due > 0) {
+              clone.querySelector('button.payment').hidden = false;
+            }
           }
           btnParent.appendChild(memberBtnClone);
         }
@@ -245,9 +262,8 @@ function getUser() {
         activatePopovers();
       })
     },
-    error: (error) => {
-      showToast('Impossible de récupérer vos informations pour le moment.');
-      console.log(error);
+    error: () => {
+      showToast('Impossible de récupérer vos informations pour le moment.', USER_TOAST_PREFIX);
     }
   });
 }
@@ -272,10 +288,9 @@ function deleteMember() {
           success: () => {
             location.reload();
           },
-          error: (error) => {
+          error: () => {
             const errorMessage = 'Une erreur est survenue, impossible de supprimer cet adhérent pour le moment.';
-            showToast(errorMessage);
-            console.log(error);
+            showToast(errorMessage, USER_TOAST_PREFIX);
           }
         });
       });
@@ -296,20 +311,13 @@ function validateMembers() {
           success: () => {
             location.reload();
           },
-          error: (error) => {
-            showToast(errorMessage);
-            console.log(error);
+          error: () => {
+            showToast(errorMessage, USER_TOAST_PREFIX);
           }
         });
       });
     });
   }
-}
-
-function showToast(text) {
-  const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('user-error-toast'));
-  $('#user-error-body').text(`${text} ${ERROR_SUFFIX}`);
-  toast.show();
 }
 
 function buildHelper(text) {

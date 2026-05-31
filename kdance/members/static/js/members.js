@@ -1,5 +1,5 @@
 /************************************************************************************/
-/* Copyright 2024, 2025 Andréa Marnier                                              */
+/* Copyright 2024 - present, Andréa Marnier                                              */
 /*                                                                                  */
 /* This file is part of KDance registration.                                        */
 /*                                                                                  */
@@ -20,12 +20,14 @@ $(document).ready(() => {
   displayPayments();
   initCheckPayment();
   handleCheckPayment();
+  activatePopovers();
   getSeasons();
   updateMember();
   deleteMember();
+  allowCbPaymentUpdate();
   const seasonSelect = document.querySelector('#season-select');
   seasonSelect.addEventListener('change', () =>
-    onSeasonChange(seasonSelect.value)
+    onSeasonChange(seasonSelect.value, getMembers)
   );
   breadcrumbDropdownOnHover();
 });
@@ -76,6 +78,12 @@ function displayPayments() {
   });
 }
 
+function allowCbPaymentUpdate() {
+  $('#cb-payment-edit').on('click', () => {
+    $('#payment-cb').prop('disabled', false);
+  })
+}
+
 function initCheckPayment() {
   const checkParent = document.querySelector('#check-div');
   const checkTemplate = document.querySelector('#check-template');
@@ -92,7 +100,7 @@ function initCheckPayment() {
       const addClone = addTemplate.content.cloneNode(true);
       let addButton = addClone.querySelector('button');
       addButton.id += `add-check-${i}`;
-      clone.querySelectorAll('.row')[1].appendChild(addClone);
+      clone.querySelector('.check-row').appendChild(addClone);
     }
     // Delete button + hidden except for first
     if (i > 0) {
@@ -101,7 +109,7 @@ function initCheckPayment() {
       let removeButton = removeClone.querySelector('button');
       removeButton.id += `remove-check-${i}`;
       removeButton.dataset.bsCnumber = i;
-      clone.querySelectorAll('.row')[1].appendChild(removeClone);
+      clone.querySelector('.check-row').appendChild(removeClone);
       clone.querySelectorAll('div')[0].id = `check-item-${i}`;
       clone.querySelectorAll('div')[0].hidden = true;
     }
@@ -131,37 +139,23 @@ function handleCheckPayment() {
 }
 
 function getSeasons() {
-  $.ajax({
-    url: seasonsUrl,
-    type: 'GET',
-    success: (data) => {
-      var urlParams = new URLSearchParams(window.location.search);
-      data.map((season) => {
-        let label = season.year;
-        const selectedUrl = urlParams.get('season') === season.id.toString();
-        if (season.is_current) {
-          label += ' (en cours)';
-        }
-        if (selectedUrl || (urlParams.get('season') === null && season.is_current)) {
-          getMembers(season.id);
-        }
-        $('#season-select').append($(
-          '<option>',
-          { value: season.id, text: label, selected: urlParams.get('season') !== null ? selectedUrl : season.is_current }
-        ));
-      });
-    },
-    error: (error) => {
-      showToast('Impossible de récupérer la liste des saisons.');
-      console.log(error);
-    }
-  });
-}
-
-function onSeasonChange(seasonId) {
-  const refresh = window.location.protocol + "//" + window.location.host + window.location.pathname + `?season=${seasonId}`;
-  window.history.pushState({ path: refresh }, '', refresh);
-  getMembers(seasonId);
+  getSeasonsWrapper((data) => {
+    var urlParams = new URLSearchParams(window.location.search);
+    data.map((season) => {
+      let label = season.year;
+      const selectedUrl = urlParams.get('season') === season.id.toString();
+      if (season.is_current) {
+        label += ' (en cours)';
+      }
+      if (selectedUrl || (urlParams.get('season') === null && season.is_current)) {
+        getMembers(season.id);
+      }
+      $('#season-select').append($(
+        '<option>',
+        { value: season.id, text: label, selected: urlParams.get('season') !== null ? selectedUrl : season.is_current }
+      ));
+    });
+  }, MEMBERS_TOAST_PREFIX);
 }
 
 function statusFormatter(value) {
@@ -188,10 +182,28 @@ function actionFormatter(value, row, index) {
       <li><button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#member-courses-update-modal" memberId="${row.id}">Changer de cours</button></li>
       <li><button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#member-courses-delete-modal" memberId="${row.id}">Annuler des cours</button></li>
     </ul>
+    <button class="btn btn-outline-info btn-sm" type="button" onClick=extractUser(${row.user_id})>
+      <i class="bi bi-cloud-arrow-down-fill"></i>
+    </button>
     <button class="btn btn-outline-warning btn-sm" memberId="${row.id}" memberName="${row.name}" type="button" data-bs-toggle="modal" data-bs-target="#member-delete-modal">
       <i class="bi-trash3-fill"></i>
     </button>
   `;
+}
+
+function extractUser(userId) {
+  $.ajax({
+    url: usersUrl + userId + "?rgpd=true",
+    type: 'GET',
+    success: (data) => {
+      download(data)
+      return;
+    },
+    error: (error) => {
+      showToast('Impossible de récupérer les informations pour le moment.', MEMBERS_TOAST_PREFIX);
+      console.log(error);
+    }
+  })
 }
 
 function getMembers(seasonId) {
@@ -330,6 +342,7 @@ function getMember(memberId) {
       const withPass = !(data.sport_pass === null || data.sport_pass?.code === null || data.sport_pass?.code === '');
       $('#pass-div').attr('hidden', !withPass);
       $('#pass-switch').prop('checked', withPass);
+      $('#payment-pass-code').data('withPass', withPass);
 
       $('#payment-coupon-count').val(data.payment.sport_coupon?.count || '');
       $('#payment-coupon-amount').val(data.payment.sport_coupon?.amount || '');
@@ -446,7 +459,7 @@ function getMember(memberId) {
       });
     },
     error: (error) => {
-      showToast('Impossible de récupérer les informations de cet adhérent.');
+      showToast('Impossible de récupérer les informations de cet adhérent.', MEMBERS_TOAST_PREFIX);
       console.log(error);
     }
   });
@@ -485,12 +498,15 @@ function updateMember() {
       $('#form-member-payment').data('memberId', memberId);
       $('#form-member-payment').data('paymentId', paymentId);
     });
+    $('#member-payment-modal').on('hide.bs.modal', () => {
+      $('#payment-cb').prop('disabled', true);
+    });
     $('#member-payment-modal').on('submit', '#form-member-payment', function (event) {
       event.preventDefault();
       const memberId = $(this).data('memberId');
       const paymentId = $(this).data('paymentId');
       patchPayment(memberId, paymentId);
-    })
+    });
   }
   if (memberLicenseModal) {
     $('#member-license-modal').on('show.bs.modal', function (event) {
@@ -526,7 +542,7 @@ function updateMember() {
           $('#member-license-modal').modal('hide');
         },
         error: (error) => {
-          showToast(`${DEFAULT_ERROR} Impossible de mettre à jour la licence.`);
+          showToast(`${DEFAULT_ERROR} Impossible de mettre à jour la licence.`, MEMBERS_TOAST_PREFIX);
           console.log(error);
         }
       });
@@ -550,7 +566,7 @@ function updateMember() {
           $('#add-btn').data('memberId', memberId);
         },
         error: (error) => {
-          showToast('Impossible de récupérer les cours de la saison.');
+          showToast('Impossible de récupérer les cours de la saison.', MEMBERS_TOAST_PREFIX);
           console.log(error);
         }
       });
@@ -601,7 +617,7 @@ function updateMember() {
           $('#update-btn').data('memberId', memberId);
         },
         error: (error) => {
-          showToast('Impossible de récupérer les cours de la saison.');
+          showToast('Impossible de récupérer les cours de la saison.', MEMBERS_TOAST_PREFIX);
           console.log(error);
         }
       });
@@ -645,7 +661,7 @@ function updateMember() {
           location.reload();
         },
         error: (error) => {
-          showToast(`${DEFAULT_ERROR} Impossible de changer le cours.`);
+          showToast(`${DEFAULT_ERROR} Impossible de changer le cours.`, MEMBERS_TOAST_PREFIX);
           console.log(error);
         }
       });
@@ -730,6 +746,12 @@ function patchPayment(memberId, paymentId) {
     }
   }
   paymentData.check_payment = checks;
+  if (! $('#payment-cb').prop('disabled')) {
+    paymentData.cb_payment = {
+      amount: $('#payment-cb').val() || 0,
+      transaction_type: "CAWL_"
+    }
+  }
   $.ajax({
     url: paymentsUrl + paymentId + '/',
     type: 'PATCH',
@@ -739,13 +761,17 @@ function patchPayment(memberId, paymentId) {
     data: JSON.stringify(paymentData),
     dataType: 'json',
     success: () => {
-      if ($('#payment-pass-code').val() !== '') {
-        memberData = {
-          sport_pass: {
-            code: $('#payment-pass-code').val(),
-            amount: $('#payment-pass-amount').val(),
-          },
-        };
+      $('#payment-cb').prop('disabled', true);
+      console.log("prout", $('#payment-pass-code').data('withPass'))
+      if ($('#payment-pass-code').val() !== '' || $('#payment-pass-code').data('withPass')) {
+      const memberData = $('#payment-pass-code').val() !== '' ?
+      {
+        sport_pass: {
+          code: $('#payment-pass-code').val(),
+          amount: $('#payment-pass-amount').val(),
+        },
+      } :
+      {};
         $.ajax({
           url: membersUrl + memberId + '/',
           type: 'PATCH',
@@ -759,7 +785,7 @@ function patchPayment(memberId, paymentId) {
           },
           error: (error) => {
             if (!error.responseJSON) {
-              showToast('Une erreur est survenue lors de la mise à jour du paiement.');
+              showToast('Une erreur est survenue lors de la mise à jour du paiement.', MEMBERS_TOAST_PREFIX);
               console.log(error);
             } else {
               const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('member-error-toast'));
@@ -784,7 +810,7 @@ function patchPayment(memberId, paymentId) {
     },
     error: (error) => {
       if (!error.responseJSON) {
-        showToast('Une erreur est survenue lors de la mise à jour du paiement.');
+        showToast('Une erreur est survenue lors de la mise à jour du paiement.', MEMBERS_TOAST_PREFIX);
         console.log(error);
       } else {
         const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('member-error-toast'));
@@ -877,7 +903,7 @@ function patchMemberCoursesActions(memberId, action) {
     success: () => { location.reload(); },
     error: (error) => {
       if (!error.responseJSON) {
-        showToast(DEFAULT_ERROR);
+        showToast(DEFAULT_ERROR, MEMBERS_TOAST_PREFIX);
         console.log(error);
       }
       if (error.responseJSON && error.responseJSON.cancel_refund) {
@@ -911,17 +937,11 @@ function deleteMember() {
             location.reload();
           },
           error: (error) => {
-            showToast('Une erreur est survenue, impossible de supprimer l\'adhérent pour le moment.');
+            showToast('Une erreur est survenue, impossible de supprimer l\'adhérent pour le moment.', MEMBERS_TOAST_PREFIX);
             console.log(error);
           }
         });
       });
     });
   }
-}
-
-function showToast(text) {
-  const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('member-error-toast'));
-  $('#member-error-body').text(`${text} ${ERROR_SUFFIX}`);
-  toast.show();
 }

@@ -1,4 +1,4 @@
-<!-- Copyright 2024, 2025 Andréa Marnier
+<!-- Copyright 2024 - present, Andréa Marnier
 
 This file is part of KDance registration.
 
@@ -49,6 +49,13 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
 						adhérents inscrits devra se faire auprès de l'équipe K'Dance. Il ne sera plus possible de supprimer un adhérent. L'adhésion restera dûe quoi qu'il arrive.
 					</strong>
 				</p>
+				<p class="main-red fst-italic" id="sport-pass-disclaimer" hidden>
+					<strong>
+						<i class="bi-exclamation-diamond"></i>
+						Vous avez indiqué bénéficier d'un Pass Sport. L'inscription ne sera valide que si vous nous faites également parvenir un chèque
+						de caution de {{ season.pass_sport_amount }}€. Celui-ci vous sera rendu une fois le code validé.
+					</strong>
+				</p>
 
 				<div class="accordion" id="payment-accordion">
 					<div class="accordion-item">
@@ -82,7 +89,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
 											class="bi-tree"></i>),</li>
 									<li>Chèques ANCV,</li>
 									<li>Coupons sport,</li>
-									<li>Pass Sport: à saisir directement dans votre espace.</li>
+									<li>Pass Sport: à saisir directement dans votre espace (et apporter un chèque de caution).</li>
 								</ul>
 							</div>
 						</div>

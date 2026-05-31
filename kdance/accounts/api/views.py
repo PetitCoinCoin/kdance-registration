@@ -1,5 +1,5 @@
 """
-Copyright 2024, 2025 Andréa Marnier
+Copyright 2024 - present, Andréa Marnier
 
 This file is part of KDance registration.
 
@@ -41,19 +41,22 @@ from accounts.api.serializers import (
     UserBaseSerializer,
     UserChangePwdSerializer,
     UserCreateSerializer,
+    UserExtractSerializer,
     UserNewPwdSerializer,
     UserResetPwdSerializer,
-    UserSerializer,
+    UserMeSerializer,
+    UserMiniSerializer,
     UserTeacherActionSerializer,
 )
+from accounts.models import UserAction
 from members.emails import EmailEnum, EmailSender
-from members.models import GeneralSettings
+from members.models import GeneralSettings, Member
 
 
 class UsersApiViewSet(
     CreateModelMixin,
-    DestroyModelMixin,
     ListModelMixin,
+    RetrieveModelMixin,
     GenericViewSet,
 ):
     def get_queryset(self):
@@ -79,7 +82,9 @@ class UsersApiViewSet(
             if self.request.path and "admin" in self.request.path.lower():
                 return UserAdminActionSerializer
             return UserTeacherActionSerializer
-        return UserSerializer
+        if self.request.query_params.get("rgpd", "").lower() in ["1", "true"]:
+            return UserExtractSerializer
+        return UserMiniSerializer
 
     def create(self, request, *args, **kwargs) -> Response:
         if not GeneralSettings.get_solo().allow_signup:
@@ -97,18 +102,6 @@ class UsersApiViewSet(
             username=username,
         )
         return response
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        if instance.username == settings.SUPERUSER_EMAIL:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-        self.perform_destroy(instance)
-        email_sender = EmailSender(EmailEnum.DELETE_USER)
-        email_sender.send_email(
-            emails=[self.request.user.username],
-            username=self.request.user.username,
-        )
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=["put"])
     def admin(self, request: Request, action: str) -> Response:
@@ -156,8 +149,14 @@ class UserMeApiViewSet(
     GenericViewSet,
 ):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
     http_method_names = ["get", "patch", "put", "delete"]
+
+    def get_serializer_class(
+        self,
+    ) -> type[UserMeSerializer]:
+        if self.request.query_params.get("rgpd", "").lower() in ["1", "true"]:
+            return UserExtractSerializer
+        return UserMeSerializer
 
     def get_object(self) -> User:
         return self.queryset.get(pk=self.request.user.pk)
@@ -166,7 +165,21 @@ class UserMeApiViewSet(
         instance = self.get_object()
         if instance.username == settings.SUPERUSER_EMAIL:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
+        if Member.objects.filter(
+            user=instance, season__is_current=True, is_validated=True
+        ).exists:
+            return Response(status=status.HTTP_403_FORBIDDEN)
         self.perform_destroy(instance)
+        email_sender = EmailSender(EmailEnum.DELETE_USER)
+        email_sender.send_email(
+            emails=[self.request.user.username],
+            username=self.request.user.username,
+        )
+        superuser = User.objects.get(username=settings.SUPERUSER_EMAIL)
+        # The user being deleted, we can't refer to it
+        UserAction(
+            user=superuser, action=f"Utilisateur supprimé: {instance.username}"
+        ).save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def update(self, request, *args, **kwargs):
@@ -194,6 +207,10 @@ class UserMeApiViewSet(
                     )
                 ],
             )
+            UserAction(
+                user=instance,
+                action=f"Mise à jour de l'email du compte: {email_update}",
+            ).save()
         return Response(serializer.data)
 
     @action(detail=False, methods=["put"])

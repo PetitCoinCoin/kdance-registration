@@ -1,4 +1,4 @@
-<!-- Copyright 2024, 2025 Andréa Marnier
+<!-- Copyright 2024 - present, Andréa Marnier
 
 This file is part of KDance registration.
 
@@ -28,6 +28,15 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
         aria-atomic="true">
         <div class="d-flex">
           <div class="toast-body fw-semibold" id="list-error-body"></div>
+          <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+    </div>
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      <div id="list-success-toast" class="toast align-items-center bg-info" role="alert" aria-live="assertive"
+        aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body fw-semibold" id="list-success-body"></div>
           <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
       </div>
@@ -67,21 +76,22 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
           <select id="season-select" class="form-select max-w-300">
           </select>
         </div>
+        <p class="col-2">Je veux voir...</p>
         <div class="d-flex flex-wrap align-items-baseline mb-3">
-          <p class="col-2">Je veux voir...</p>
-          <div class="d-flex col">
             <select id="menu-1-select" class="form-select w-auto me-2">
             </select>
             <select id="menu-2-select" class="form-select w-auto me-2" hidden>
             </select>
-          </div>
-          <div class="d-flex col-1 justify-content-end">
             <button class="btn btn-info" type="button" id="search-btn">
               <i class="bi-search"></i>
             </button>
-          </div>
         </div>
         <div class="border-top">
+          <div class="d-flex justify-content-center">
+            <div class="spinner-border text-info mt-4" role="status" hidden>
+              <span class="visually-hidden">Chargement en cours...</span>
+            </div>
+          </div>
           <table id="data-table"></table>
         </div>
         <div class="d-flex mt-3">
@@ -112,6 +122,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
     const ffdB = "{{ season.ffd_b_amount }}";
     const ffdC = "{{ season.ffd_c_amount }}";
     const ffdD = "{{ season.ffd_d_amount }}";
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
   </script>
   <script src="{% static 'js/lists.js' %}"></script>
 </main>

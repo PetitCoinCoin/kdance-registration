@@ -1,5 +1,5 @@
 /************************************************************************************/
-/* Copyright 2024, 2025 Andréa Marnier                                              */
+/* Copyright 2024 - present, Andréa Marnier                                              */
 /*                                                                                  */
 /* This file is part of KDance registration.                                        */
 /*                                                                                  */
@@ -18,8 +18,8 @@
 
 $(document).ready(() => {
   getSeasons();
-  populateMainSelect();
   searchData();
+  populateMainSelect();
   const mainSelect = document.querySelector('#menu-1-select');
   mainSelect.addEventListener('change', () =>
     onMainChange(mainSelect.value)
@@ -35,23 +35,15 @@ $(document).ready(() => {
 
 
 function getSeasons() {
-  $.ajax({
-    url: seasonsUrl,
-    type: 'GET',
-    success: (data) => {
-      data.map((season) => {
-        let label = season.year;
-        if (season.is_current) {
-          label += ' (en cours)';
-        }
-        $('#season-select').append($('<option>', { value: season.id, text: label, selected: season.is_current }));
-      });
-    },
-    error: (error) => {
-      showToast('Impossible de récupérer la liste des saisons.');
-      console.log(error);
-    }
-  });
+  getSeasonsWrapper((data) => {
+    data.map((season) => {
+      let label = season.year;
+      if (season.is_current) {
+        label += ' (en cours)';
+      }
+      $('#season-select').append($('<option>', { value: season.id, text: label, selected: season.is_current }));
+    });
+  }, LISTS_TOAST_PREFIX);
 }
 
 function populateMainSelect() {
@@ -62,20 +54,23 @@ function populateMainSelect() {
 
 function populateSecondSelect(previousValue) {
   $('#menu-2-select').attr('hidden', false);
+  $('#menu-2-select').empty();
   switch (previousValue) {
     case '1':
     case '6':
     case '7':
+    case '8':
       getCourses($('#season-select').val(), previousValue);
       break
+    case '9':
+      getCourses($('#season-select').val(), previousValue, true);
+      break
     case '3':
-      $('#menu-2-select').empty();
       for (let [key, value] of Object.entries(MONTH)) {
         $('#menu-2-select').append($('<option>', { value: key, text: value, selected: key == '0' }));
       }
       break
     default:
-      $('#menu-2-select').empty();
       $('#menu-2-select').attr('hidden', true);
   }
 }
@@ -90,12 +85,13 @@ function onMainChange(mainValue) {
   }
 }
 
-function getCourses(seasonId, mainValue) {
+function getCourses(seasonId, mainValue, isForNextSeason = false) {
+  const filter = isForNextSeason ? '&next=true' : ''
   $.ajax({
-    url: coursesUrl + `?season=${seasonId}`,
+    url: coursesUrl + `?season=${seasonId}`+ filter,
     type: 'GET',
     success: (data) => {
-      $('#menu-2-select').append($('<option>', { value: '0', text: mainValue === '6' ? '-' : 'Tous les cours', selected: true }));
+      $('#menu-2-select').append($('<option>', { value: '0', text: ['6', '8', '9'].indexOf(mainValue) > -1 ? '-' : 'Tous les cours', selected: true }));
       for (let i = 0; i < data.length; i++) {
         const startHour = data[i].start_hour.split(':');
         const label = `${data[i].name}, ${WEEKDAY[data[i].weekday]} ${startHour[0]}h${startHour[1]}`;
@@ -103,7 +99,7 @@ function getCourses(seasonId, mainValue) {
       }
     },
     error: (error) => {
-      showToast('Impossible de récupérer les cours de la saison.');
+      showToast('Impossible de récupérer les cours de la saison.', LISTS_TOAST_PREFIX);
       console.log(error);
     }
   });
@@ -111,6 +107,7 @@ function getCourses(seasonId, mainValue) {
 
 function searchData() {
   $('#search-btn').on('click', () => {
+    showLoader();
     const mainValue = $('#menu-1-select').val();
     switch (mainValue) {
       case '1':
@@ -118,6 +115,8 @@ function searchData() {
       case '5':
       case '6':
       case '7':
+      case '8':
+      case '9':
         getMembersPerCourse(mainValue);
         break
       case '2':
@@ -127,7 +126,7 @@ function searchData() {
         getChecksPerMonth();
         break
       default:
-        return
+        break
     }
   });
 }
@@ -136,9 +135,9 @@ function getMembersPerCourse(mainValue) {
   document.querySelector('#total-amount-div').className = 'd-none';
   var url;
   const subValue = $('#menu-2-select').val()
+  let filter = '';
   switch (subValue) {
     case null:
-      let filter = '';
       switch (mainValue) {
         case '4':
           filter = 'with_pass';
@@ -153,7 +152,7 @@ function getMembersPerCourse(mainValue) {
       url = `${membersUrl}?season=${$('#season-select').val()}&${filter}=true`;
       break
     case '0':
-      if (mainValue === '6') {
+      if (mainValue === '6' || mainValue === '8' || mainValue === '9') {
         const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('list-error-toast'));
         $('#list-error-body').text('Veuillez sélectionner un cours.');
         toast.show();
@@ -162,7 +161,10 @@ function getMembersPerCourse(mainValue) {
       url = `${membersUrl}?season=${$('#season-select').val()}`;
       break
     default:
-      url = `${membersUrl}?course=${subValue}`;
+      if (mainValue == '9') {
+        filter = '&next=true'
+      }
+      url = `${membersUrl}?course=${subValue}${filter}`;
   }
   $.ajax({
     url: url,
@@ -171,7 +173,8 @@ function getMembersPerCourse(mainValue) {
       $('#data-table').bootstrapTable('destroy');
       switch (mainValue) {
         case '1':
-          buildMembersInfo(data, subValue);
+        case '9':
+          buildMembersInfo(data, subValue, mainValue === '9');
           break
         case '2':
         case '3':
@@ -189,19 +192,25 @@ function getMembersPerCourse(mainValue) {
         case '7':
           buildEmergencyInfo(data, subValue);
           break
+        case '8':
+          buildNextSeason(data, subValue);
+          break;
         default:
           return
       }
       $('#total-count').text(data.length);
     },
     error: (error) => {
-      showToast('Impossible de récupérer les informations.');
+      showToast('Impossible de récupérer les informations.', LISTS_TOAST_PREFIX);
       console.log(error);
+    },
+    complete: () => {
+      hideLoader();
     }
   });
 }
 
-function buildMembersInfo(data, courseId) {
+function buildMembersInfo(data, courseId, isForNextSeason) {
   let columns = [
     {
       field: 'name',
@@ -209,6 +218,26 @@ function buildMembersInfo(data, courseId) {
       searchable: true,
       sortable: true,
     },
+    {
+      field: 'birthday',
+      title: 'Date de naissance',
+      searchable: false,
+      sortable: true,
+    }
+  ];
+  if (isForNextSeason) {
+    columns.push({
+        field: 'current_courses',
+        title: 'Cours actuels',
+        searchable: false,
+        sortable: true,
+        visible: true,
+        formatter: function(value) {
+          return value.join('<br />')
+        },
+      })
+  } else {
+    columns.push(...[
     {
       field: 'created',
       title: 'Inscrit le',
@@ -224,11 +253,6 @@ function buildMembersInfo(data, courseId) {
       formatter: function(value) {
         return value.join('<br />')
       },
-    }, {
-      field: 'birthday',
-      title: 'Date de naissance',
-      searchable: false,
-      sortable: true,
     }, {
       field: 'phone',
       title: 'Téléphone',
@@ -329,19 +353,20 @@ function buildMembersInfo(data, courseId) {
       sortable: true,
       visible: false,
     }
-  ];
-  if (courseId > 0) {
-    columns.splice(5, 0, {
-      field: 'courses',
-      title: 'Autre cours',
-      searchable: true,
-      sortable: true,
-      visible: true,
-      formatter: function(value) {
-        return value.join('<br />')
-      },
+  ]);
+    if (courseId > 0) {
+      columns.splice(5, 0, {
+        field: 'courses',
+        title: 'Autre cours',
+        searchable: true,
+        sortable: true,
+        visible: true,
+        formatter: function(value) {
+          return value.join('<br />')
+        },
+      }
+    );
     }
-  );
   }
   $('#data-table').bootstrapTable({
     ...COMMON_TABLE_PARAMS,
@@ -355,9 +380,21 @@ function buildMembersInfo(data, courseId) {
     },
     columns: columns,
     data: data.map(m => {
+      if (isForNextSeason) {
+        return {
+          birthday: (new Date(m.birthday)).toLocaleDateString('fr-FR'),
+          name: `${m.last_name} ${m.first_name}`,
+          current_courses: m.active_courses.map(
+          (c) => `${c.name}, ${WEEKDAY[c.weekday]}`
+        ).concat(m.cancelled_courses.map(
+          (c) => `${c.name}, ${WEEKDAY[c.weekday]} (Annulé)`)
+        ),
+        }
+      }
       return {
         ...m,
         status: courseId > 0 ? buildStatusOneCourse(m, courseId) : buildStatusAllCourses(m),
+        birthday: (new Date(m.birthday)).toLocaleDateString('fr-FR'),
         created: (new Date(m.created)).toLocaleString('fr-FR'),
         name: `${m.last_name} ${m.first_name}`,
         courses: m.active_courses.filter(c => c.id != courseId).map(
@@ -473,6 +510,119 @@ function buildEmergencyInfo(data, courseId) {
         ...buildContactsData(m.contacts),
       }
     })
+  });
+}
+
+function buildNextSeason(data, courseId) {
+  const seasonId = $('#season-select').val();
+  showLoader();
+  $.ajax({
+    url: coursesUrl + `?season=${seasonId}&next=true`,
+    type: 'GET',
+    success: (coursesData) => {
+      hideLoader();
+      let columns = [
+        {
+          field: 'name',
+          title: 'Adhérent',
+          searchable: true,
+          sortable: true,
+        },{
+          field: 'birthyear',
+          title: 'Né(e) en',
+          searchable: false,
+          sortable: true,
+          width: '100',
+        }, {
+          field: 'courses',
+          title: 'Autre cours',
+          searchable: true,
+          sortable: true,
+          visible: true,
+          formatter: function(value) {
+            return value.join('<br />')
+          },
+        }, {
+          field: 'operate',
+          title: 'Cours pour l\'année prochaine',
+          align: 'left',
+          clickToSelect: false,
+          formatter: actionFormatter,
+        }
+      ];
+      $('#data-table').bootstrapTable({
+        ...COMMON_TABLE_PARAMS,
+        showExport: true,
+        exportTypes: ['csv', 'xlsx', 'pdf', 'json'],
+        exportOptions: {
+          fileName: function () {
+            const suffix = $('#menu-2-select').val() === '0' ? 'tous' : $('#menu-2-select option:selected').text();
+            return `adherents_prochaine-saison_${$('#season-select option:selected').text().substring(0,9)}_${suffix}`
+          }
+        },
+        columns: columns,
+        data: data.map(m => {
+          const birthyear = (new Date(m.birthday)).getFullYear();
+          return {
+            ...m,
+            name: `${m.last_name} ${m.first_name}`,
+            birthyear,
+            courses: m.active_courses.filter(c => c.id != courseId).map(
+              (c) => `${c.name}, ${WEEKDAY[c.weekday]}`
+            ),
+            possibleCourses: coursesData.filter((c) => (! c.min_year || c.min_year <= birthyear) && c.max_year >= birthyear)
+          }
+        })
+      });
+    },
+    error: (error) => {
+      showToast('Êtes vous sur d\'avoir créé la saison prochaine ? Allez d\'abord la créer et ajouter des cours ! À moins qu\'il y ait un autre problème.', LISTS_TOAST_PREFIX, false);
+      console.log(error);
+    }
+  });
+}
+
+function actionFormatter(value, row, index) {
+  const possibleCourses = row.possibleCourses.map((c) =>
+    `<li class="form-check">
+        <input type="checkbox" class="form-check-input" id="${row.id}-${c.id}"${row.next_courses.map(i => i.id).indexOf(c.id) > -1 ? ' checked' : ''} onChange=updateNextSeason(event,${row.id},${c.id})>
+        <label class="form-check-label" for="${row.id}-${c.id}">${c.name} (${formatCourseYears(c)}), ${WEEKDAY[c.weekday]}</label>
+      </li>`
+  );
+  return `<div id="next-${row.id}" class="d-flex flex-column">
+  ${row.next_courses.map((c) => `<span id="next-${row.id}-${c.id}">${c.name}, ${WEEKDAY[c.weekday]}</span>`).join('')}
+  </div>
+  <div class="dropdown mt-2">
+  <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+    Ajuster l'affectation
+  </button>
+  <ul class="dropdown-menu p-2">${possibleCourses.join('')}</ul></div>`
+}
+
+function updateNextSeason(event, memberId, courseId) {
+  const action = event.target.checked ? 'add' : 'remove';
+  $.ajax({
+    url: membersUrl + memberId + '/next-courses/' + action + '/',
+    type: 'PUT',
+    contentType: 'application/json',
+    headers: { 'X-CSRFToken': csrftoken },
+    mode: 'same-origin',
+    data: JSON.stringify({ next_course: courseId }),
+    dataType: 'json',
+    success: (data) => {
+      if (action === 'add') {
+        $(`#next-${memberId}`)[0].innerHTML += `<span id="next-${memberId}-${courseId}">${data.name}, ${WEEKDAY[data.weekday]}</span>`
+      } else {
+        $(`#next-${memberId}-${courseId}`)[0].remove()
+      }
+      showToast('Affectation mise à jour !', 'list-success', false);
+    },
+    error: (error) => {
+      if (!error.responseJSON) {
+        showToast(DEFAULT_ERROR, LISTS_TOAST_PREFIX);
+        console.log(error);
+      }
+    }
   });
 }
 
@@ -737,8 +887,11 @@ function getChecksPerMonth() {
       $('#total-amount').text(`${totalAmount}€`);
     },
     error: (error) => {
-      showToast('Impossible de récupérer les chèques demandés.');
+      showToast('Impossible de récupérer les chèques demandés.', LISTS_TOAST_PREFIX);
       console.log(error);
+    },
+    complete: () => {
+      hideLoader();
     }
   });
 }
@@ -772,6 +925,7 @@ function getPayments() {
     url: `${paymentsUrl}?season=${$('#season-select').val()}`,
     type: 'GET',
     success: (data) => {
+      hideLoader();
       $('#data-table').bootstrapTable('destroy');
       $('#data-table').bootstrapTable({
         ...COMMON_TABLE_PARAMS,
@@ -876,14 +1030,15 @@ function getPayments() {
             searchable: true,
           }],
         data: data.map(p => {
+          const checks = p.check_payment.filter(c => c.month !== 100)
           return {
             ...p,
             ancv: p.ancv || {amount: 0, count: 0},
             cb_payment: p.cb_payment?.amount || 0,
             sport_coupon: p.sport_coupon || {amount: 0, count: 0},
             other_payment: p.other_payment || {amount: 0, comment: ''},
-            check_count: p.check_payment.length,
-            check_amount: p.check_payment.reduce((acc, val) => acc + val.amount, 0),
+            check_count: checks.length,
+            check_amount: checks.reduce((acc, val) => acc + val.amount, 0),
           }
         })
       });
@@ -896,14 +1051,9 @@ function getPayments() {
       $('#total-amount').text(`${totalAmount}€`);
     },
     error: (error) => {
-      showToast('Impossible de récupérer les paiements demandés.');
+      hideLoader();
+      showToast('Impossible de récupérer les paiements demandés.', LISTS_TOAST_PREFIX);
       console.log(error);
     }
   });
-}
-
-function showToast(text) {
-  const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('list-error-toast'));
-  $('#list-error-body').text(`${text} ${ERROR_SUFFIX}`);
-  toast.show();
 }

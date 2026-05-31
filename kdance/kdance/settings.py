@@ -1,5 +1,5 @@
 """
-Copyright 2024, 2025 Andréa Marnier
+Copyright 2024 - present, Andréa Marnier
 
 This file is part of KDance registration.
 
@@ -159,11 +159,11 @@ SUPERUSER_PWD = os.getenv("SUPERUSER_PWD")
 LOGIN_URL = "/login/"
 LOGOUT_REDIRECT_URL = "/login/"
 CSRF_COOKIE_HTTPONLY = True
-SESSION_COOKIE_AGE = 60 * 60 * 24 * 7  # 1 week
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 60  # 60 days
 
 # Internationalization
 LANGUAGE_CODE = "fr-fr"
-TIME_ZONE = "UTC"
+TIME_ZONE = "Europe/Paris"
 USE_I18N = True
 USE_TZ = True
 

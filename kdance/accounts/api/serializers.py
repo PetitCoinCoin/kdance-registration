@@ -1,5 +1,5 @@
 """
-Copyright 2024, 2025 Andréa Marnier
+Copyright 2024 - present, Andréa Marnier
 
 This file is part of KDance registration.
 
@@ -34,7 +34,9 @@ from accounts.models import Profile, ResetPassword
 from members.emails import EmailEnum, EmailSender
 from members.models import Member, Payment, Season
 from members.api.serializers import (
+    MemberExtractSerializer,
     MemberRetrieveSerializer,
+    PaymentExtractSerializer,
     PaymentSerializer,
 )
 
@@ -229,7 +231,20 @@ class UserCreateSerializer(UserBaseSerializer):
         return user
 
 
-class UserSerializer(UserBaseSerializer):
+class UserMiniSerializer(UserBaseSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+        )
+        read_only_fields = fields
+
+
+class UserMeSerializer(UserBaseSerializer):
     profile = ProfileSerializer()
     payment = PaymentSerializer(read_only=True, many=True)
     members = MemberRetrieveSerializer(read_only=True, many=True)
@@ -261,6 +276,26 @@ class UserSerializer(UserBaseSerializer):
                 user.payment = Payment.objects.filter(user=user).all()
                 user.members = Member.objects.filter(user=user).all()
         super().__init__(*args, **kwargs)
+
+
+class UserExtractSerializer(UserMeSerializer):
+    payment = PaymentExtractSerializer(read_only=True, many=True)
+    members = MemberExtractSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = User
+        fields = (
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "date_joined",
+            "last_login",
+            "profile",
+            "payment",
+            "members",
+        )
+        read_only_fields = fields
 
 
 class UserAdminActionSerializer(serializers.Serializer):

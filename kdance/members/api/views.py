@@ -1,5 +1,5 @@
 """
-Copyright 2024, 2025 Andréa Marnier
+Copyright 2024 - present, Andréa Marnier
 
 This file is part of KDance registration.
 
@@ -16,6 +16,7 @@ You should have received a copy of the GNU Affero General Public License along
 with KDance registration. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from accounts.models import UserAction
 from members.emails import EmailEnum, EmailSender
 from members.models import (
     Check,
@@ -24,6 +25,7 @@ from members.models import (
     Member,
     Payment,
     Season,
+    Skill,
     Teacher,
 )
 from members.api.serializers import (
@@ -34,16 +36,20 @@ from members.api.serializers import (
     GeneralSettingsSerializer,
     MemberCoursesActionsEnum,
     MemberCoursesSerializer,
+    MemberNextCoursesSerializer,
     MemberRetrieveSerializer,
     MemberRetrieveShortSerializer,
     MemberSerializer,
     PaymentSerializer,
     SeasonSerializer,
+    SkillSerializer,
     TeacherSerializer,
+    TeacherRetrieveSerializer,
 )
 
 from django.conf import settings
 from django.db.models import Count, Q
+from django.forms.models import model_to_dict
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.mixins import (
@@ -110,6 +116,16 @@ class SeasonViewSet(
         return queryset.order_by("-year")
 
 
+class SkillViewSet(
+    CreateModelMixin,
+    ListModelMixin,
+    GenericViewSet,
+):
+    queryset = Skill.objects.all().order_by("name")
+    serializer_class = SkillSerializer
+    http_method_names = ["get", "post"]
+
+
 class TeacherViewSet(
     CreateModelMixin,
     ListModelMixin,
@@ -119,8 +135,12 @@ class TeacherViewSet(
     GenericViewSet,
 ):
     queryset = Teacher.objects.all().order_by("name")
-    serializer_class = TeacherSerializer
     http_method_names = ["get", "post", "patch", "delete"]
+
+    def get_serializer_class(self):
+        if self.request.method.lower() == "get":
+            return TeacherRetrieveSerializer
+        return TeacherSerializer
 
 
 class PaymentViewSet(
@@ -179,9 +199,14 @@ class CourseViewSet(
     def get_queryset(self):
         queryset = Course.objects.all()
         season = self.request.query_params.get("season")
+        next_season = self.request.query_params.get("next")
         if season:
-            queryset = queryset.filter(season__id=season)
-        return queryset.order_by("-season__year", "teacher__name", "name")
+            if next_season and next_season.lower() in ["true", "1", "y"]:
+                season_instance = Season.objects.get(id=season)
+                queryset = queryset.filter(season=season_instance.next_season)
+            else:
+                queryset = queryset.filter(season__id=season)
+        return queryset.order_by("-season__year", "teacher__name", "skill", "name")
 
     @action(methods=["post"], detail=False)
     def copy_season(self, request: Request) -> Response:
@@ -226,18 +251,23 @@ class MemberViewSet(
         return MemberSerializer
 
     def get_queryset(self):
-        queryset = (
-            Member.objects.all()
-            .select_related("documents", "season", "user")
-            .prefetch_related("active_courses", "cancelled_courses")
-        )
         season = self.request.query_params.get("season")
         course = self.request.query_params.get("course")
+        next_season = self.request.query_params.get("next")
         with_pass = self.request.query_params.get("with_pass")
         with_license = self.request.query_params.get("with_license")
 
         search = self.request.query_params.get("search")
         sort = self.request.query_params.get("sort")
+
+        if course and next_season and next_season.lower() in ["true", "1", "y"]:
+            return Member.objects.filter(next_courses__id=course).all()
+
+        queryset = (
+            Member.objects.all()
+            .select_related("documents", "season", "user")
+            .prefetch_related("active_courses", "cancelled_courses")
+        )
         if season:
             queryset = queryset.filter(season__id=season)
         if course:
@@ -336,6 +366,10 @@ class MemberViewSet(
             active_courses=member.active_courses.all(),
             waiting_courses=member.waiting_courses.all(),
         )
+        UserAction(
+            user=member.user,
+            action=f"Ajout d'un adhérent: {member.first_name} {member.last_name}",
+        ).save()
         return Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
@@ -346,7 +380,19 @@ class MemberViewSet(
         instance = self.get_object()
         if not request.user.is_superuser and instance.user != request.user:
             return Response(status=status.HTTP_403_FORBIDDEN)
-        return super().update(request, *args, **kwargs)
+        initial_values = model_to_dict(instance)
+        response = super().update(request, *args, **kwargs)
+
+        instance.refresh_from_db()
+        updated = model_to_dict(instance)
+        update_values = {k: v for k, v in updated.items() if v != initial_values.get(k)}
+        prefix = "[ADMIN ]" if request.user != instance.user else ""
+        UserAction(
+            user=instance.user,
+            action=f"{prefix}Adhérent mis à jour. Nouvelles valeurs: {str(update_values)}",
+        ).save()
+
+        return response
 
     def perform_update(self, serializer: serializers.BaseSerializer):
         user = self.get_object().user
@@ -366,6 +412,11 @@ class MemberViewSet(
             full_name=name,
             season_year=season,
         )
+        prefix = "[ADMIN ]" if request.user != instance.user else ""
+        UserAction(
+            user=instance.user,
+            action=f"{prefix}Adhérent supprimé: {instance.first_name} {instance.last_name}",
+        ).save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -383,4 +434,44 @@ class MemberViewSet(
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
+
+        saved_action = (
+            "Ajout"
+            if action == "add"
+            else "Suppression"
+            if action == "remove"
+            else "Ajout (forcé)"
+        )
+        UserAction(
+            user=member.user,
+            action=f"[ADMIN] {saved_action} de cours pour {member.first_name} {member.last_name}: {', '.join(request.data.get('courses', []))}",
+        ).save()
+        return Response(serializer.data)
+
+    @action(
+        detail=True,
+        methods=["put"],
+        serializer_class=MemberNextCoursesSerializer,
+        url_path=r"next-courses/(?P<action>\w+)",
+    )
+    def next_courses(self, request: Request, action: str, *_a, **_k) -> Response:
+        if action not in [action.value for action in MemberCoursesActionsEnum]:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        member = self.get_object()
+        serializer = MemberNextCoursesSerializer(
+            data=request.data, member=member, action=action
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        saved_action = (
+            "ajout"
+            if action == "add"
+            else "suppression"
+            if action == "remove"
+            else "ajout forcé"
+        )
+        UserAction(
+            user=member.user,
+            action=f"[ADMIN] Pré-affectation ({saved_action}) de cours pour {member.first_name} {member.last_name}: {', '.join(request.data.get('courses', []))}",
+        ).save()
         return Response(serializer.data)

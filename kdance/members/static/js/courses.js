@@ -1,5 +1,5 @@
 /************************************************************************************/
-/* Copyright 2024, 2025 Andréa Marnier                                              */
+/* Copyright 2024 - present, Andréa Marnier                                              */
 /*                                                                                  */
 /* This file is part of KDance registration.                                        */
 /*                                                                                  */
@@ -19,6 +19,7 @@
 $(document).ready(() => {
   populateWeekdays();
   getSeasons();
+  getSkills();
   getTeachers();
   createUpdateSeason();
   createUpdateTeacher();
@@ -26,9 +27,16 @@ $(document).ready(() => {
   copyCourseFromSeason();
   deleteItem();
   const seasonSelect = document.querySelector('#season-select');
-  seasonSelect.addEventListener('change', () =>
-    onSeasonChange(seasonSelect.value)
-  );
+  seasonSelect.addEventListener('change', () => {
+    onSeasonChange(seasonSelect.value, (sId) => {
+      getCourses(sId);
+      getPreviousSeason(sId);
+    })
+  });
+  document.querySelector('#course-teacher').addEventListener('change', () => {
+    onTeacherChange();
+  });
+  $('#add-skill-btn').on('click', () => { postSkill(); });
   breadcrumbDropdownOnHover();
 });
 
@@ -40,34 +48,26 @@ function populateWeekdays() {
 }
 
 function getSeasons() {
-  $.ajax({
-    url: seasonsUrl,
-    type: 'GET',
-    success: (data) => {
-      var urlParams = new URLSearchParams(window.location.search);
-      data.map((season) => {
-        let label = season.year;
-        const selectedUrl = urlParams.get('season') === season.id.toString();
-        if (season.is_current) {
-          label += ' (en cours)';
-        }
-        if (selectedUrl || (urlParams.get('season') === null && season.is_current)) {
-          getCourses(season.id);
-          $('#copy-modal-title').html(`Ajouter des cours à la saison ${season.year}`);
-        } else {
-          $('#copy-season').append($('<option>', { value: season.id, text: season.year }));
-        }
-        $('#season-select').append($(
-          '<option>',
-          { value: season.id, text: label, selected: urlParams.get('season') !== null ? selectedUrl : season.is_current }
-        ));
-      });
-    },
-    error: (error) => {
-      showToast('Impossible de récupérer la liste des saisons.');
-      console.log(error);
-    }
-  });
+  getSeasonsWrapper((data) => {
+    var urlParams = new URLSearchParams(window.location.search);
+    data.map((season) => {
+      let label = season.year;
+      const selectedUrl = urlParams.get('season') === season.id.toString();
+      if (season.is_current) {
+        label += ' (en cours)';
+      }
+      if (selectedUrl || (urlParams.get('season') === null && season.is_current)) {
+        getCourses(season.id);
+        $('#copy-modal-title').html(`Ajouter des cours à la saison ${season.year}`);
+      } else {
+        $('#copy-season').append($('<option>', { value: season.id, text: season.year }));
+      }
+      $('#season-select').append($(
+        '<option>',
+        { value: season.id, text: label, selected: urlParams.get('season') !== null ? selectedUrl : season.is_current }
+      ));
+    });
+  }, COURSES_TOAST_PREFIX);
 }
 
 function getSeason(season) {
@@ -78,6 +78,7 @@ function getSeason(season) {
     success: (data) => {
       $('#season-year').val(data.year);
       $('#season-current').prop('checked', data.is_current);
+      $('#season-adhesion-fee').val(data.adhesion_fee);
       $('#season-discount-percent').val(data.discount_percent);
       $('#season-discount-limit').val(data.discount_limit);
       $('#season-pass-sport-amount').val(data.pass_sport_amount);
@@ -137,6 +138,9 @@ function postOrPatchSeason(url, method) {
       ffd_c_amount: $('#season-ffd-c-amount').val(),
       ffd_d_amount: $('#season-ffd-d-amount').val(),
     };
+    if ($('#season-adhesion-fee').val() !== '') {
+      data['adhesion_fee'] = $('#season-adhesion-fee').val();
+    }
     if ($('#season-discount-percent').val() !== '') {
       data['discount_percent'] = $('#season-discount-percent').val();
     }
@@ -159,8 +163,7 @@ function postOrPatchSeason(url, method) {
       },
       error: (error) => {
         if (!error.responseJSON) {
-          showToast(DEFAULT_ERROR);
-          console.log(error);
+          showToast(DEFAULT_ERROR, COURSES_TOAST_PREFIX);
         }
         if (error.responseJSON.year) {
           $('#invalid-season-year').html(error.responseJSON.year[0] + ' Format attendu: XXXX-YYYY');
@@ -202,22 +205,15 @@ function copyCourseFromSeason() {
         to_season: parseInt($('#season-select').val(), 10),
       }),
       dataType: 'json',
-      success: (data) => {
+      success: () => {
         event.currentTarget.submit();
       },
       error: (error) => {
-        showToast(DEFAULT_ERROR);
+        showToast(DEFAULT_ERROR, COURSES_TOAST_PREFIX);
         console.log(error);
       }
     });
   });
-}
-
-function onSeasonChange(seasonId) {
-  const refresh = window.location.protocol + "//" + window.location.host + window.location.pathname + `?season=${seasonId}`;
-  window.history.pushState({ path: refresh }, '', refresh);
-  getCourses(seasonId);
-  getPreviousSeason(seasonId);
 }
 
 function getPreviousSeason(seasonId) {
@@ -244,6 +240,7 @@ function actionFormatter(value, row) {
 }
 
 function getCourses(seasonId) {
+  showLoader();
   $.ajax({
     url: coursesUrl + `?season=${seasonId}`,
     type: 'GET',
@@ -265,10 +262,22 @@ function getCourses(seasonId) {
             searchable: true,
             sortable: true,
           }, {
+            field: 'years',
+            title: 'Années',
+            searchable: false,
+            sortable: true,
+          }, {
             field: 'teacher.name',
             title: 'Professeur',
             searchable: true,
             sortable: true,
+            visible: false,
+          }, {
+            field: 'skill.name',
+            title: 'Discipline',
+            searchable: true,
+            sortable: true,
+            visible: false,
           }, {
             field: 'capacity',
             title: 'Capacité',
@@ -314,7 +323,8 @@ function getCourses(seasonId) {
               ...c,
               price: c.price + '€',
               is_complete: c.is_complete ? 'Oui' : 'Non',
-              slot: `${WEEKDAY[c.weekday]}, ${startHour[0]}h${startHour[1]}-${endHour[0]}h${endHour[1]}`
+              slot: `${WEEKDAY[c.weekday]}, ${startHour[0]}h${startHour[1]}-${endHour[0]}h${endHour[1]}`,
+              years: formatCourseYears(c)
             }
           })
         });
@@ -327,14 +337,66 @@ function getCourses(seasonId) {
             ...c,
             price: c.price + '€',
             is_complete: c.is_complete ? 'Oui' : 'Non',
-            slot: `${WEEKDAY[c.weekday]}, ${startHour[0]}h${startHour[1]}-${endHour[0]}h${endHour[1]}`
+            slot: `${WEEKDAY[c.weekday]}, ${startHour[0]}h${startHour[1]}-${endHour[0]}h${endHour[1]}`,
+            years: formatCourseYears(c)
           }
         }));
       }
     },
     error: (error) => {
-      showToast('Impossible de récupérer les cours de la saison.');
+      showToast('Impossible de récupérer les cours de la saison.', COURSES_TOAST_PREFIX);
       console.log(error);
+    },
+    complete: () => {
+      hideLoader();
+    }
+  });
+}
+
+function getSkills() {
+  $.ajax({
+    url: skillsUrl,
+    type: 'GET',
+    success: (data) => {
+      for (const skill of data) {
+        const element = `<li class="form-check">
+        <input type="checkbox" class="form-check-input" id="check-skill-${skill.id}" value="${skill.id}">
+        <label class="form-check-label" for="skill-${skill.id}">${skill.name}</label>
+      </li>`
+        $('#teacher-skills-select').append(element);
+      }
+    },
+    error: (error) => {
+      showToast('Impossible de récupérer la liste des disciplines.', COURSES_TOAST_PREFIX);
+      console.log(error);
+    }
+  });
+}
+
+function postSkill() {
+  $.ajax({
+    url: skillsUrl,
+    type: 'POST',
+    headers: { 'X-CSRFToken': csrftoken },
+    mode: 'same-origin',
+    dataType: 'json',
+    data: { name: $('#new-skill-input').val() },
+    success: (data) => {
+      const element = `<li class="form-check">
+      <input type="checkbox" class="form-check-input" id="check-skill-${data.id}" value="${data.id}">
+      <label class="form-check-label" for="skill-${data.id}">${data.name}</label>
+    </li>`
+      $('#teacher-skills-select').append(element);
+      $('#new-skill-input').val(undefined)
+    },
+    error: (error) => {
+      if (!error.responseJSON) {
+        showToast('Impossible d\'ajouter une nouvelle discipline.', COURSES_TOAST_PREFIX);
+        console.log(error);
+      }
+      if (error.responseJSON && error.responseJSON.name) {
+        showToast(error.responseJSON.name[0], COURSES_TOAST_PREFIX, false);
+      }
     }
   });
 }
@@ -347,28 +409,49 @@ function getTeachers() {
       const listParent = document.querySelector('#teachers-list');
       const teacherTemplate = document.querySelector('#teacher-item-template');
       teacherSelect = $('#course-teacher');
+      skillSelect = $('#course-skill');
       data.map((teacher) => {
-        teacherSelect.append($('<option>', { value: teacher.id, text: teacher.name }));
+        teacherSelect.append($('<option>', { value: teacher.id, text: teacher.name, skills: teacher.skills.map(s=> s.id) }));
+        teacher.skills.map((skill) => {
+          if (Array.from(skillSelect.prop('options')).map(o => parseInt(o.value)).indexOf(skill.id) < 0) {
+            skillSelect.append($('<option>', { value: skill.id, text: skill.name }));
+          }
+        });
         const clone = teacherTemplate.content.cloneNode(true);
-        let name = clone.querySelector('span');
-        name.textContent = teacher.name;
+        let data = clone.querySelector('span');
+        data.textContent = teacher.skills.length > 0 ? `${teacher.name} : ${teacher.skills.map(s => s.name).join(', ')}` : teacher.name;
         let avatar = clone.querySelector('img');
         avatar.src = `https://api.dicebear.com/8.x/thumbs/svg?seed=${teacher.name}&radius=50`;
         let buttons = clone.querySelectorAll('button');
         buttons[0].id = `edit-${teacher.id}-btn`;
         buttons[0].dataset.bsTname = teacher.name;
         buttons[0].dataset.bsTid = teacher.id;
+        buttons[0].dataset.bsTskillids = teacher.skills.map(s => s.id);
         buttons[1].id = `delete-${teacher.id}-btn`;
         buttons[1].dataset.bsTname = teacher.name;
         buttons[1].dataset.bsTid = teacher.id;
         listParent.appendChild(clone);
       });
+      onTeacherChange();
     },
     error: (error) => {
-      showToast('Impossible de récupérer la liste des professeurs.');
+      showToast('Impossible de récupérer la liste des professeurs.', COURSES_TOAST_PREFIX);
       console.log(error);
     }
   });
+}
+
+function onTeacherChange() {
+  const teacherskills = $('#course-teacher')[0].selectedOptions[0].getAttribute('skills');
+  const skills = !! teacherskills ? teacherskills.split(',').map(s => parseInt(s)) : [];
+  for (var skill of $('#course-skill').prop('options')) {
+    if (skills.indexOf(parseInt(skill.value)) < 0) {
+      skill.disabled = true;
+      skill.selected = false;
+    } else {
+      skill.disabled = false;
+    }
+  }
 }
 
 function createUpdateTeacher() {
@@ -378,13 +461,23 @@ function createUpdateTeacher() {
       const button = event.relatedTarget;
       const teacher = button.getAttribute('data-bs-Tid');
       const teacherName = button.getAttribute('data-bs-Tname');
+      const teacherskills = button.getAttribute('data-bs-Tskillids');
+      const skills = !! teacherskills ? teacherskills.split(',') : [];
+      $('.invalid-feedback').removeClass('d-inline');
       if (teacher !== null) {
         $('#teacher-modal-title').html('Modifier un professeur');
         $('#teacher-btn').html('Modifier');
         $('#teacher-name').val(teacherName);
+        for (element of $('[id^=check-skill-]')) {
+          element.checked = skills.indexOf(element.value) > -1;
+        }
       } else {
         $('#teacher-modal-title').html('Ajouter un professeur');
         $('#teacher-btn').html('Ajouter');
+        $('#teacher-name').val(undefined);
+        for (element of $('[id^=check-skill-]')) {
+          element.checked = false;
+        }
       }
       postOrPatchTeacher(teacher);
     });
@@ -397,21 +490,30 @@ function postOrPatchTeacher(teacher) {
   $('#form-teacher').submit((event) => {
     $('.invalid-feedback').removeClass('d-inline');
     event.preventDefault();
+    let skills = [];
+    for (const element of $('[id^=check-skill-]')) {
+      if (element.checked) {
+        skills.push(parseInt(element.value));
+      }
+    }
+    const data = {
+      name: $('#teacher-name').val(),
+      skills
+    };
     $.ajax({
       url: url,
       type: method,
       contentType: 'application/json',
       headers: { 'X-CSRFToken': csrftoken },
       mode: 'same-origin',
-      data: JSON.stringify({ name: $('#teacher-name').val() }),
+      data: JSON.stringify(data),
       dataType: 'json',
       success: () => {
         location.reload();
       },
       error: (error) => {
         if (!error.responseJSON) {
-          showToast(DEFAULT_ERROR);
-          console.log(error);
+          showToast(DEFAULT_ERROR, COURSES_TOAST_PREFIX);
         }
         if (error.responseJSON && error.responseJSON.name) {
           $('#invalid-teacher-name').html(error.responseJSON.name[0]);
@@ -438,7 +540,9 @@ function createUpdateCourse() {
         $('#course-modal-title').html(`Ajouter un cours pour la saison ${seasonYear}`);
         $('#course-btn').html('Ajouter');
       }
-      postOrPatchCourse(course);
+      $('#course-btn').on('click', () => {
+        postOrPatchCourse(course);
+      });
     });
   }
 }
@@ -456,14 +560,18 @@ function getCourse(course, deleteModalBody) {
       }
       $('#course-name').val(data.name);
       $('#course-teacher').val(data.teacher.id);
+      onTeacherChange();
+      $('#course-skill').val(data.skill?.id);
       $('#course-price').val(data.price);
       $('#course-weekday').val(data.weekday);
       $('#course-start').val(data.start_hour.substring(0, 5));
       $('#course-end').val(data.end_hour.substring(0, 5));
       $('#course-capacity').val(data.capacity);
+      $('#course-max-year').val(data.max_year);
+      $('#course-min-year').val(data.min_year ?? "");
     },
     error: (error) => {
-      showToast('Impossible de récupérer les informations du cours.');
+      showToast('Impossible de récupérer les informations du cours.', COURSES_TOAST_PREFIX);
       console.log(error);
     }
   });
@@ -472,43 +580,51 @@ function getCourse(course, deleteModalBody) {
 function postOrPatchCourse(course) {
   const method = course === null ? 'POST' : 'PATCH';
   const url = course === null ? coursesUrl : coursesUrl + course + '/';
-  $('#form-course').submit((event) => {
-    $('.invalid-feedback').removeClass('d-inline');
-    event.preventDefault();
-    const data = {
-      name: $('#course-name').val(),
-      teacher: $('#course-teacher').val(),
-      season: $('#season-select').val(),
-      price: $('#course-price').val(),
-      weekday: $('#course-weekday').val(),
-      start_hour: $('#course-start').val(),
-      end_hour: $('#course-end').val(),
-      capacity: $('#course-capacity').val(),
-    }
-    $.ajax({
-      url: url,
-      type: method,
-      contentType: 'application/json',
-      headers: { 'X-CSRFToken': csrftoken },
-      mode: 'same-origin',
-      data: JSON.stringify(data),
-      dataType: 'json',
-      success: () => {
-        location.reload();
-      },
-      error: (error) => {
-        if (!error.responseJSON) {
-          showToast(DEFAULT_ERROR);
-          console.log(error);
-        }
-        if (error.responseJSON && error.responseJSON.non_field_errors) {
-          const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('course-error-toast'));
-          $('#course-error-body').text(error.responseJSON.non_field_errors.join(', '));
-          toast.show();
-          console.log(error);
-        }
+  $('.invalid-feedback').removeClass('d-inline');
+  const minYear = $('#course-min-year').val();
+  const data = {
+    name: $('#course-name').val(),
+    teacher: $('#course-teacher').val(),
+    skill: $('#course-skill').val(),
+    season: $('#season-select').val(),
+    price: $('#course-price').val(),
+    weekday: $('#course-weekday').val(),
+    start_hour: $('#course-start').val(),
+    end_hour: $('#course-end').val(),
+    capacity: $('#course-capacity').val(),
+    max_year: $('#course-max-year').val(),
+    min_year: minYear == "" ? null : minYear
+  }
+  $.ajax({
+    url: url,
+    type: method,
+    contentType: 'application/json',
+    headers: { 'X-CSRFToken': csrftoken },
+    mode: 'same-origin',
+    data: JSON.stringify(data),
+    dataType: 'json',
+    success: () => {
+      location.reload();
+    },
+    error: (error) => {
+      if (!error.responseJSON) {
+        showToast(DEFAULT_ERROR, COURSES_TOAST_PREFIX);
       }
-    });
+      if (error.responseJSON && error.responseJSON.non_field_errors) {
+        const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('course-error-toast'));
+        $('#course-error-body').text(error.responseJSON.non_field_errors.join(', '));
+        toast.show();
+        console.log(error);
+      }
+      if (error.responseJSON && error.responseJSON.min_year) {
+        $('#invalid-course-min-year').html(error.responseJSON.min_year[0]);
+        $('#invalid-course-min-year').addClass('d-inline');
+      }
+      if (error.responseJSON && error.responseJSON.max_year) {
+        $('#invalid-course-max-year').html(error.responseJSON.max_year[0]);
+        $('#invalid-course-max-year').addClass('d-inline');
+      }
+    }
   });
 }
 
@@ -550,17 +666,11 @@ function deleteItem() {
             location.reload();
           },
           error: (error) => {
-            showToast(DEFAULT_ERROR);
+            showToast(DEFAULT_ERROR, COURSES_TOAST_PREFIX);
             console.log(error);
           }
         });
       });
     });
   }
-}
-
-function showToast(text) {
-  const toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('course-error-toast'));
-  $('#course-error-body').text(`${text} ${ERROR_SUFFIX}`);
-  toast.show();
 }

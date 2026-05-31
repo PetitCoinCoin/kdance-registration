@@ -1,0 +1,141 @@
+<!-- Copyright 2024 - present, Andréa Marnier
+
+This file is part of KDance registration.
+
+KDance registration is free software: you can redistribute it and/or modify it
+under the terms of the GNU Affero General Public License as published by the
+Free Software Foundation, either version 3 of the License, or any later version.
+
+KDance registration is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License
+for more details.
+
+You should have received a copy of the GNU Affero General Public License along
+with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
+
+{% extends 'layouts/base.html' %}
+
+{% load static %}
+
+{% block content %}
+
+<main>
+  <section>
+    <!-- Content -->
+    <div class="container">
+      <div class="text-center">
+        <h1 class="display-4 mb-3">Mentions légales</h1>
+      </div>
+      <div id="legal-div" class="container mt-5">
+        <div class="row">
+          <div class="col-lg-8 mx-auto">
+
+            <!-- 1. Informations de l'éditeur -->
+            <h4>1. Éditeur du site</h4>
+            <p>
+              <strong>Nom :</strong> K'Dance<br>
+              <strong>Forme juridique :</strong> Association loi 1901<br>
+              <strong>Siège social :</strong> Mairie de Villemur-sur-Tarn, Place Charles ourgaut, 31340 Villemur-sur-Tarn, France<br>
+              <strong>Numéro RNA :</strong> W313002168
+            </p>
+
+            <!-- 2. Représentant légal -->
+            <h4>2. Représentant légal</h4>
+            <p>
+              <strong>Responsable de la publication :</strong> Les (co-)président(e)s de K'Dance<br>
+              <strong>Adresse e-mail :</strong> <a href="mailto:kdance31340@gmail.com">kdance31340@gmail.com</a><br>
+              <strong>Téléphone :</strong> 0768294811
+            </p>
+
+            <!-- 3. Hébergeur -->
+            <h4>3. Hébergeur du site</h4>
+            <p>
+              <strong>Nom de l'hébergeur :</strong> o2switch<br>
+              <strong>Adresse :</strong> Chemin des Pardiaux, 63000 Clermont-Ferrand, France<br>
+              <strong>Téléphone :</strong> 0444446040<br>
+              <strong>Site web :</strong> <a href="https://www.o2switch.fr" target="_blank">https://www.o2switch.fr</a>
+            </p>
+
+            <!-- 4. Conditions d'utilisation -->
+            <h4>4. Conditions d'utilisation</h4>
+            <p>
+              L'utilisateur s'engage à utiliser ce site conformément à la loi et à l'ordre public.
+              Il s'engage notamment à ne pas publier de contenu contraire à la loi, violant les droits d'autrui, ou offensant.
+              Toute violation entraînera la suppression immédiate du contenu et pourra entraîner des poursuites judiciaires.
+            </p>
+
+            <!-- 5. Propriété intellectuelle -->
+            <h4>5. Propriété intellectuelle</h4>
+            <p>
+              L'application web est open source et distribuée sous licence GNU AGPL v3.<br />
+              Néanmoins, l'ensemble du contenu, des documents, des images, des logos et des éléments graphiques de ce site est la propriété
+              exclusive de K'Dance ou de ses prestataires. Toute reproduction, représentation ou diffusion de ces contenus sans
+              autorisation préalable est interdite.
+            </p>
+
+            <!-- 6. Responsabilité -->
+            <h4>6. Limitation de responsabilité</h4>
+            <p>
+              K'Dance décline toute responsabilité pour :
+            </p>
+            <ul>
+              <li>Les interruptions ou dysfonctionnements du site;</li>
+              <li>Les erreurs ou des omissions;</li>
+              <li>Les mauvais usages du site par l'utilisateur;</li>
+              <li>Les contenus externes accessibles via des liens hypertexte.</li>
+            </ul>
+
+            <!-- 7. Données personnelles et cookies -->
+            <h4>7. Données personnelles et cookies</h4>
+            <p>
+              Le site utilise des cookies pour l'authentification des utilisateurs uniquement.<br>
+              Pour plus d'informations sur la gestion de vos données personnelles et de vos droits conformément au RGPD,
+              veuillez consulter notre <a href="{% static 'pdf/politique-de-confidentialite.pdf' %}" target="_blank">politique de confidentialité</a>.
+            </p>
+
+            <!-- 8. Liens hypertextes -->
+            <h4>8. Liens hypertextes</h4>
+            <p>
+              K'Dance ne peut être responsable du contenu des sites externes accessibles via les liens hypertexte du site.
+              Les liens externes sont à titre informatif et ne constituent pas une approbation du contenu de ces sites.
+            </p>
+
+            <!-- 9. Contact -->
+            <h4>9. Contact</h4>
+            <p>
+              Pour toute question ou demande, vous pouvez nous contacter à :
+            </p>
+            <p>
+              <strong>Adresse :</strong> MAIRIE DE VILLEMUR PLACE CHARLES OURGAUT, 31340 VILLEMUR-SUR-TARN<br>
+              <strong>E-mail :</strong> <a href="mailto:kdance31340@gmail.com">kdance31340@gmail.com</a><br>
+              <strong>Téléphone :</strong> 0768294811
+            </p>
+
+            <!-- 10. Modification des mentions légales -->
+            <h4>10. Modification des mentions légales</h4>
+            <p>
+              K'Dance se réserve le droit de modifier les présentes mentions légales à tout moment.
+              Les modifications prendront effet immédiatement après leur publication sur le site.
+            </p>
+
+            <!-- 11. Droit applicable -->
+            <h4>11. Droit applicable</h4>
+            <p>
+              Les présentes mentions légales sont régies par la loi française.
+              Tout litige relatif à l'utilisation du site sera soumis à la juridiction compétente du ressort du siège social de K'Dance.
+            </p>
+
+            <hr class="my-5">
+            <p class="text-muted">
+              <em>Dernière mise à jour : 25 janvier 2026</em>
+            </p>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+{% endblock content %}

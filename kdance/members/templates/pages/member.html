@@ -1,4 +1,4 @@
-<!-- Copyright 2024, 2025 Andréa Marnier
+<!-- Copyright 2024 - present, Andréa Marnier
 
 This file is part of KDance registration.
 
@@ -140,6 +140,12 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
                 <label class="form-check-label" for="pass-switch">J'ai un code Pass Sport</label>
               </div>
               <div id="pass-div" hidden>
+                <div class="mb-4 fst-italic">
+                  <i class="bi-info-circle main-red"></i>
+                  <strong>
+                    Un chèque de caution est nécessaire pour valider l'inscription. Il vous sera rendu une fois le code validé.
+                  </strong>
+                </div>
                 <div class="row align-items-end">
                   <div class="col-7 col-sm form-outline mb-2">
                     <label class="form-label required" for="member-pass-code">Code</label>
@@ -147,7 +153,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
                   </div>
                   <div class="col-5 col-sm form-outline mb-2">
                     <label class="form-label" for="member-pass-amount">Montant (€)</label>
-                    <input type="number" id="member-pass-amount" class="form-control" min="0" value="50"
+                    <input type="number" id="member-pass-amount" class="form-control" min="0" value="{{ season.pass_sport_amount }}"
                       disabled />
                   </div>
                 </div>
@@ -168,7 +174,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
                 <h5 class="border-bottom mb-3 fw-semibold">Contacts d'urgence (même pour les adultes)</h5>
                   <div class="form-check form-switch mb-1">
                     <input class="form-check-input" type="checkbox" role="switch" id="emergency-me-switch">
-                    <span class="d-inline-block" tabindex="0" data-bs-toggle="popover"
+                    <span id="emergency-contact-wrapper" class="d-inline-block" tabindex="0" data-bs-toggle="popover"
                       data-bs-trigger="hover focus" data-bs-content="Impossible pour soi-même !"
                       data-bs-placement="bottom">
                       <label class="form-check-label" for="emergency-me-switch">Je suis contact d'urgence pour
@@ -202,9 +208,26 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
                     <div id="invalid-member-license" class="invalid-feedback"></div>
                   </div>
                 </div>
-                <div id="member-courses"></div>
+                <p class="mb-4 mt-4"><strong>Adhésion à l'association:</strong> {{season.adhesion_fee}}€</p>
+                <div class="d-flex justify-content-center">
+                  <div class="spinner-border text-info mt-2" role="status" hidden>
+                    <span class="visually-hidden">Chargement en cours...</span>
+                  </div>
+                </div>
+                <div class="table-emphasis p-2">
+                  <table class="table">
+                    <thead>
+                      <th></th>
+                      <th>Cours</th>
+                      {% if not season.is_pre_signup_ongoing %}<th>Années de naissance</th>{% endif %}
+                      <th>Horaire</th>
+                      <th>Tarif</th>
+                      <th></th>
+                    </thead>
+                    <tbody id="member-courses"></tbody>
+                  </table>
+                </div>
                 <div id="invalid-member-courses" class="invalid-feedback"></div>
-                <p class="mb-4 mt-4"><strong>Adhésion à l'association:</strong> 10€</p>
               </div>
             </div>
 
@@ -214,24 +237,38 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
                 <input class="form-check-input" type="checkbox" value="" id="authorise-emergency" checked>
                 <label class="form-check-label" for="authorise-emergency">
                   En tant que responsable légal de cet adhérent mineur, j'autorise l’encadrant de la section
-                  danse ou un
-                  membre du Conseil d’Administration à prendre, en cas d’accident, toutes mesures urgentes
-                  tant
-                  médicales que chirurgicales, y compris l’hospitalisation.
+                  danse ou un membre du Conseil d’Administration à prendre, en cas d’accident, toutes mesures
+                  urgentes tant médicales que chirurgicales, y compris l’hospitalisation.
                 </label>
               </div>
               <div class="form-check mb-4">
                 <input class="form-check-input" type="checkbox" value="" id="authorise-photos" checked>
                 <label class="form-check-label" for="authorise-photos">
                   J'autorise l'association K'dance à utiliser les photos et/ou vidéos réalisées dans le cadre
-                  de ses
-                  activités à des fins promotionnelles y compris sur les réseaux sociaux de K’dance.
+                  de ses activités à des fins promotionnelles y compris sur les réseaux sociaux de K’dance.
+                </label>
+              </div>
+              <div class="form-check mb-4" id="rgpd-wrapper">
+                <input class="form-check-input" type="checkbox" value="" id="authorise-rgpd">
+                <label class="form-check-label required" for="authorise-rgpd">
+                  J’accepte que mes données personnelles soient utilisées pour le traitement de ma demande,
+                  conformément à la <a href="{% static 'pdf/politique-de-confidentialite.pdf' %}" target="_blank">politique de confidentialité</a>.
+                </label>
+              </div>
+              <div class="form-check mb-4" id="check-accuracy-wrapper">
+                <input class="form-check-input" type="checkbox" value="" id="check-accuracy">
+                <label class="form-check-label required" for="check-accuracy">
+                  J’ai vérifié l'exactitude des données concernant l'adhérent (état civil, coordonnées) ainsi que les différents contacts
+                  (en particulier les contacts d'urgence).
                 </label>
               </div>
             </div>
           </div>
           <button type="button" class="btn btn-secondary" onclick="window.location='/'">Annuler</button>
-          <button type="submit" class="btn btn-info">Enregistrer</button>
+          <span id="submit-wrapper" class="d-inline-block" tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus"
+          data-bs-content="Vous devez consentir au recueil et au traitement de vos données, et attester de l'exactitude des informations fournies">
+            <button id="member-submit" type="submit" class="btn btn-info">Enregistrer</button>
+          </span>
         </form>
       </div>
 
@@ -293,6 +330,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
     const membersUrl = "{% url 'api-members-list' %}";
     const seasonsUrl = "{% url 'api-seasons-list' %}";
     const settingsUrl = "{% url 'api-settings-detail' %}";
+    const isPreSignupOngoing = "{{ season.is_pre_signup_ongoing }}".toLowerCase() === "true";
     const isSignupOngoing = "{{ season.is_signup_ongoing }}".toLowerCase() === "true";
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
   </script>
