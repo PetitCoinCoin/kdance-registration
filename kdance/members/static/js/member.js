@@ -124,8 +124,8 @@ function getCurrentSeason() {
 
 async function getCourses() {
   showLoader();
-  return getCurrentSeason().then(data => {
-    const seasonId = data[0].id;
+  return getCurrentSeason().then(seasonData => {
+    const seasonId = seasonData[0].id;
     return new Promise((resolve, reject) => {
       $.ajax({
         url: coursesUrl + `?season=${seasonId}`,
@@ -153,7 +153,7 @@ async function getCourses() {
 `
           });
           let memberSeason = $('#member-season');
-          memberSeason.append($('<option>', { value: seasonId, text: data[0].year }));
+          memberSeason.append($('<option>', { value: seasonId, text: seasonData[0].year }));
           memberSeason.val(seasonId)
           resolve();
         },
