@@ -198,7 +198,7 @@ async function getMember() {
       member = urlParams.get('pk');
       $('#form-member').data('url', membersUrl + member + '/');
       $('#form-member').data('method', 'PATCH');
-      $('#rgpd-wrapper').remove();
+      $('#rgpd-consent-wrapper').remove();
       $('#check-accuracy-wrapper').remove();
       $('#submit-wrapper').hide();
     } else {
