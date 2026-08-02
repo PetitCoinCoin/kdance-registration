@@ -190,7 +190,7 @@ class CourseSerializer(serializers.ModelSerializer):
             "start_hour",
             "end_hour",
             "capacity",
-            "is_complete",
+            "count",
             "waiting",
         )
 

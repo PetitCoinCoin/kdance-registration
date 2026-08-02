@@ -276,6 +276,10 @@ class Course(models.Model):
         unique_together = ("name", "season", "weekday", "start_hour")
 
     @property
+    def count(self) -> int:
+        return self.members.count()
+
+    @property
     def is_complete(self) -> bool:
         return self.members.count() >= self.capacity
 

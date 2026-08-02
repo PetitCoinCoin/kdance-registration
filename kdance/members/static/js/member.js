@@ -138,7 +138,7 @@ async function getCourses() {
             const endHour = course.end_hour.split(':');
             const years = isPreSignupOngoing ? '' : `<th>${formatCourseYears(course)}</th>`;
             let label = `${course.name} (${years}) - ${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]} à ${endHour[0]}h${endHour[1]} - ${course.price}€`;
-            if (course.is_complete) {
+            if (course.count >= course.capacity) {
               label = `COMPLET (liste d'attente): ${label}`;
             }
             memberCourses.innerHTML += `<tr><th><div class="form-check">
@@ -148,7 +148,7 @@ async function getCourses() {
   ${years}
   <th>${WEEKDAY[course.weekday]}, ${startHour[0]}h${startHour[1]} à ${endHour[0]}h${endHour[1]}</th>
   <th>${course.price}€</th>
-  <th>${course.is_complete ? "<strong>Liste d'attente</strong>" : ""}</th>
+  <th>${course.count >= course.capacity ? "<strong>Liste d'attente</strong>" : ""}</th>
 </tr>
 `
           });
