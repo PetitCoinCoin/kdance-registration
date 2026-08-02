@@ -207,7 +207,7 @@ class UserMeApiViewSet(
                     members = [
                         f"{member.first_name} {member.last_name}"
                         for member in request.user.member_set.filter(
-                            season__year=current_season.previous_season
+                            season__year=current_season.previous_season_year
                         )
                     ]
             email_sender.send_email(

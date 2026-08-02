@@ -134,7 +134,7 @@ class Season(models.Model):
         return Season.objects.filter(year__gt=self.year).order_by("year").first()
 
     @property
-    def previous_season(self) -> str:
+    def previous_season_year(self) -> str:
         previous_season = (
             Season.objects.filter(year__lt=self.year).order_by("-year").first()
         )
@@ -310,7 +310,7 @@ class Course(models.Model):
                 self.members_next.remove(member)
                 member.check_next()
         for member in Member.objects.filter(
-            season__year=self.season.previous_season
+            season__year=self.season.previous_season_year
         ).all():
             if (
                 self.min_year and member.birthday.year < self.min_year

@@ -545,7 +545,7 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             first_name=self.validated_data["first_name"],
             last_name=self.validated_data["last_name"],
             birthday=self.validated_data["birthday"],
-            season__year=self.validated_data["season"].previous_season,
+            season__year=self.validated_data["season"].previous_season_year,
         ).exists():
             email_sender = EmailSender(EmailEnum.PRE_SIGNUP_WARNING)
             email_sender.send_email(
