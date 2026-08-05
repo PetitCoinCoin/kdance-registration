@@ -115,6 +115,17 @@ function majorityImpact(isMajor) {
   }
 }
 
+function isBirthDateInconsistent() {
+  const birthDate = new Date($('#member-birthday').val());
+  const birthYear = birthDate.getFullYear();
+  return Array.from(document.querySelectorAll('.course-checkbox')).some(item =>
+    item.checked && (
+      birthYear > item.dataset.maxYear ||
+      (item.dataset.minYear !== "null" && birthYear < item.dataset.minYear)
+    )
+  );
+}
+
 function getCurrentSeason() {
   return $.ajax({
     url: seasonsUrl + '?is_current=True',
@@ -142,7 +153,7 @@ async function getCourses() {
               label = `COMPLET (liste d'attente): ${label}`;
             }
             memberCourses.innerHTML += `<tr><th><div class="form-check">
-  <input class="form-check-input course-checkbox" type="checkbox" value="${course.id}" id="check-${course.id}">
+  <input class="form-check-input course-checkbox" type="checkbox" value="${course.id}" id="check-${course.id}" data-min-year="${course.min_year}" data-max-year="${course.max_year}">
   </div></th>
   <th><label class="form-check-label" for="check-${course.id}">${course.name}</label></th>
   ${years}
@@ -178,7 +189,18 @@ function createUpdateMember() {
     event.preventDefault();
     const url = $('#form-member').data('url');
     const method = $('#form-member').data('method');
-    postOrPatchMember(url, method, event);
+    if ((! isPreSignupOngoing) && $('#form-member').data('canEditCourse') && isBirthDateInconsistent()) {
+      const yearWarningModalElement = document.getElementById('year-warning-modal');
+      const yearWarningModal = new bootstrap.Modal(yearWarningModalElement);
+      yearWarningModal.show();
+      $('#year-warning-btn').on('click', () => {
+        postOrPatchMember(url, method, event);
+        yearWarningModal.hide();
+      });
+    } else {
+      console.log("pouet")
+      // postOrPatchMember(url, method, event);
+    }
   })
 }
 

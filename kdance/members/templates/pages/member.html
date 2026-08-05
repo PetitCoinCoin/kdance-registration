@@ -33,6 +33,27 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
       </div>
     </div>
 
+    <!-- Modal -->
+    <div class="modal fade" id="year-warning-modal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title">Âge à vérifier</h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>La date de naissance indiquée ne correspond pas aux critères d'âge d'un ou plusieurs cours sélectionnés.</p>
+            <p>Vous pouvez poursuivre votre inscription. Celle-ci sera toutefois vérifiée et, si nécessaire, nous pourrons
+              vous demander de changer de cours, ou bien annuler votre inscription.</p>
+          </div>
+          <div class="modal-footer">
+            <button id="year-warning-btn" type="submit" class="btn btn-secondary">Poursuivre l'inscription</button>
+            <button type="button" class="btn btn-info" data-bs-dismiss="modal">Vérifier les cours choisis</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Content -->
     <div class="container">
       <div class="text-center">
@@ -76,21 +97,21 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
                 <div class="col-sm-4">
                   <div class="form-outline mb-4">
                     <label class="form-label required" for="member-firstname">Prénom</label>
-                    <input type="text" id="member-firstname" class="form-control" />
+                    <input type="text" id="member-firstname" class="form-control" required />
                     <div id="invalid-member-first-name" class="invalid-feedback"></div>
                   </div>
                 </div>
                 <div class="col-sm-4">
                   <div class="form-outline mb-4">
                     <label class="form-label required" for="member-lastname">Nom de famille</label>
-                    <input type="text" id="member-lastname" class="form-control" />
+                    <input type="text" id="member-lastname" class="form-control" required />
                     <div id="invalid-member-last-name" class="invalid-feedback"></div>
                   </div>
                 </div>
                 <div class="col-sm-4">
                   <div class="form-outline mb-4">
                     <label class="form-label required" for="member-birthday">Date de naissance</label>
-                    <input type="date" id="member-birthday" class="form-control" />
+                    <input type="date" id="member-birthday" class="form-control" required />
                     <div id="invalid-member-birthday" class="invalid-feedback"></div>
                   </div>
                 </div>
@@ -99,14 +120,14 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
                 <div class="col-sm-4">
                   <div class="form-outline mb-1">
                     <label class="form-label required" for="member-phone">Téléphone</label>
-                    <input type="text" id="member-phone" class="form-control" maxlength="14" />
+                    <input type="text" id="member-phone" class="form-control" maxlength="14" required />
                     <div id="invalid-member-phone" class="invalid-feedback"></div>
                   </div>
                 </div>
                 <div class="col-sm-8">
                   <div class="form-outline mb-4">
                     <label class="form-label required" for="member-email">Email</label>
-                    <input type="text" id="member-email" class="form-control" />
+                    <input type="text" id="member-email" class="form-control" required />
                     <div id="invalid-member-email" class="invalid-feedback"></div>
                   </div>
                 </div>
@@ -115,7 +136,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
                 <div class="col-12">
                   <div class="form-outline mb-4">
                     <label class="form-label required" for="member-address">Adresse</label>
-                    <textarea class="form-control" id="member-address" rows="2"></textarea>
+                    <textarea class="form-control" id="member-address" rows="2" required></textarea>
                     <div id="invalid-member-address" class="invalid-feedback"></div>
                   </div>
                 </div>
