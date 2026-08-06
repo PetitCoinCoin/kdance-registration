@@ -157,7 +157,7 @@ class Season(models.Model):
         if self.signup_end is None:
             return False
         signup_end = self.signup_end + timedelta(
-            days=GeneralSettings.get_solo().pre_signup_payment_delta_days
+            days=GeneralSettings.get_solo().signup_payment_delta_days
         )
         return self.signup_start is not None and date.today() <= signup_end
 
