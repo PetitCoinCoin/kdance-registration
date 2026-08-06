@@ -198,8 +198,7 @@ function createUpdateMember() {
         yearWarningModal.hide();
       });
     } else {
-      console.log("pouet")
-      // postOrPatchMember(url, method, event);
+      postOrPatchMember(url, method, event);
     }
   })
 }
