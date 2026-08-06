@@ -26,7 +26,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
         {% if user.is_superuser or is_teacher%}
           <button class="btn btn-outline-info dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Admin</button>
           <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="{% url 'course_mgmt' %}">Gérer les cours</a></li>
+            <li><a class="dropdown-item" href="{% url 'course_mgmt' %}">Gérer la saison</a></li>
             <li><a class="dropdown-item" href="{% url 'member_mgmt' %}">Gérer les adhérents</a></li>
             <li><a class="dropdown-item" href="{% url 'admin_mgmt' %}">Gérer les admins</a></li>
             <li><a class="dropdown-item" href="{% url 'site_mgmt' %}">Gérer le site</a></li>

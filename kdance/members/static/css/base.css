@@ -142,6 +142,12 @@ a {
   flex-direction: column;
 }
 
+@media (max-width: 576px) {
+  #year-warning-modal.modal-dialog {
+    max-width: 300px !important;
+  }
+}
+
 @media (min-width: 540px) {
   #course-header {
     flex-direction: row !important;
