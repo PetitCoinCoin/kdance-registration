@@ -212,7 +212,7 @@ class UserMeApiViewSet(
                     ]
             email_sender.send_email(
                 emails=[settings.DEFAULT_FROM_EMAIL, settings.SUPERUSER_EMAIL],
-                username=[email_update],
+                username=email_update,
                 members=[
                     f"{member.first_name} {member.last_name}"
                     for member in request.user.member_set.filter(
