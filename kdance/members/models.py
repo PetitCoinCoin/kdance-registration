@@ -134,7 +134,7 @@ class Season(models.Model):
         return Season.objects.filter(year__gt=self.year).order_by("year").first()
 
     @property
-    def previous_season(self) -> str:
+    def previous_season_year(self) -> str:
         previous_season = (
             Season.objects.filter(year__lt=self.year).order_by("-year").first()
         )
@@ -150,28 +150,23 @@ class Season(models.Model):
     @property
     def is_pre_signup_ongoing(self) -> bool:
         today = date.today()
-        pre_signup_end = self.pre_signup_end + timedelta(
-            days=GeneralSettings.get_solo().pre_signup_payment_delta_days
-        )
-        return self.pre_signup_start <= today <= pre_signup_end
+        return self.pre_signup_start <= today <= self.pre_signup_end
 
     @property
     def is_before_signup(self) -> bool:
-        return (
-            self.signup_start is not None
-            and self.signup_end is not None
-            and date.today() <= self.signup_end
+        if self.signup_end is None:
+            return False
+        signup_end = self.signup_end + timedelta(
+            days=GeneralSettings.get_solo().pre_signup_payment_delta_days
         )
+        return self.signup_start is not None and date.today() <= signup_end
 
     @property
     def is_signup_ongoing(self) -> bool:
         if not self.signup_start or not self.signup_end:
             return False
         today = date.today()
-        signup_end = self.signup_end + timedelta(
-            days=GeneralSettings.get_solo().signup_payment_delta_days
-        )
-        return self.signup_start <= today <= signup_end
+        return self.signup_start <= today <= self.signup_end
 
     @property
     def is_after_signup(self) -> bool:
@@ -281,6 +276,10 @@ class Course(models.Model):
         unique_together = ("name", "season", "weekday", "start_hour")
 
     @property
+    def count(self) -> int:
+        return self.members.count()
+
+    @property
     def is_complete(self) -> bool:
         return self.members.count() >= self.capacity
 
@@ -310,7 +309,7 @@ class Course(models.Model):
                 self.members_next.remove(member)
                 member.check_next()
         for member in Member.objects.filter(
-            season__year=self.season.previous_season
+            season__year=self.season.previous_season_year
         ).all():
             if (
                 self.min_year and member.birthday.year < self.min_year

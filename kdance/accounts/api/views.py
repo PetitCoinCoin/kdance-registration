@@ -50,7 +50,7 @@ from accounts.api.serializers import (
 )
 from accounts.models import UserAction
 from members.emails import EmailEnum, EmailSender
-from members.models import GeneralSettings, Member
+from members.models import GeneralSettings, Member, Season
 
 
 class UsersApiViewSet(
@@ -197,6 +197,19 @@ class UserMeApiViewSet(
         self.perform_update(serializer)
         if email_update:
             email_sender = EmailSender(EmailEnum.UPDATE_USER_EMAIL)
+            members = [
+                f"{member.first_name} {member.last_name}"
+                for member in request.user.member_set.filter(season__is_current=True)
+            ]
+            if not members:
+                current_season = Season.objects.filter(is_current=True).first()
+                if current_season:
+                    members = [
+                        f"{member.first_name} {member.last_name}"
+                        for member in request.user.member_set.filter(
+                            season__year=current_season.previous_season_year
+                        )
+                    ]
             email_sender.send_email(
                 emails=[settings.DEFAULT_FROM_EMAIL, settings.SUPERUSER_EMAIL],
                 username=[email_update],

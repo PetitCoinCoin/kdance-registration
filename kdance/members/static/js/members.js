@@ -609,7 +609,7 @@ function updateMember() {
         success: (data) => {
           data.map(course => {
             const startHour = course.start_hour.split(':');
-            const label = `${course.is_complete ? "(COMPLET) " : ""}${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
+            const label = `${course.count >= course.capacity ? "(COMPLET) " : ""}${course.name}, ${WEEKDAY[course.weekday]} ${startHour[0]}h${startHour[1]}`;
             $('#course-next-select').append($('<option>', { value: course.id, text: label }));
           });
           let memberId = button.getAttribute('memberId');

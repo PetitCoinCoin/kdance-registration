@@ -279,18 +279,23 @@ function getCourses(seasonId) {
             sortable: true,
             visible: false,
           }, {
+            field: 'count',
+            title: 'Effectif',
+            searchable: false,
+            sortable: false,
+            cellStyle: function (value, row) {
+              return {
+                classes: value >= row.capacity ? 'bg-warning' : ''
+              };
+            },
+          }, {
             field: 'capacity',
             title: 'Capacité',
             searchable: false,
             sortable: false,
-          }, {
-            field: 'is_complete',
-            title: 'Complet',
-            searchable: true,
-            sortable: true,
-            cellStyle: function (value) {
+            cellStyle: function (value, row) {
               return {
-                classes: value == 'Oui' ? 'bg-warning' : ''
+                classes: value <= row.count ? 'bg-warning' : ''
               };
             },
           }, {
@@ -322,7 +327,6 @@ function getCourses(seasonId) {
             return {
               ...c,
               price: c.price + '€',
-              is_complete: c.is_complete ? 'Oui' : 'Non',
               slot: `${WEEKDAY[c.weekday]}, ${startHour[0]}h${startHour[1]}-${endHour[0]}h${endHour[1]}`,
               years: formatCourseYears(c)
             }
@@ -336,7 +340,6 @@ function getCourses(seasonId) {
           return {
             ...c,
             price: c.price + '€',
-            is_complete: c.is_complete ? 'Oui' : 'Non',
             slot: `${WEEKDAY[c.weekday]}, ${startHour[0]}h${startHour[1]}-${endHour[0]}h${endHour[1]}`,
             years: formatCourseYears(c)
           }

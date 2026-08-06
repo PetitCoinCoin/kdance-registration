@@ -92,7 +92,9 @@ def index(request: HttpRequest) -> HttpResponse:
             + timedelta(days=general_settings.signup_payment_delta_days)
             if current_season and current_season.signup_end
             else "",
-            "previous_season": current_season.previous_season if current_season else "",
+            "previous_season_year": current_season.previous_season_year
+            if current_season
+            else "",
         },
     )
 
