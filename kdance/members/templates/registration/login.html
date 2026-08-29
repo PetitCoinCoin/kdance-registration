@@ -26,7 +26,18 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
       <div class="text-center">
         <h1 class="display-4 mb-3">Connexion à votre espace adhérent</h1>
       </div>
-      <div class="d-flex flex-column align-items-center">
+      {% if current_season.is_before_signup and not current_season.is_signup_ongoing %}
+        <div class="blinking text-center rounded px-2 pt-2 mb-2 fs-1">
+          <p>Les inscriptions sont fermées pour le moment.</p>
+          <p>Ouverture prévue <strong>du {{ current_season.signup_start }} au {{ current_season.signup_end }}.</strong></p>
+        </div>
+      {% elif current_season.is_after_signup %}
+        <div class="text-center border border-danger border-5 rounded px-2 pt-2 mb-2 fs-2">
+          <p><strong>Les inscriptions sont terminées pour la saison {{ current_season.year }}.</strong></p>
+          <p>Vous pouvez néanmoins consulter et mettre à jour vos informations.</p>
+        </div>
+      {% endif %}
+      <div class="d-flex flex-column align-items-center mt-4">
         <form id="form-login" class="min-w-500 d-flex flex-column" method="post">
           {% csrf_token %}
           <div class="form-outline mb-4">

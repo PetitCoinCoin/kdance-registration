@@ -123,6 +123,19 @@ a {
   border: 0.2rem solid orange;
 }
 
+.blinking {
+  border: 10px solid rgb(252, 49, 49);
+  animation-name: blinking;
+  animation-duration: 1s;
+  animation-iteration-count: 100;
+}
+
+@keyframes blinking {
+  50% {
+    border-color: #852243;
+  }
+}
+
 #about-div {
   text-align: justify;
   max-width: 1000px;
