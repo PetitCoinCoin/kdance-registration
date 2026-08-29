@@ -146,7 +146,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
           </div>
         </div>
         <div class="mb-3">
-          {% if current_season.is_before_pre_signup %}
+          {% if current_season.is_pre_signup_ongoing %}
             <div class="border border-warning border-5 rounded px-2 pt-2 mb-2">
               <h5>Ré-inscriptions</h5>
               <p>
@@ -164,15 +164,34 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
                 </ul>
               </p>
             </div>
+          {% elif current_season.is_before_pre_signup %}
+            <div class="text-center border border-danger border-5 rounded px-2 pt-2 mb-2 fs-1">
+              <p>Les ré-inscriptions sont fermées pour le moment.</p>
+              <p>Ouverture prévue <strong>le {{ current_season.pre_signup_start }}.</strong></p>
+            </div>
           {% endif %}
-          {% if current_season.is_before_signup %}
+          {% if current_season.is_signup_ongoing %}
             <div class="border border-warning border-5 rounded px-2 pt-2 mb-2">
               <h5>Inscriptions</h5>
               <p>Les inscriptions en ligne pour cette saison ont lieu <strong>du {{ current_season.signup_start }} au {{ current_season.signup_end }}.</strong> Elles sont ouvertes à toutes et à tous.</p>
               <p class="main-red fw-semibold">L'inscription ne sera valide que si le <span class="border-bottom border-danger">paiement est effectué avant le {{ signup_payment_end }}</span> à midi.</p>
+              <p>
+                Si vous pensez être éligible au <strong>Pass Sport</strong>, mais que vous n'avez pas encore le code:
+                <ul>
+                  <li>cochez <i>"J'ai un code Pass Sport"</i> et entrez <i>"À VENIR"</i> à la place du code</li>
+                  <li>effectuez le règlement comme vous le souhaitez (en ligne, chèque, ANCV, Espèces): les {{ current_season.pass_sport_amount }}€ ont été déduits</li>
+                  <li>faites nous parvenir un chèque de caution de {{ current_season.pass_sport_amount }}€ avant le {{ signup_payment_end }}</li>
+                  <li>... lorsque vous recevrez le code Pass Sport, revenez le mettre à jour ici ! Dans le cas contraire, le chèque de caution sera encaissé en fin d'année.</li>
+                </ul>
+              </p>
+            </div>
+          {% elif current_season.is_before_signup %}
+            <div class="blinking text-center rounded px-2 pt-2 mb-2 fs-1">
+              <p>Les inscriptions sont fermées pour le moment.</p>
+              <p>Ouverture prévue <strong>le {{ current_season.signup_start }}.</strong></p>
             </div>
           {% elif current_season.is_after_signup %}
-            <div class="border border-warning border-5 rounded px-2 pt-2 mb-2">
+            <div class="border border-danger border-5 rounded px-2 pt-2 mb-2">
               <h5>Inscriptions</h5>
               <p>Les inscriptions sont terminées pour la saison {{ current_season.year }}. <strong>Vous ne pouvez plus ajouter d'adhérent.</strong></p>
             </div>

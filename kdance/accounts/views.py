@@ -22,6 +22,8 @@ from django.http import Http404, HttpRequest, HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import redirect, render
 
+from members.models import Season
+
 
 @require_http_methods(["GET"])
 def signup_view(request: HttpRequest) -> HttpResponse:
@@ -55,7 +57,12 @@ def login_view(request: HttpRequest) -> HttpResponse:
                 request, "registration/login.html", context={"error": message}
             )
     else:
-        return render(request, "registration/login.html", context={"error": None})
+        current_season = Season.objects.filter(is_current=True).first()
+        return render(
+            request,
+            "registration/login.html",
+            context={"error": None, "current_season": current_season},
+        )
 
 
 @require_http_methods(["GET"])
