@@ -26,12 +26,18 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
       <div class="text-center">
         <h1 class="display-4 mb-3">Connexion à votre espace adhérent</h1>
       </div>
-      {% if current_season.is_before_signup and not current_season.is_signup_ongoing %}
+      {% now "Y" as current_year %}
+      {% if current_season.is_before_signup %}
         <div class="blinking text-center rounded px-2 pt-2 mb-2 fs-1">
           <p>Les inscriptions sont fermées pour le moment.</p>
-          <p>Ouverture prévue <strong>du {{ current_season.signup_start }} au {{ current_season.signup_end }}.</strong></p>
+          <p>Ouverture prévue <strong>le {{ current_season.signup_start|date:"j F \à H:i" }}.</strong></p>
         </div>
-      {% elif current_season.is_after_signup %}
+      {% elif current_season.is_signup_payment_still_ongoing %}
+        <div class="blinking text-center rounded px-2 pt-2 mb-2 fs-4">
+          <p>Les inscriptions pour la saison {{ current_season.year }} sont désormais fermées.</p>
+          <p>Le règlement des inscriptions est possible jusqu'au <strong>{{ signup_payment_end|date:"j F \à H:i" }}</strong>.</p>
+        </div>
+      {% elif current_season.is_after_signup and current_season.year|slice:":4" == current_year %}
         <div class="text-center border border-danger border-5 rounded px-2 pt-2 mb-2 fs-2">
           <p><strong>Les inscriptions sont terminées pour la saison {{ current_season.year }}.</strong></p>
           <p>Vous pouvez néanmoins consulter et mettre à jour vos informations.</p>
