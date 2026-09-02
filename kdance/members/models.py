@@ -21,7 +21,6 @@ from __future__ import annotations
 import logging
 
 from enum import Enum
-from datetime import date, timedelta
 
 from members.emails import EmailEnum, EmailSender
 from django.conf import settings
@@ -37,6 +36,7 @@ from django.db.models import Count, Q
 from django.db.models.signals import post_delete
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
+from django.utils import timezone
 from solo.models import SingletonModel
 
 _logger = logging.getLogger(__name__)
@@ -51,10 +51,6 @@ class GeneralSettings(SingletonModel):
         null=False,
         default=True,
     )
-    pre_signup_payment_delta_days = models.PositiveBigIntegerField(
-        null=False, default=7
-    )
-    signup_payment_delta_days = models.PositiveBigIntegerField(null=False, default=7)
 
 
 class Season(models.Model):
@@ -68,10 +64,12 @@ class Season(models.Model):
         unique=True,
     )
     is_current = models.BooleanField(null=False, blank=False, default=True)
-    pre_signup_start = models.DateField(null=False, blank=False)
-    pre_signup_end = models.DateField(null=False, blank=False)
-    signup_start = models.DateField(null=True)
-    signup_end = models.DateField(null=True)
+    pre_signup_start = models.DateTimeField(null=False, blank=False)
+    pre_signup_end = models.DateTimeField(null=False, blank=False)
+    pre_signup_end_payment = models.DateTimeField(null=False, blank=False)
+    signup_start = models.DateTimeField(null=True)
+    signup_end = models.DateTimeField(null=True)
+    signup_end_payment = models.DateTimeField(null=True)
     adhesion_fee = models.PositiveIntegerField(
         default=10,
         blank=False,
@@ -142,40 +140,40 @@ class Season(models.Model):
 
     @property
     def is_before_pre_signup(self) -> bool:
-        pre_signup_end = self.pre_signup_end + timedelta(
-            days=GeneralSettings.get_solo().pre_signup_payment_delta_days
-        )
-        return date.today() <= pre_signup_end
+        return timezone.now() < self.pre_signup_start
 
     @property
     def is_pre_signup_ongoing(self) -> bool:
-        today = date.today()
+        today = timezone.now()
         return self.pre_signup_start <= today <= self.pre_signup_end
 
     @property
+    def is_pre_signup_payment_still_ongoing(self) -> bool:
+        return timezone.now() <= self.pre_signup_end_payment
+
+    @property
     def is_before_signup(self) -> bool:
-        if self.signup_end is None:
-            return False
-        signup_end = self.signup_end + timedelta(
-            days=GeneralSettings.get_solo().signup_payment_delta_days
-        )
-        return self.signup_start is not None and date.today() <= signup_end
+        return self.signup_start is not None and timezone.now() < self.signup_start
 
     @property
     def is_signup_ongoing(self) -> bool:
         if not self.signup_start or not self.signup_end:
             return False
-        today = date.today()
+        today = timezone.now()
         return self.signup_start <= today <= self.signup_end
+
+    @property
+    def is_signup_payment_still_ongoing(self) -> bool:
+        return (
+            self.signup_end_payment is not None
+            and timezone.now() <= self.signup_end_payment
+        )
 
     @property
     def is_after_signup(self) -> bool:
         if not self.signup_start or not self.signup_end:
             return False
-        signup_end = self.signup_end + timedelta(
-            days=GeneralSettings.get_solo().signup_payment_delta_days
-        )
-        return date.today() > signup_end
+        return timezone.now() > self.signup_end_payment
 
     def __repr__(self) -> str:
         return self.year
@@ -366,7 +364,7 @@ class Course(models.Model):
                 weekday=self.get_weekday_display(),
                 start_hour=self.start_hour.strftime("%Hh%M"),
                 with_next_course_warning=self.season.signup_end
-                and self.season.signup_end < date.today(),
+                and self.season.signup_end < timezone.now(),
             )
 
 

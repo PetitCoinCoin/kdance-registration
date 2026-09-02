@@ -60,6 +60,12 @@ function formatCourseYears(course) {
   return `${course.min_year}-${course.max_year}`
 }
 
+function formatDateTimeForInput(date) {
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
+}
+
 function getSeasonsWrapper(callback, toastPrefix) {
   $.ajax({
     url: seasonsUrl,

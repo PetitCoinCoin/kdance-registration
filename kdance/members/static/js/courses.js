@@ -82,10 +82,12 @@ function getSeason(season) {
       $('#season-discount-percent').val(data.discount_percent);
       $('#season-discount-limit').val(data.discount_limit);
       $('#season-pass-sport-amount').val(data.pass_sport_amount);
-      $('#pre-signup-start').val(data.pre_signup_start);
-      $('#pre-signup-end').val(data.pre_signup_end);
-      $('#signup-start').val(data.signup_start);
-      $('#signup-end').val(data.signup_end);
+      $('#pre-signup-start').val(formatDateTimeForInput(new Date(data.pre_signup_start)));
+      $('#pre-signup-end').val(formatDateTimeForInput(new Date(data.pre_signup_end)));
+      $('#pre-signup-end-payment').val(formatDateTimeForInput(new Date(data.pre_signup_end_payment)));
+      $('#signup-start').val(data.signup_start ? formatDateTimeForInput(new Date(data.signup_start)) : null);
+      $('#signup-end').val(data.signup_end ? formatDateTimeForInput(new Date(data.signup_end)) : null);
+      $('#signup-end-payment').val(data.signup_end_payment ? formatDateTimeForInput(new Date(data.signup_end_payment)) : null);
       $('#season-ffd-a-amount').val(data.ffd_a_amount);
       $('#season-ffd-b-amount').val(data.ffd_b_amount);
       $('#season-ffd-c-amount').val(data.ffd_c_amount);
@@ -126,13 +128,27 @@ function postOrPatchSeason(url, method) {
   $('#form-season').submit((event) => {
     $('.invalid-feedback').removeClass('d-inline');
     event.preventDefault();
+    let preSignupEndPayment = undefined;
+    if ($('#pre-signup-end-payment').val() !== '') {
+      preSignupEndPayment = $('#pre-signup-end-payment').val();
+    } else {
+      preSignupEndPayment = $('#pre-signup-end').val() !== '' ? $('#pre-signup-end').val() : undefined;
+    }
+    let signupEndPayment = null;
+    if ($('#signup-end-payment').val() !== '') {
+      signupEndPayment = $('#signup-end-payment').val();
+    } else {
+      signupEndPayment = $('#signup-end').val() !== '' ? $('#signup-end').val() : null;
+    }
     const data = {
       year: $('#season-year').val(),
       is_current: $('#season-current').is(':checked'),
       pre_signup_start: $('#pre-signup-start').val() !== '' ? $('#pre-signup-start').val() : undefined,
       pre_signup_end: $('#pre-signup-end').val() !== '' ? $('#pre-signup-end').val() : undefined,
+      pre_signup_end_payment: preSignupEndPayment,
       signup_start: $('#signup-start').val() !== '' ? $('#signup-start').val() : null,
       signup_end: $('#signup-end').val() !== '' ? $('#signup-end').val() : null,
+      signup_end_payment: signupEndPayment,
       ffd_a_amount: $('#season-ffd-a-amount').val(),
       ffd_b_amount: $('#season-ffd-b-amount').val(),
       ffd_c_amount: $('#season-ffd-c-amount').val(),
@@ -177,6 +193,10 @@ function postOrPatchSeason(url, method) {
           $('#invalid-pre-signup-end').html(error.responseJSON.pre_signup_end[0]);
           $('#invalid-pre-signup-end').addClass('d-inline');
         }
+        if (error.responseJSON.pre_signup_end_payment) {
+          $('#invalid-pre-signup-end-payment').html(error.responseJSON.pre_signup_end_payment[0]);
+          $('#invalid-pre-signup-end-payment').addClass('d-inline');
+        }
         if (error.responseJSON.signup_start) {
           $('#invalid-signup-start').html(error.responseJSON.signup_start[0]);
           $('#invalid-signup-start').addClass('d-inline');
@@ -184,6 +204,10 @@ function postOrPatchSeason(url, method) {
         if (error.responseJSON.signup_end) {
           $('#invalid-signup-end').html(error.responseJSON.signup_end[0]);
           $('#invalid-signup-end').addClass('d-inline');
+        }
+        if (error.responseJSON.signup_end_payment) {
+          $('#invalid-signup-end-payment').html(error.responseJSON.signup_end_payment[0]);
+          $('#invalid-signup-end-payment').addClass('d-inline');
         }
       }
     });

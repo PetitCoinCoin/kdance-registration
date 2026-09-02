@@ -35,7 +35,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
 
     <!-- Modal -->
     {% csrf_token %}
-    <div class="modal fade" id="season-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal modal-lg fade" id="season-modal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -55,55 +55,93 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
                   Saison courante ?
                 </label>
               </div>
-              <div class="form-outline mb-4">
-                <label class="form-label" for="season-adhesion-fee">Montant de l'adhésion pour la saison</label>
-                <input type="number" id="season-adhesion-fee" class="form-control" min="0" value="10" />
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-outline mb-4">
+                    <label class="form-label" for="season-adhesion-fee">Adhésion (€)</label>
+                    <input type="number" id="season-adhesion-fee" class="form-control" min="0" value="10" />
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-outline mb-4">
+                    <label class="form-label" for="season-pass-sport-amount">Pass Sport (€)</label>
+                    <input type="number" id="season-pass-sport-amount" class="form-control" min="0" value="50" />
+                  </div>
+                </div>
               </div>
-              <div class="form-outline mb-4">
-                <label class="form-label" for="season-discount-percent">Réduction appliquée (en %)</label>
-                <input type="number" id="season-discount-percent" class="form-control" min="0" max="100" value="10" />
-              </div>
-              <div class="form-outline mb-4">
-                <label class="form-label" for="season-discount-limit">Réduction à partir de .. cours</label>
-                <input type="number" id="season-discount-limit" class="form-control" min="0" value="2" />
-              </div>
-              <div class="form-outline mb-4">
-                <label class="form-label" for="season-pass-sport-amount">Montant du Pass Sport pour la saison</label>
-                <input type="number" id="season-pass-sport-amount" class="form-control" min="0" value="50" />
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-outline mb-4">
+                    <label class="form-label" for="season-discount-percent">Réduction appliquée (en %)</label>
+                    <input type="number" id="season-discount-percent" class="form-control" min="0" max="100" value="10" />
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-outline mb-4">
+                    <label class="form-label" for="season-discount-limit">Réduction à partir de .. cours</label>
+                    <input type="number" id="season-discount-limit" class="form-control" min="0" value="2" />
+                  </div>
+                </div>
               </div>
               <div class="form-outline mb-4">
                 <h6>Pré-inscriptions</h6>
                 <div class="row">
-                  <label class="form-label required col-2" for="pre-signup-start">Du</label>
-                  <div class="col-10">
-                    <input type="date" id="pre-signup-start" class="form-control" />
+                  <div class="col-md-6">
+                    <div class="row align-items-center">
+                      <label class="form-label required col-auto mb-0" for="pre-signup-start">Du</label>
+                      <div class="col">
+                        <input type="datetime-local" id="pre-signup-start" class="form-control" />
+                      </div>
+                    </div>
                     <div id="invalid-pre-signup-start" class="invalid-feedback"></div>
                   </div>
-                </div>
-                <div class="row">
-                  <label class="form-label required col-2" for="pre-signup-end">au</label>
-                  <div class="col-10">
-                    <input type="date" id="pre-signup-end" class="form-control" />
+                  <div class="col-md-6">
+                    <div class="row align-items-center">
+                      <label class="form-label required col-auto mb-0" for="pre-signup-end">au</label>
+                      <div class="col">
+                        <input type="datetime-local" id="pre-signup-end" class="form-control" />
+                      </div>
+                    </div>
                     <div id="invalid-pre-signup-end" class="invalid-feedback"></div>
                   </div>
                 </div>
+                <div class="row mt-2 align-items-center">
+                  <label class="form-label col-auto mb-0" for="pre-signup-end-payment">Paiement avant le</label>
+                  <div class="col">
+                    <input type="datetime-local" id="pre-signup-end-payment" class="form-control" />
+                  </div>
+                </div>
+                <div id="invalid-pre-signup-end-payment" class="invalid-feedback"></div>
               </div>
               <div class="form-outline mb-4">
                 <h6>Inscriptions</h6>
                 <div class="row">
-                  <label class="form-label col-2" for="signup-start">Du</label>
-                  <div class="col-10">
-                    <input type="date" id="signup-start" class="form-control" />
+                  <div class="col-md-6">
+                    <div class="row align-items-center">
+                      <label class="form-label col-auto mb-0" for="signup-start">Du</label>
+                      <div class="col">
+                        <input type="datetime-local" id="signup-start" class="form-control" />
+                      </div>
+                    </div>
                     <div id="invalid-signup-start" class="invalid-feedback"></div>
                   </div>
-                </div>
-                <div class="row">
-                  <label class="form-label col-2" for="signup-end">au</label>
-                  <div class="col-10">
-                    <input type="date" id="signup-end" class="form-control" />
+                  <div class="col-md-6">
+                    <div class="row align-items-center">
+                      <label class="form-label col-auto mb-0" for="signup-end">au</label>
+                      <div class="col">
+                        <input type="datetime-local" id="signup-end" class="form-control" />
+                      </div>
+                    </div>
                     <div id="invalid-signup-end" class="invalid-feedback"></div>
                   </div>
                 </div>
+                <div class="row mt-2 align-items-center">
+                  <label class="form-label col-auto mb-0" for="signup-end-payment">Paiement avant le</label>
+                  <div class="col">
+                    <input type="datetime-local" id="signup-end-payment" class="form-control" />
+                  </div>
+                </div>
+                <div id="invalid-signup-end-payment" class="invalid-feedback"></div>
               </div>
               <div class="form-outline mb-4">
                 <h6>Tarifs FFD</h6>

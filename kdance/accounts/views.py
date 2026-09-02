@@ -61,7 +61,13 @@ def login_view(request: HttpRequest) -> HttpResponse:
         return render(
             request,
             "registration/login.html",
-            context={"error": None, "current_season": current_season},
+            context={
+                "error": None,
+                "current_season": current_season,
+                "signup_payment_end": current_season.signup_end_payment
+                if current_season and current_season.signup_end_payment
+                else "",
+            },
         )
 
 
