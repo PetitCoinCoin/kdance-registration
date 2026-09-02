@@ -59,8 +59,6 @@ class GeneralSettingsSerializer(serializers.ModelSerializer):
         fields = (
             "allow_signup",
             "allow_new_member",
-            "pre_signup_payment_delta_days",
-            "signup_payment_delta_days",
         )
 
 
@@ -73,8 +71,10 @@ class SeasonSerializer(serializers.ModelSerializer):
             "is_current",
             "pre_signup_start",
             "pre_signup_end",
+            "pre_signup_end_payment",
             "signup_start",
             "signup_end",
+            "signup_end_payment",
             "adhesion_fee",
             "discount_percent",
             "discount_limit",
@@ -88,14 +88,27 @@ class SeasonSerializer(serializers.ModelSerializer):
     def validate(self, attr: dict) -> dict:
         validated = super().validate(attr)
         if (
-            validated.get("pre_signup_end")
+            validated.get("pre_signup_start")
             and validated.get("pre_signup_end")
             and validated.get("pre_signup_end") < validated.get("pre_signup_start")
         ):
             raise serializers.ValidationError(
                 {
                     "pre_signup_end": [
-                        "La fin des pré-inscriptions ne peut être qu'après le début des pré-inscriptions."
+                        "La fin des pré-inscriptions ne peut être qu'après le début des réinscriptions."
+                    ]
+                }
+            )
+        if (
+            validated.get("pre_signup_end")
+            and validated.get("pre_signup_end_payment")
+            and validated.get("pre_signup_end_payment")
+            < validated.get("pre_signup_end")
+        ):
+            raise serializers.ValidationError(
+                {
+                    "pre_signup_end_payment": [
+                        "La fin du paiement ne peut être qu'après la fin des réinscriptions."
                     ]
                 }
             )
@@ -108,12 +121,12 @@ class SeasonSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {
                     "signup_start": [
-                        "Le début des inscriptions ne peut être qu'après la fin des pré-inscriptions."
+                        "Le début des inscriptions ne peut être qu'après la fin des réinscriptions."
                     ]
                 }
             )
         if (
-            validated.get("signup_end")
+            validated.get("signup_start")
             and validated.get("signup_end")
             and validated.get("signup_end") < validated.get("signup_start")
         ):
@@ -121,6 +134,18 @@ class SeasonSerializer(serializers.ModelSerializer):
                 {
                     "signup_end": [
                         "La fin des inscriptions ne peut être qu'après le début des inscriptions."
+                    ]
+                }
+            )
+        if (
+            validated.get("signup_end")
+            and validated.get("signup_end_payment")
+            and validated.get("signup_end_payment") < validated.get("signup_end")
+        ):
+            raise serializers.ValidationError(
+                {
+                    "signup_end_payment": [
+                        "La fin du paiement ne peut être qu'après la fin des inscriptions."
                     ]
                 }
             )

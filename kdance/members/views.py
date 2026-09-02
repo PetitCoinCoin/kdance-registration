@@ -16,7 +16,6 @@ You should have received a copy of the GNU Affero General Public License along
 with KDance registration. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from datetime import timedelta
 from pathlib import Path
 
 from django.conf import settings
@@ -84,13 +83,11 @@ def index(request: HttpRequest) -> HttpResponse:
             "is_teacher": _is_teacher(request),
             "allow_new_member": general_settings.allow_new_member,
             "current_season": current_season,
-            "pre_signup_payment_end": current_season.pre_signup_end
-            + timedelta(days=general_settings.pre_signup_payment_delta_days)
+            "pre_signup_payment_end": current_season.pre_signup_end_payment
             if current_season
             else "",
-            "signup_payment_end": current_season.signup_end
-            + timedelta(days=general_settings.signup_payment_delta_days)
-            if current_season and current_season.signup_end
+            "signup_payment_end": current_season.signup_end_payment
+            if current_season and current_season.signup_end_payment
             else "",
             "previous_season_year": current_season.previous_season_year
             if current_season

@@ -146,14 +146,19 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
           </div>
         </div>
         <div class="mb-3">
-          {% if current_season.is_pre_signup_ongoing %}
+          {% if current_season.is_before_pre_signup %}
+            <div class="blinking text-center rounded px-2 pt-2 mb-2 fs-1">
+              <p>Les ré-inscriptions sont fermées pour le moment.</p>
+              <p>Ouverture prévue <strong>le {{ current_season.pre_signup_start|date:"j F \à H:i" }}.</strong></p>
+            </div>
+          {% elif current_season.is_pre_signup_ongoing %}
             <div class="border border-warning border-5 rounded px-2 pt-2 mb-2">
               <h5>Ré-inscriptions</h5>
               <p>
-              Uniquement pour les adhérents <span class="border-bottom border-danger">inscrits la saison précédente, sur leur discipline</span>: <strong>du {{ current_season.pre_signup_start }} au {{ current_season.pre_signup_end }}.</strong><br/>
+              Uniquement pour les adhérents <span class="border-bottom border-danger">inscrits la saison précédente, sur leur discipline</span>: <strong>du {{ current_season.pre_signup_start|date:"j F \à H:i" }} au {{ current_season.pre_signup_end|date:"j F \à H:i" }}.</strong><br/>
               <i class="bi bi-exclamation-triangle"></i> Les tarifs de licence FFD sont mis à jour pendant l'été. Ils sont donc susceptibles d'être modifiés ultérieurement.
               </p>
-              <p class="main-red fw-semibold">L'inscription ne sera valide que si le <span class="border-bottom border-danger">paiement est effectué avant le {{ pre_signup_payment_end }}</span>.</p>
+              <p class="main-red fw-semibold">L'inscription ne sera valide que si le <span class="border-bottom border-danger">paiement est effectué avant le {{ pre_signup_payment_end|date:"j F \à H:i" }}</span>.</p>
               <p>
                 Si vous ou votre enfant êtes éligible au <strong>Pass Sport</strong>, vous ne recevrez votre code que plus tard dans l'été. Dans ce cas:
                 <ul>
@@ -164,17 +169,22 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
                 </ul>
               </p>
             </div>
-          {% elif current_season.is_before_pre_signup %}
-            <div class="text-center border border-danger border-5 rounded px-2 pt-2 mb-2 fs-1">
-              <p>Les ré-inscriptions sont fermées pour le moment.</p>
-              <p>Ouverture prévue <strong>le {{ current_season.pre_signup_start }}.</strong></p>
+          {% elif current_season.is_pre_signup_payment_still_ongoing %}
+            <div class="blinking text-center rounded px-2 pt-2 mb-2 fs-4">
+              <p>Les ré-inscriptions sont désormais fermées.</p>
+              <p>Vous avez jusqu'au <strong>{{ pre_signup_payment_end|date:"j F \à H:i" }}</strong> pour régler et ainsi valider votre inscription.</p>
             </div>
           {% endif %}
-          {% if current_season.is_signup_ongoing %}
+          {% if current_season.is_before_signup %}
+            <div class="blinking text-center rounded px-2 pt-2 mb-2 fs-1">
+              <p>Les inscriptions sont fermées pour le moment.</p>
+              <p>Ouverture prévue <strong>le {{ current_season.signup_start|date:"j F \à H:i" }}.</strong></p>
+            </div>
+          {% elif current_season.is_signup_ongoing %}
             <div class="border border-warning border-5 rounded px-2 pt-2 mb-2">
               <h5>Inscriptions</h5>
-              <p>Les inscriptions en ligne pour cette saison ont lieu <strong>du {{ current_season.signup_start }} au {{ current_season.signup_end }}.</strong> Elles sont ouvertes à toutes et à tous.</p>
-              <p class="main-red fw-semibold">L'inscription ne sera valide que si le <span class="border-bottom border-danger">paiement est effectué avant le {{ signup_payment_end }}</span> à midi.</p>
+              <p>Les inscriptions en ligne pour cette saison ont lieu <strong>du {{ current_season.signup_start|date:"j F \à H:i" }} au {{ current_season.signup_end|date:"j F \à H:i" }}.</strong> Elles sont ouvertes à toutes et à tous.</p>
+              <p class="main-red fw-semibold">L'inscription ne sera valide que si le <span class="border-bottom border-danger">paiement est effectué avant le {{ signup_payment_end|date:"j F \à H:i" }}</span>.</p>
               <p>
                 Si vous pensez être éligible au <strong>Pass Sport</strong>, mais que vous n'avez pas encore le code:
                 <ul>
@@ -185,15 +195,16 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
                 </ul>
               </p>
             </div>
-          {% elif current_season.is_before_signup %}
-            <div class="blinking text-center rounded px-2 pt-2 mb-2 fs-1">
-              <p>Les inscriptions sont fermées pour le moment.</p>
-              <p>Ouverture prévue <strong>le {{ current_season.signup_start }}.</strong></p>
+          {% elif current_season.is_signup_payment_still_ongoing %}
+            <div class="blinking text-center rounded px-2 pt-2 mb-2 fs-4">
+              <p>Les inscriptions pour la saison {{ current_season.year }} sont désormais fermées.</p>
+              <p>Vous avez jusqu'au <strong>{{ signup_payment_end|date:"j F \à H:i" }}</strong> pour régler et ainsi valider votre inscription.</p>
+              <p>Dans le cas contraire, votre inscription pourra être annulée, et votre place donnée à une personne sur liste d'attente.</p>
             </div>
           {% elif current_season.is_after_signup %}
-            <div class="border border-danger border-5 rounded px-2 pt-2 mb-2">
-              <h5>Inscriptions</h5>
-              <p>Les inscriptions sont terminées pour la saison {{ current_season.year }}. <strong>Vous ne pouvez plus ajouter d'adhérent.</strong></p>
+            <div class="border border-danger border-5 rounded px-2 pt-2 mb-2 fs-5">
+              <p>Les inscriptions sont terminées pour la saison {{ current_season.year }}.</p>
+              <p><strong>Vous ne pouvez plus ajouter d'adhérent.</strong></p>
             </div>
           {% endif %}
           <details>
