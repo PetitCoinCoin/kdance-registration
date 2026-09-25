@@ -37,7 +37,7 @@ const MONTH = {
   100: 'Caution',
 }
 
-const CHECK_NUMBER = 8;
+const CHECK_NUMBER = 14;
 const CONTACT_NUMBER = 2;
 
 const CONTACT_MAPPING = {

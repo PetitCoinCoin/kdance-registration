@@ -354,6 +354,8 @@ function postOrPatchMember(url, method, event) {
     data.active_courses = $('#form-member').data('canEditCourse') ? courses : undefined;
     if ($('#member-pass-code').val() !== '') {
       data.sport_pass = { code: $('#member-pass-code').val() };
+    } else if (method == "PATCH" && $('#member-pass-code').val() === '') {
+      data.sport_pass = {};
     }
     $.ajax({
       url: url,
