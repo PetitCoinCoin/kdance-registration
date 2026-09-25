@@ -322,8 +322,8 @@ function getMember(memberId) {
       $('#member-courses-delete-modal-title').html(`Annuler le(s) cours de ${data.first_name} ${data.last_name}`);
       $('#member-courses-update-modal-title').html(`Changer le cours de ${data.first_name} ${data.last_name}`);
       $('#doc-select').val(data.documents?.medical_document || "Manquant");
-      $('#authorise-photos').prop('checked', data.documents?.authorise_photos || false);
-      $('#authorise-emergency').prop('checked', data.documents?.authorise_emergency || true);
+      $('#authorise-photos').prop('checked', data.documents?.authorise_photos);
+      $('#authorise-emergency').prop('checked', data.documents?.authorise_emergency);
       $('#member-license').val(data.ffd_license || 0);
 
       // Payment
