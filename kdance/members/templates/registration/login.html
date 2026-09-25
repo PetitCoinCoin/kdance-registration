@@ -32,7 +32,7 @@ with KDance registration. If not, see <https://www.gnu.org/licenses/>. -->
           <p>Les inscriptions sont fermées pour le moment.</p>
           <p>Ouverture prévue <strong>le {{ current_season.signup_start|date:"j F \à H:i" }}.</strong></p>
         </div>
-      {% elif current_season.is_signup_payment_still_ongoing %}
+      {% elif not current_season.is_signup_ongoing and current_season.is_signup_payment_still_ongoing %}
         <div class="blinking text-center rounded px-2 pt-2 mb-2 fs-4">
           <p>Les inscriptions pour la saison {{ current_season.year }} sont désormais fermées.</p>
           <p>Le règlement des inscriptions est possible jusqu'au <strong>{{ signup_payment_end|date:"j F \à H:i" }}</strong>.</p>
