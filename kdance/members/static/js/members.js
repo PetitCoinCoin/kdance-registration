@@ -762,7 +762,6 @@ function patchPayment(memberId, paymentId) {
     dataType: 'json',
     success: () => {
       $('#payment-cb').prop('disabled', true);
-      console.log("prout", $('#payment-pass-code').data('withPass'))
       if ($('#payment-pass-code').val() !== '' || $('#payment-pass-code').data('withPass')) {
       const memberData = $('#payment-pass-code').val() !== '' ?
       {
@@ -771,7 +770,7 @@ function patchPayment(memberId, paymentId) {
           amount: $('#payment-pass-amount').val(),
         },
       } :
-      {};
+      { sport_pass: {} };
         $.ajax({
           url: membersUrl + memberId + '/',
           type: 'PATCH',

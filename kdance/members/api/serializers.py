@@ -586,7 +586,7 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
         self.validated_data["user"] = User.objects.get(username=username)
         contacts = self.validated_data.pop("contacts", None)
         documents = self.validated_data.pop("documents", None) if self.partial else None
-        sport_pass = self.validated_data.pop("sport_pass", {})
+        sport_pass = self.validated_data.pop("sport_pass", None)
         active_courses = self.validated_data.pop("active_courses", None)
         cancelled_courses = self.validated_data.pop("cancelled_courses", None)
         now = timezone.now()
@@ -610,19 +610,20 @@ class MemberSerializer(WritableNestedModelSerializer, serializers.ModelSerialize
             for key, value in documents.items():
                 setattr(doc, key, value)
             doc.save()
-        if sport_pass:
-            if SportPass.objects.filter(member__id=member.id).exists():
-                sport_pass_item = SportPass.objects.get(member__id=member.id)
-                sport_pass_item.code = sport_pass["code"]
-                sport_pass_item.save()
+        if sport_pass is not None:
+            if sport_pass:
+                if SportPass.objects.filter(member__id=member.id).exists():
+                    sport_pass_item = SportPass.objects.get(member__id=member.id)
+                    sport_pass_item.code = sport_pass["code"]
+                    sport_pass_item.save()
+                else:
+                    sport_pass_item = SportPass.objects.create(code=sport_pass["code"])
+                    member.sport_pass = sport_pass_item
+                    member.save()
             else:
-                sport_pass_item = SportPass.objects.create(code=sport_pass["code"])
-                member.sport_pass = sport_pass_item
-                member.save()
-        else:
-            if SportPass.objects.filter(member__id=member.id).exists():
-                sport_pass_item = SportPass.objects.get(member__id=member.id)
-                sport_pass_item.delete()
+                if SportPass.objects.filter(member__id=member.id).exists():
+                    sport_pass_item = SportPass.objects.get(member__id=member.id)
+                    sport_pass_item.delete()
         courses_removed = []
         courses_added_active = []
         courses_added_waiting = []
